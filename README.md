@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Enterprise RAG System for Test Case Generation
 
 > Advanced Retrieval-Augmented Generation system for document search and AI agent integration
