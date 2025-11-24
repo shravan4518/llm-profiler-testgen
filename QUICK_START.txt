@@ -1,0 +1,113 @@
+================================================================================
+                    ENTERPRISE RAG SYSTEM - QUICK START
+================================================================================
+
+GET STARTED IN 5 MINUTES
+========================
+
+1. ACTIVATE ENVIRONMENT
+   venv\Scripts\activate
+
+2. INSTALL DEPENDENCIES (if not already done)
+   pip install -r requirements.txt
+
+3. ADD YOUR DOCUMENTS
+   Place PDFs, TXT, MD, or JSON files in:
+   data/docs/
+
+4. RUN THE SYSTEM
+   python src/main_enterprise.py
+
+5. INGEST DOCUMENTS
+   Choose: [I] Ingest documents
+   Wait for completion
+
+6. SEARCH
+   Choose: [H] Hybrid search
+   Enter your query
+   View results!
+
+COMMON TASKS
+============
+
+Ingest New Documents:
+  - Add files to data/docs/
+  - Run: [I] Ingest
+  - System auto-detects new/updated files
+
+Search for Information:
+  - Run: [H] Hybrid search (recommended)
+  - Or [S] Semantic search
+  - Or [K] Keyword search
+  - Or [T] Search with context
+
+Check System Status:
+  - Run: [V] View statistics
+  - Shows: # of docs, chunks, vectors
+
+List All Documents:
+  - Run: [L] List documents
+  - Shows: filenames, IDs, chunk counts
+
+Remove Outdated Document:
+  - Run: [R] Remove document
+  - Enter: document ID
+  - Confirm: yes
+
+CONFIGURATION
+=============
+
+Edit config.py to customize:
+  - CHUNK_SIZE = 1000          # Chunk size (chars)
+  - CHUNK_OVERLAP = 200        # Overlap (chars)
+  - DEFAULT_TOP_K = 5          # Search results
+  - EMBED_MODEL_NAME = "..."   # Embedding model
+  - LOG_LEVEL = "INFO"         # Logging level
+
+TROUBLESHOOTING
+===============
+
+No results found?
+  → Check [V] stats to verify docs are ingested
+  → Try [H] hybrid search instead of [S] semantic
+  → Increase number of results (k)
+
+Slow ingestion?
+  → Normal for large PDFs
+  → Check logs: data/logs/rag_system.log
+  → Reduce EMBED_BATCH_SIZE in config.py
+
+Error loading PDF?
+  → Check file is not corrupted/password-protected
+  → View logs for details
+
+Module not found?
+  → Activate venv: venv\Scripts\activate
+  → Install deps: pip install -r requirements.txt
+
+FOR FULL DOCUMENTATION
+======================
+See: ENTERPRISE_RAG_DOCUMENTATION.txt
+
+AGENT INTEGRATION EXAMPLE
+==========================
+
+from src.vector_db.search_engine import HybridSearchEngine
+
+# Initialize
+search = HybridSearchEngine()
+
+# Search
+results = search.search(
+    query="How to configure network scanning",
+    k=5,
+    search_mode='hybrid'
+)
+
+# Extract context for your LLM/agent
+context = "\n\n".join([r.chunk_metadata.text for r in results])
+
+# Use in your prompt
+prompt = f"Based on:\n{context}\n\nGenerate test cases for..."
+
+================================================================================

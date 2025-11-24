@@ -1,0 +1,401 @@
+================================================================================
+                    SEARCH OUTPUT & RESULTS GUIDE
+================================================================================
+
+OVERVIEW
+========
+
+The enterprise RAG system now provides COMPLETE, FULL-TEXT search results
+with multiple output options.
+
+IMPROVEMENTS FROM YOUR SCREENSHOT
+==================================
+
+BEFORE (Old System):
+  ❌ Only showed 150-200 character preview
+  ❌ Truncated results with "..."
+  ❌ No option to see full text
+  ❌ No way to save results
+  ❌ Minimal metadata
+
+AFTER (New System):
+  ✅ Shows FULL TEXT of matched chunks (default)
+  ✅ Option to save results to file
+  ✅ Complete metadata (doc name, page, chunk ID, scores)
+  ✅ Multiple search modes
+  ✅ Context-aware search (shows surrounding chunks)
+  ✅ Professional formatting
+
+SEARCH OPTIONS
+==============
+
+When you perform a search, you'll now be asked:
+
+1. "Show full text? (y/n, default y):"
+   - y (default): Shows complete chunk text
+   - n: Shows 500-character preview
+
+2. "Save results to file? (y/n, default n):"
+   - y: Saves full results to data/search_results_TIMESTAMP.txt
+   - n (default): Only shows in console
+
+EXAMPLE SEARCH SESSION
+=======================
+
+Enter command: H
+Enter search query: fingerprints
+Number of results (default 5): 5
+Show full text? (y/n, default y): y          ← PRESS ENTER for full text
+Save results to file? (y/n, default n): y    ← Type 'y' to save
+
+Searching (hybrid mode): 'fingerprints'
+----------------------------------------------------------------------
+
+======================================================================
+SEARCH RESULTS FOR: 'fingerprints'
+Search Mode: HYBRID
+Total Results: 5
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+[RESULT 1/5]
+──────────────────────────────────────────────────────────────────────
+Document: ps-pps-9.1r10.0-profiler-administration-guide.pdf
+Doc ID: ps-pps-9.1r10.0-profiler-administration-guide_a3f4b8c2
+Page Number: 42
+Chunk Index: 15
+Chunk ID: ps-pps-9.1r10.0-profiler-administration-guide_a3f4b8c2_chunk_15
+
+Scores:
+  - Semantic Score: 0.8542
+  - Keyword Score: 0.6231
+  - Hybrid Score: 0.7850
+
+--- MATCHED CHUNK ---
+Fingerprinting Configuration
+The fingerprinting feature allows you to identify devices on your network
+based on their unique characteristics. To configure fingerprinting:
+
+1. Navigate to Configuration > Network Discovery > Fingerprinting
+2. Enable the fingerprinting module
+3. Configure the fingerprint database update schedule
+4. Set the matching threshold (recommended: 85%)
+5. Configure alert settings for unknown devices
+
+Fingerprint Matching Algorithm:
+The system uses a multi-factor matching algorithm that considers:
+- Operating system signatures
+- Service banners
+- Network behavior patterns
+- Device-specific protocol implementations
+
+Best Practices:
+- Keep fingerprint database updated weekly
+- Review unknown device alerts daily
+- Maintain a whitelist of known devices
+- Use custom fingerprints for proprietary devices
+
+For advanced fingerprinting options, see Chapter 8: Advanced
+Network Discovery Features.
+
+
+──────────────────────────────────────────────────────────────────────
+[RESULT 2/5]
+──────────────────────────────────────────────────────────────────────
+...
+
+======================================================================
+END OF RESULTS (5 total)
+======================================================================
+
+✓ Results saved to: C:\...\POC\data\search_results_20251124_103045.txt
+
+
+CONTEXT SEARCH (RECOMMENDED FOR FULL INFORMATION)
+==================================================
+
+For even MORE complete information, use: [T] Search with context
+
+This shows:
+- Previous chunks (context before)
+- Your matched chunk
+- Following chunks (context after)
+
+Example:
+
+Enter command: T
+Enter search query: fingerprints
+Number of results: 3
+Context window (chunks before/after, default 1): 2  ← Get 2 chunks before/after
+Save results to file? (y/n, default n): y
+
+This gives you the COMPLETE section with full context!
+
+Output Example:
+
+======================================================================
+CONTEXT SEARCH RESULTS FOR: 'fingerprints'
+Context Window: ±2 chunks
+Total Results: 3
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+[RESULT 1/3]
+──────────────────────────────────────────────────────────────────────
+Document: ps-pps-9.1r10.0-profiler-administration-guide.pdf
+Hybrid Score: 0.7850
+
+┌─ CONTEXT BEFORE (Previous Chunks) ─────────────────────
+│ [Chunk 13]
+│ Network Discovery Overview
+│ The network discovery module automatically scans your network
+│ to identify all connected devices. This chapter covers the
+│ configuration and best practices for network discovery.
+│
+│ [Chunk 14]
+│ Basic Network Scanning
+│ To perform a basic network scan:
+│ 1. Navigate to Operations > Network Scan
+│ 2. Select the network range to scan
+│ 3. Choose scan intensity (Low, Medium, High)
+│ 4. Click "Start Scan"
+│
+└────────────────────────────────────────────────────────
+
+╔═ MATCHED CHUNK (Your Search Result) ═══════════════════
+║ [Chunk 15]
+║ Fingerprinting Configuration
+║ The fingerprinting feature allows you to identify devices...
+║ [FULL TEXT AS SHOWN ABOVE]
+╚════════════════════════════════════════════════════════
+
+┌─ CONTEXT AFTER (Following Chunks) ─────────────────────
+│ [Chunk 16]
+│ Troubleshooting Fingerprinting Issues
+│ If fingerprinting is not working correctly:
+│ - Check database version (Help > About > Database Version)
+│ - Verify network connectivity to fingerprint server
+│ - Review logs: /var/log/profiler/fingerprint.log
+│
+│ [Chunk 17]
+│ Fingerprinting API Integration
+│ The fingerprinting API allows programmatic access to the
+│ fingerprint database. API endpoints:
+│ POST /api/v2/fingerprint/scan
+│ GET /api/v2/fingerprint/results/{scan_id}
+│ PUT /api/v2/fingerprint/database/update
+│
+└────────────────────────────────────────────────────────
+
+✓ Results saved to: C:\...\POC\data\context_search_20251124_103045.txt
+
+USING SAVED RESULTS
+===================
+
+All search results are saved in: data/
+
+Files are named with timestamp:
+  - search_results_YYYYMMDD_HHMMSS.txt      (basic search)
+  - context_search_YYYYMMDD_HHMMSS.txt      (context search)
+
+You can:
+1. Open them in any text editor
+2. Copy/paste into documentation
+3. Share with your team
+4. Use as input for your AI agents
+5. Archive for future reference
+
+TIPS FOR BEST RESULTS
+======================
+
+1. USE CONTEXT SEARCH [T] for comprehensive information
+   - Shows full sections, not just isolated chunks
+   - Better for understanding workflows and procedures
+
+2. INCREASE context window for complex topics
+   - Use 2-3 chunks before/after for complete context
+   - Use 1 chunk for quick lookups
+
+3. SAVE TO FILE when you need to:
+   - Share results with team
+   - Document findings
+   - Use in reports
+   - Feed to AI agents
+
+4. INCREASE number of results (k) when:
+   - Query is broad (e.g., "authentication")
+   - You need comprehensive coverage
+   - Building a knowledge base
+
+5. USE HYBRID SEARCH [H] as default
+   - Best accuracy (combines semantic + keyword)
+   - Works well for technical queries
+   - Finds both conceptual and exact matches
+
+UNDERSTANDING SCORES
+====================
+
+Each result shows three scores:
+
+1. Semantic Score (0.0 - 1.0)
+   - Measures conceptual similarity
+   - Based on vector embeddings
+   - Higher = more semantically related
+
+2. Keyword Score (0.0 - 1.0)
+   - Measures exact term matching
+   - Based on BM25 algorithm
+   - Higher = more keyword matches
+
+3. Hybrid Score (0.0 - 1.0)
+   - Combined score: 0.7 * semantic + 0.3 * keyword
+   - Best indicator of overall relevance
+   - Results are sorted by this score
+
+INTERPRETING SCORES:
+
+  Score     Quality     Interpretation
+  ─────────────────────────────────────────────────
+  0.9-1.0   Excellent   Highly relevant, exact match
+  0.7-0.9   Good        Relevant, on-topic
+  0.5-0.7   Fair        Somewhat relevant
+  0.3-0.5   Poor        Loosely related
+  0.0-0.3   Very Poor   Not relevant
+
+USING RESULTS WITH AI AGENTS
+=============================
+
+The search results are designed to be agent-friendly:
+
+PYTHON EXAMPLE:
+
+from src.vector_db.search_engine import HybridSearchEngine
+
+# Initialize
+search = HybridSearchEngine()
+
+# Get results
+results = search.search(
+    query="how to configure fingerprinting",
+    k=10,
+    search_mode='hybrid'
+)
+
+# Extract all matched text
+all_context = "\n\n".join([
+    f"[From {r.chunk_metadata.doc_name}, Page {r.chunk_metadata.page_number}]\n"
+    f"{r.chunk_metadata.text}"
+    for r in results
+])
+
+# Pass to your LLM
+prompt = f"""
+Based on the following documentation:
+
+{all_context}
+
+Generate detailed test cases for the fingerprinting feature.
+"""
+
+# Use with your agent framework
+test_cases = your_llm.generate(prompt)
+
+FILE-BASED APPROACH:
+
+1. Run context search with save enabled
+2. Read the saved file
+3. Pass to your agent
+
+# After running [T] search with save
+with open('data/context_search_20251124_103045.txt', 'r') as f:
+    context = f.read()
+
+prompt = f"Based on:\n{context}\n\nGenerate test cases..."
+
+TROUBLESHOOTING OUTPUT ISSUES
+==============================
+
+Q: Results are still truncated?
+A: Make sure you answered 'y' to "Show full text?" prompt
+
+Q: No results found?
+A: - Check [V] stats to verify docs are ingested
+   - Try [H] hybrid search instead of [S] semantic
+   - Increase number of results (k=10 or k=20)
+
+Q: Results don't seem relevant?
+A: - Use more specific query terms
+   - Try [K] keyword search for exact terms
+   - Check hybrid scores (should be >0.5 for relevance)
+
+Q: Want even more context?
+A: - Use [T] context search
+   - Increase context window (2-5 chunks)
+   - Increase number of results
+
+Q: File not saving?
+A: - Check data/ directory exists and is writable
+   - Check logs: data/logs/rag_system.log
+
+COMPARISON: OLD vs NEW OUTPUT
+==============================
+
+OLD OUTPUT (from your screenshot):
+──────────────────────────────────
+[1] Document: ps-pps-9.1r10.0-profiler-administration-guide.pdf
+    Score: 0.0492
+
+    --- MATCHED CHUNK ---
+    --- Page 1 --- Pulse Policy Secure Profiler: Administration Guide...
+    [TRUNCATED AT ~150 CHARS]
+
+NEW OUTPUT (current system):
+──────────────────────────────────
+[RESULT 1/5]
+──────────────────────────────────────────────────────────────────────
+Document: ps-pps-9.1r10.0-profiler-administration-guide.pdf
+Doc ID: ps-pps-9.1r10.0-profiler-administration-guide_a3f4b8c2
+Page Number: 42
+Chunk Index: 15
+Chunk ID: ps-pps-9.1r10.0-profiler-administration-guide_a3f4b8c2_chunk_15
+
+Scores:
+  - Semantic Score: 0.8542
+  - Keyword Score: 0.6231
+  - Hybrid Score: 0.7850
+
+--- MATCHED CHUNK ---
+[COMPLETE CHUNK TEXT - UP TO 1000 CHARACTERS]
+Fingerprinting Configuration
+The fingerprinting feature allows you to identify devices on your network
+based on their unique characteristics. To configure fingerprinting:
+[... FULL TEXT CONTINUES ...]
+
+✓ Results saved to: data/search_results_20251124_103045.txt
+
+SUMMARY
+=======
+
+✅ NEW FEATURES:
+   - Full text display (no truncation)
+   - Save to file option
+   - Complete metadata
+   - Context-aware search
+   - Professional formatting
+   - Multiple search modes
+
+✅ BENEFITS:
+   - Get ALL the information you need
+   - No more guessing what's in truncated text
+   - Easy to share and archive results
+   - Perfect for AI agent integration
+   - Complete traceability (doc, page, chunk ID)
+
+✅ RECOMMENDED WORKFLOW:
+   1. Use [H] Hybrid search for general queries
+   2. Use [T] Context search when you need full sections
+   3. Save to file when you need to reference later
+   4. Increase context window (2-3) for comprehensive info
+   5. Review hybrid scores to assess relevance
+
+================================================================================
