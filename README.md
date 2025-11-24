@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Enterprise RAG System for Test Case Generation
 
 > Advanced Retrieval-Augmented Generation system for document search and AI agent integration
@@ -274,3 +275,6 @@ For issues or questions:
 **Version**: 2.0 (Enterprise Edition)
 **Last Updated**: 2025-11-24
 **Status**: Production-Ready ✅
+=======
+# llm-profiler-testgen
+>>>>>>> d345fb44152a505590d4a71cec113d6e318a598d
