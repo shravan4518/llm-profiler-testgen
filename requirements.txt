@@ -1,0 +1,45 @@
+# Enterprise RAG System - Python Dependencies
+# Core dependencies for document processing, embeddings, and vector search
+
+# Vector Store and Embeddings
+faiss-cpu==1.13.0              # Vector similarity search
+sentence-transformers==5.1.2   # Sentence embeddings
+torch==2.9.1                   # PyTorch (required by sentence-transformers)
+transformers==4.57.1           # Hugging Face transformers
+
+# Document Processing
+pdfplumber==0.11.8             # PDF text extraction
+pypdfium2==5.0.0               # PDF rendering backend
+pdfminer.six==20251107         # PDF mining utilities
+Pillow>=10.0.0                 # Image processing for multimodal RAG
+
+# Data Processing
+numpy==2.3.5                   # Numerical computing
+scikit-learn==1.7.2            # Machine learning utilities
+
+# Utilities
+tqdm==4.67.1                   # Progress bars
+requests==2.32.5               # HTTP library
+certifi==2025.11.12            # SSL certificates
+
+# LLM Integration - Azure OpenAI (Production)
+openai>=1.12.0                  # Azure OpenAI SDK
+langchain>=0.1.0                # LangChain for LLM orchestration
+langchain-openai>=0.0.5         # LangChain Azure OpenAI integration
+
+# Multi-Agent Framework - CrewAI
+crewai>=0.11.0                  # CrewAI framework for agent orchestration
+crewai-tools>=0.2.0             # CrewAI tools and utilities
+
+# Output Formatting
+openpyxl>=3.1.0                 # Excel file generation
+tabulate>=0.9.0                 # Table formatting
+
+# Optional: Additional document formats
+# python-docx==1.1.0           # MS Word documents (uncomment if needed)
+# markdown==3.7                # Markdown processing (uncomment if needed)
+
+# Development (optional)
+# pytest==8.3.3                # Testing framework
+# black==24.10.0               # Code formatting
+# pylint==3.3.1                # Code linting

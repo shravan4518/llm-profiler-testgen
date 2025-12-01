@@ -1,0 +1,1173 @@
+================================================================================
+           ENTERPRISE RAG SYSTEM - COMPREHENSIVE DOCUMENTATION
+================================================================================
+
+Project: Advanced RAG System for Test Case Generation and Automation
+Version: 2.1 (Enterprise Edition + Multimodal Image Support)
+Last Updated: 2025-11-25
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. Executive Summary
+2. System Architecture
+3. Key Features & Improvements
+4. Project Structure
+5. Installation & Setup
+6. Configuration Guide
+7. Usage Instructions
+8. How It Works (Technical Deep Dive)
+9. Multimodal Image Processing (NEW!)
+10. Agent Integration Guide
+11. Best Practices for Enterprise Use
+12. Troubleshooting
+13. Performance Optimization
+14. Future Enhancements
+15. Migration from Legacy System
+
+================================================================================
+1. EXECUTIVE SUMMARY
+================================================================================
+
+This Enterprise RAG (Retrieval-Augmented Generation) system is designed for
+intelligent document search and retrieval to support AI agents in generating
+test cases for your automation and profiling workflows.
+
+PURPOSE:
+- Store and semantically search large volumes of documentation
+  (admin guides, API docs, product workflows)
+- Enable AI agents to quickly find relevant context for test case generation
+- Provide hybrid search (semantic + keyword) for optimal retrieval accuracy
+- Support enterprise-level features: versioning, deduplication, metadata tracking
+
+END GOAL:
+When you integrate AI agents (CrewAI, LangChain, etc.), they will query this
+RAG system to retrieve relevant documentation, which they'll use to:
+- Generate comprehensive test cases
+- Understand API endpoints and workflows
+- Create profiler automation scripts
+- Answer domain-specific questions
+
+================================================================================
+2. SYSTEM ARCHITECTURE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                         ENTERPRISE RAG SYSTEM                       │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌───────────────┐    ┌──────────────┐    ┌──────────────────┐   │
+│  │   Documents   │───▶│  Ingestion   │───▶│  Vector Store    │   │
+│  │  (PDF, TXT,   │    │   Pipeline   │    │   (FAISS)        │   │
+│  │   MD, JSON)   │    └──────────────┘    └──────────────────┘   │
+│  └───────────────┘           │                      │              │
+│                               │                      │              │
+│                               ▼                      ▼              │
+│                      ┌──────────────┐      ┌──────────────────┐   │
+│                      │   Document   │      │    Embedding     │   │
+│                      │   Loaders    │      │     Model        │   │
+│                      └──────────────┘      │ (SentenceTransf) │   │
+│                               │             └──────────────────┘   │
+│                               ▼                      │              │
+│                      ┌──────────────┐               │              │
+│                      │   Semantic   │               │              │
+│                      │Text Splitter │               │              │
+│                      └──────────────┘               │              │
+│                                                      │              │
+│  ┌───────────────┐                         ┌────────▼──────────┐   │
+│  │   AI Agent    │◀───── Query ───────────│  Search Engine   │   │
+│  │  (Future)     │                         │  (Hybrid Search) │   │
+│  │               │────── Results ─────────▶│                  │   │
+│  └───────────────┘                         └──────────────────┘   │
+│                                                      │              │
+│                                             ┌────────▼──────────┐  │
+│                                             │  Metadata Store  │  │
+│                                             │  (Document Reg.) │  │
+│                                             └──────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+
+CORE COMPONENTS:
+
+1. Document Loaders (src/document_processing/loaders.py)
+   - Load PDF, TXT, MD, JSON files
+   - Extract metadata (author, title, creation date, page count)
+   - Extract images from PDFs (NEW!)
+   - Generate unique document IDs based on content hash
+
+2. Image Processor (src/document_processing/image_processor.py) [NEW!]
+   - Extracts images from PDF pages
+   - Uses Vision LLM (Gemini Vision/GPT-4 Vision) for image analysis
+   - Converts screenshots, diagrams, charts to searchable text
+   - Associates image descriptions with page context
+
+3. Text Splitter (src/utils/text_splitter.py)
+   - Semantic chunking (respects paragraph/sentence boundaries)
+   - Configurable chunk size and overlap
+   - Maintains context across chunks
+   - Integrates image descriptions inline with text
+
+4. Vector Store (src/vector_db/vector_store.py)
+   - FAISS index for fast similarity search
+   - Metadata tracking for each chunk (including image markers)
+   - Document registry with versioning
+   - Deduplication and update detection
+
+5. Search Engine (src/vector_db/search_engine.py)
+   - Semantic search (vector similarity)
+   - Keyword search (BM25 scoring)
+   - Hybrid search (combined scoring)
+   - Context-aware search (returns surrounding chunks)
+   - Image-enhanced results (includes descriptions from diagrams/screenshots)
+
+6. Ingestion Pipeline (src/vector_db/ingestion_pipeline.py)
+   - Orchestrates document loading, image extraction, chunking, and storage
+   - Handles batch ingestion
+   - Manages updates and deduplication
+   - Processes images in parallel for efficiency
+
+================================================================================
+3. KEY FEATURES & IMPROVEMENTS OVER LEGACY SYSTEM
+================================================================================
+
+LEGACY SYSTEM ISSUES                 → ENTERPRISE SOLUTION
+────────────────────────────────────────────────────────────────────────
+❌ Fixed 512-char chunking           → ✅ Semantic chunking (1000 chars,
+   (breaks sentences)                    200 overlap, paragraph-aware)
+
+❌ No metadata tracking              → ✅ Full metadata: doc ID, page numbers,
+                                         timestamps, source file, hash
+
+❌ Duplicate ingestion               → ✅ Content-hash based deduplication
+                                         and version detection
+
+❌ Hardcoded paths                   → ✅ Centralized config.py with
+                                         environment variable support
+
+❌ No document removal               → ✅ Document removal with index rebuild
+
+❌ Semantic search only              → ✅ Hybrid search (semantic + keyword)
+                                         for better accuracy
+
+❌ No logging                        → ✅ Comprehensive logging to file and
+                                         console with levels
+
+❌ PDF-only support                  → ✅ Multi-format: PDF, TXT, MD, JSON
+                                         (extensible)
+
+❌ Text-only (misses visual info)    → ✅ MULTIMODAL: Extracts & analyzes
+                                         images/screenshots/diagrams using
+                                         Vision LLM (NEW!)
+
+❌ No error handling                 → ✅ Robust error handling and recovery
+
+❌ No statistics/monitoring          → ✅ Detailed stats: doc count, chunk
+                                         count, ingestion history
+
+❌ Single search result format       → ✅ Multiple modes: basic, hybrid,
+                                         with-context
+
+❌ No agent-ready interface          → ✅ Programmatic API ready for agent
+                                         integration
+
+================================================================================
+4. PROJECT STRUCTURE
+================================================================================
+
+POC/
+├── config.py                          # Central configuration
+├── requirements.txt                   # Python dependencies
+├── ENTERPRISE_RAG_DOCUMENTATION.txt   # This file
+│
+├── data/
+│   ├── docs/                          # Input documents (PDF, TXT, etc.)
+│   ├── faiss_index/                   # Vector index and metadata
+│   │   ├── faiss_index.bin           # FAISS vector index
+│   │   ├── chunk_metadata.pkl        # Chunk metadata store
+│   │   └── document_registry.pkl     # Document tracking
+│   ├── logs/                          # System logs
+│   │   └── rag_system.log
+│   └── embeddings/                    # (Reserved for future use)
+│
+├── src/
+│   ├── main_enterprise.py            # Main CLI entry point
+│   │
+│   ├── document_processing/
+│   │   ├── __init__.py
+│   │   └── loaders.py                # Document loaders (PDF, TXT, MD, JSON)
+│   │
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── logger.py                 # Logging configuration
+│   │   └── text_splitter.py          # Semantic text chunking
+│   │
+│   └── vector_db/
+│       ├── __init__.py
+│       ├── vector_store.py           # Vector store management
+│       ├── ingestion_pipeline.py     # Document ingestion orchestration
+│       ├── search_engine.py          # Hybrid search engine
+│       ├── faiss_setup.py            # (Legacy - kept for compatibility)
+│       ├── ingest_docs.py            # (Legacy - kept for compatibility)
+│       └── query_faiss.py            # (Legacy - kept for compatibility)
+│
+└── venv/                              # Virtual environment
+
+================================================================================
+5. INSTALLATION & SETUP
+================================================================================
+
+STEP 1: Activate Virtual Environment
+-------------------------------------
+Windows:
+    cd C:\Users\SaiShravan.V\OneDrive - Ivanti\Desktop\POC
+    venv\Scripts\activate
+
+Linux/Mac:
+    cd /path/to/POC
+    source venv/bin/activate
+
+STEP 2: Install/Update Dependencies
+------------------------------------
+    pip install -r requirements.txt
+
+This will install:
+- faiss-cpu (vector search)
+- sentence-transformers (embeddings)
+- torch (deep learning backend)
+- pdfplumber (PDF processing)
+- scikit-learn (ML utilities)
+- and other dependencies
+
+STEP 3: Verify Installation
+----------------------------
+    python -c "import faiss; import sentence_transformers; print('OK')"
+
+You should see "OK" printed.
+
+STEP 4: Place Documents
+------------------------
+Place your documents in the data/docs/ directory:
+    data/docs/
+    ├── admin-guide.pdf
+    ├── api-documentation.pdf
+    ├── workflow-specs.txt
+    └── ... (more files)
+
+Supported formats: .pdf, .txt, .md, .json
+
+STEP 5: Run the System
+-----------------------
+    python src/main_enterprise.py
+
+You'll see the CLI interface with options to ingest and search.
+
+================================================================================
+6. CONFIGURATION GUIDE
+================================================================================
+
+All configuration is in config.py at the project root.
+
+KEY SETTINGS:
+
+# Paths
+DATA_DIR           = BASE_DIR / "data"
+DOCS_DIR           = DATA_DIR / "docs"         # Input documents
+INDEX_DIR          = DATA_DIR / "faiss_index"  # Vector index storage
+LOGS_DIR           = DATA_DIR / "logs"         # Log files
+
+# Embedding Model
+EMBED_MODEL_NAME   = "all-MiniLM-L6-v2"        # Fast, accurate model
+                                               # Options:
+                                               # - "all-MiniLM-L6-v2" (384 dim, fast)
+                                               # - "all-mpnet-base-v2" (768 dim, better quality)
+                                               # - "multi-qa-mpnet-base-dot-v1" (for Q&A)
+
+EMBED_DIM          = 384                       # Must match model dimension
+
+# Chunking
+CHUNK_SIZE         = 1000                      # Characters per chunk
+CHUNK_OVERLAP      = 200                       # Overlap to maintain context
+MIN_CHUNK_SIZE     = 100                       # Minimum chunk size
+
+# Search
+DEFAULT_TOP_K      = 5                         # Default number of results
+SIMILARITY_THRESHOLD = 0.7                     # Minimum similarity (0-1)
+
+# Logging
+LOG_LEVEL          = "INFO"                    # DEBUG, INFO, WARNING, ERROR
+LOG_FILE           = LOGS_DIR / "rag_system.log"
+
+# Performance
+EMBED_BATCH_SIZE   = 32                        # Batch size for encoding
+MAX_WORKERS        = 4                         # Parallel processing threads
+
+CUSTOMIZATION:
+
+To use a better embedding model (for higher accuracy):
+    EMBED_MODEL_NAME = "all-mpnet-base-v2"
+    EMBED_DIM = 768
+
+To increase chunk size for longer context:
+    CHUNK_SIZE = 1500
+    CHUNK_OVERLAP = 300
+
+To enable debug logging:
+    LOG_LEVEL = "DEBUG"
+
+================================================================================
+7. USAGE INSTRUCTIONS
+================================================================================
+
+STARTING THE SYSTEM:
+--------------------
+    python src/main_enterprise.py
+
+CLI COMMANDS:
+-------------
+
+[I] Ingest documents from data/docs directory
+    - Scans data/docs/ for all supported files
+    - Loads, chunks, and indexes them
+    - Skips files that are already up-to-date
+    - Shows ingestion statistics
+
+[F] Ingest a single file
+    - Prompts for file path
+    - Useful for adding individual documents
+
+[S] Search (semantic)
+    - Pure vector similarity search
+    - Best for conceptual queries
+    - Example: "how to configure network scanning"
+
+[H] Hybrid search (semantic + keyword)
+    - Combines semantic and keyword matching
+    - Best for most queries
+    - Example: "API endpoint for user authentication"
+
+[K] Keyword search
+    - BM25-based keyword matching
+    - Best for exact term queries
+    - Example: "POST /api/v2/users"
+
+[T] Search with context
+    - Returns matched chunk + surrounding chunks
+    - Useful for understanding full context
+    - Configurable context window
+
+[V] View statistics
+    - Shows document count, chunk count, vectors
+    - Useful for monitoring system state
+
+[L] List all documents
+    - Shows all ingested documents with metadata
+    - Displays doc ID, filename, chunk count, ingestion time
+
+[R] Remove a document
+    - Removes document and rebuilds index
+    - Use when document is outdated or incorrect
+
+[C] Clear all data
+    - Deletes everything (use with caution!)
+    - Requires confirmation
+
+[Q] Quit
+    - Exits the system
+
+EXAMPLE WORKFLOW:
+-----------------
+
+1. Start the system:
+       python src/main_enterprise.py
+
+2. Ingest documents:
+       Enter command: I
+       (System loads all documents from data/docs/)
+
+3. Check stats:
+       Enter command: V
+       (Verify documents and chunks are indexed)
+
+4. Perform hybrid search:
+       Enter command: H
+       Enter search query: how to configure profiler settings
+       Number of results: 5
+
+5. View results with context:
+       Enter command: T
+       Enter search query: API authentication workflow
+       Number of results: 3
+       Context window: 2
+
+================================================================================
+8. HOW IT WORKS (TECHNICAL DEEP DIVE)
+================================================================================
+
+INGESTION PROCESS:
+------------------
+
+1. Document Loading
+   - DocumentLoaderFactory detects file type
+   - Appropriate loader (PDFLoader, TextLoader, etc.) extracts content
+   - Metadata extracted: title, author, page count, timestamps
+   - Content hash generated (MD5) for deduplication
+
+2. Text Chunking
+   - SemanticTextSplitter splits text into chunks
+   - Respects paragraph boundaries (splits on \n\n)
+   - Adds overlap between chunks to maintain context
+   - Each chunk tagged with: doc_id, chunk_index, page_number, etc.
+
+3. Embedding Generation
+   - SentenceTransformer model encodes each chunk into a vector
+   - Vectors are 384-dimensional (for all-MiniLM-L6-v2)
+   - Batch processing for efficiency
+
+4. Vector Storage
+   - FAISS IndexFlatL2 stores vectors for fast similarity search
+   - ChunkMetadata stored separately (maps vector ID → chunk info)
+   - DocumentRegistry tracks all documents and their chunks
+
+5. Persistence
+   - FAISS index saved to faiss_index.bin
+   - Metadata saved to chunk_metadata.pkl
+   - Registry saved to document_registry.pkl
+
+SEARCH PROCESS:
+---------------
+
+Semantic Search:
+    1. Query encoded into vector (same model)
+    2. FAISS searches for k nearest neighbors (L2 distance)
+    3. Results sorted by similarity
+    4. ChunkMetadata retrieved for each result
+
+Keyword Search:
+    1. Query tokenized into terms
+    2. BM25 scoring applied to each chunk
+    3. Results ranked by BM25 score
+    4. Top k results returned
+
+Hybrid Search:
+    1. Both semantic and keyword search performed
+    2. Scores normalized to 0-1 range
+    3. Weighted combination: 0.7 * semantic + 0.3 * keyword
+    4. Results ranked by hybrid score
+    5. Best of both worlds: semantic understanding + exact term matching
+
+Context-Aware Search:
+    1. Hybrid search performed
+    2. For each result, surrounding chunks retrieved (by chunk_index)
+    3. Returns: previous chunks + matched chunk + next chunks
+    4. Useful for LLMs that need full context
+
+DEDUPLICATION & VERSIONING:
+---------------------------
+
+- Each document has a unique doc_id = filename + content_hash
+- When ingesting:
+    - If doc_id exists AND content_hash matches → Skip (already up-to-date)
+    - If doc_id exists BUT content_hash differs → Remove old, ingest new
+    - If doc_id doesn't exist → Ingest as new
+
+This ensures:
+    - No duplicate ingestion
+    - Automatic update detection
+    - Version control based on content
+
+================================================================================
+9. MULTIMODAL IMAGE PROCESSING (NEW!)
+================================================================================
+
+The Enterprise RAG System now supports MULTIMODAL processing, enabling extraction
+and understanding of images, screenshots, architectural diagrams, charts, and
+flowcharts embedded in PDF documentation.
+
+WHY MULTIMODAL MATTERS:
+-----------------------
+
+Technical documentation contains critical visual information:
+- Screenshots showing UI configuration steps
+- Architecture diagrams explaining system design
+- Flowcharts depicting workflows and processes
+- Network diagrams showing topology
+- Error message screenshots
+- Data flow diagrams
+- API sequence diagrams
+
+Without image processing, your RAG system would MISS these crucial details!
+
+HOW IT WORKS:
+-------------
+
+┌─────────────────────────────────────────────────────────────┐
+│              MULTIMODAL INGESTION PIPELINE                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  PDF Document                                               │
+│      │                                                      │
+│      ├──▶ Extract Text ──▶ Text Chunks ──▶ Vector DB      │
+│      │                                                      │
+│      └──▶ Extract Images                                    │
+│              │                                              │
+│              ├──▶ Image 1 (Screenshot) ──┐                 │
+│              ├──▶ Image 2 (Diagram)    ──┤                 │
+│              └──▶ Image 3 (Chart)      ──┤                 │
+│                                           │                 │
+│                                           ▼                 │
+│                              ┌───────────────────────┐     │
+│                              │   Vision LLM          │     │
+│                              │  (Gemini Vision /     │     │
+│                              │   GPT-4 Vision)       │     │
+│                              └───────────────────────┘     │
+│                                           │                 │
+│                                           ▼                 │
+│                              Image Descriptions:           │
+│                              - "Screenshot showing..."      │
+│                              - "Architecture diagram..."    │
+│                              - "Flowchart depicting..."     │
+│                                           │                 │
+│                                           ▼                 │
+│                              Insert into text at           │
+│                              corresponding page            │
+│                                           │                 │
+│                                           ▼                 │
+│                              Enhanced Text Chunks          │
+│                              with Image Context            │
+│                                           │                 │
+│                                           ▼                 │
+│                                      Vector DB              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+APPROACH: Vision LLM → Text Conversion
+---------------------------------------
+
+Instead of storing images directly, we use a SMART approach:
+
+1. Extract images from PDFs during ingestion
+2. Send each image to Vision LLM (Gemini Vision or GPT-4 Vision)
+3. LLM analyzes and describes the image in detail
+4. Insert description into document text at the corresponding location
+5. Chunk and embed the enhanced text (now includes image descriptions)
+6. Search works on BOTH original text AND image descriptions
+
+ADVANTAGES of this approach:
+✅ Text-based search (no need for image embeddings)
+✅ Works with existing FAISS vector store
+✅ LLM provides rich, detailed descriptions
+✅ Searchable context from screenshots and diagrams
+✅ No need for separate multimodal vector DB
+✅ Cost-effective (only pay for image analysis during ingestion)
+
+IMAGE ANALYSIS PROMPT:
+----------------------
+
+When an image is extracted, we send it to the Vision LLM with this prompt:
+
+"Analyze this image from technical documentation and provide a detailed
+description. Include:
+- What type of image this is (screenshot, diagram, chart, etc.)
+- Main components or UI elements visible
+- Any text visible in the image
+- Workflow steps if it's a diagram
+- Configuration settings if it's a screenshot
+- Technical details relevant to the context
+Be comprehensive and technical."
+
+Example Vision LLM output:
+--------------------------
+
+Input: Screenshot from admin guide page 42
+Output: "[IMAGE: Screenshot of Profiler configuration interface showing the
+Fingerprinting settings panel. The interface displays a toggle switch labeled
+'Enable Device Fingerprinting' in the ON position. Below are three configuration
+fields: 'Fingerprint Database Update Frequency' set to 'Weekly', 'Matching
+Threshold' set to '85%', and 'Unknown Device Alert' checkbox checked. The page
+header shows 'Configuration > Network Discovery > Fingerprinting'. A blue
+'Save Configuration' button is visible at the bottom right.]"
+
+This description is then embedded and searchable!
+
+INTEGRATION WITH TEXT:
+----------------------
+
+Images are integrated into the document text based on their page location:
+
+Original PDF:
+  Page 42:
+    "To configure fingerprinting settings:"
+    [Image of UI]
+    "Click Save to apply changes."
+
+Enhanced Text (after image processing):
+  Page 42:
+    "To configure fingerprinting settings:
+
+    [IMAGE: Screenshot of Profiler configuration interface showing the
+    Fingerprinting settings panel...]
+
+    Click Save to apply changes."
+
+This enhanced text is then chunked normally, preserving image context!
+
+CONFIGURATION:
+--------------
+
+Add to config.py:
+
+# Multimodal Image Processing
+ENABLE_IMAGE_PROCESSING = True  # Enable/disable image extraction
+IMAGE_VISION_MODEL = "gemini-2.5-flash"  # or "gpt-4-vision-preview"
+MAX_IMAGES_PER_PAGE = 5  # Limit images extracted per page
+IMAGE_MIN_SIZE = 100  # Minimum image size in pixels (filters out icons)
+IMAGE_DESCRIPTION_MAX_TOKENS = 300  # Max tokens for each description
+
+COST CONSIDERATIONS:
+--------------------
+
+Vision LLM calls are more expensive than text-only:
+
+Gemini Vision:
+  - Free tier: 60 images/minute
+  - Paid: $0.0025 per image
+
+GPT-4 Vision:
+  - $0.01-0.02 per image
+
+Example cost for 58-page admin guide with 15 images:
+  - Gemini Vision: 15 images × $0.0025 = $0.0375 (~4 cents)
+  - GPT-4 Vision: 15 images × $0.015 = $0.225 (~23 cents)
+
+✅ One-time cost during ingestion
+✅ NO ongoing costs (descriptions stored as text)
+✅ Huge value: Screenshots and diagrams now searchable!
+
+SEARCH EXAMPLE:
+---------------
+
+Without image processing:
+  Query: "fingerprinting configuration UI"
+  Results: Text mentioning "fingerprinting" and "configuration"
+  Missing: Visual details about the actual UI!
+
+With image processing:
+  Query: "fingerprinting configuration UI"
+  Results:
+    1. Text chunk: "To configure fingerprinting..."
+    2. Image chunk: "[IMAGE: Screenshot showing Fingerprinting settings
+       panel with Enable toggle, Database Update field set to Weekly,
+       Matching Threshold at 85%...]"
+    3. Text chunk: "Click Save to apply..."
+
+✅ Agent now knows EXACTLY what the UI looks like!
+✅ Can generate precise test steps: "Verify toggle is ON", "Check threshold=85%"
+
+USE CASES:
+----------
+
+1. **Test Case Generation:**
+   - See screenshots of expected UI states
+   - Understand workflows from flowcharts
+   - Verify error messages from error screenshots
+
+2. **Architecture Understanding:**
+   - Learn system design from architecture diagrams
+   - Understand data flow from sequence diagrams
+   - Map network topology from network diagrams
+
+3. **Configuration Steps:**
+   - See exact UI elements from screenshots
+   - Follow wizard steps from UI captures
+   - Identify setting locations visually
+
+4. **API Documentation:**
+   - Understand request/response from API diagrams
+   - Learn authentication flow from sequence diagrams
+   - See payload structure from JSON examples
+
+IMPLEMENTATION:
+---------------
+
+Files added/modified:
+
+1. src/document_processing/image_processor.py (NEW)
+   - Extract images from PDF pages using pdfplumber
+   - Send images to Vision LLM (Gemini/GPT-4)
+   - Parse and format image descriptions
+   - Associate descriptions with page numbers
+
+2. src/document_processing/loaders.py (MODIFIED)
+   - PDFLoader now calls ImageProcessor
+   - Inserts image descriptions into text content
+   - Maintains page-to-image mapping in metadata
+
+3. config.py (MODIFIED)
+   - Added image processing configuration
+   - Vision model selection
+   - Image filtering parameters
+
+EXAMPLE OUTPUT:
+---------------
+
+Before multimodal:
+  Chunk 15 (Page 42):
+    "To configure fingerprinting settings, navigate to the
+    Configuration menu. Click Save to apply changes."
+
+After multimodal:
+  Chunk 15 (Page 42):
+    "To configure fingerprinting settings, navigate to the
+    Configuration menu.
+
+    [IMAGE: Screenshot of Profiler configuration interface showing
+    the Fingerprinting settings panel. The interface displays a toggle
+    switch labeled 'Enable Device Fingerprinting' in the ON position.
+    Configuration fields visible: 'Fingerprint Database Update Frequency'
+    set to 'Weekly', 'Matching Threshold' set to '85%', 'Unknown Device
+    Alert' checkbox checked. Save Configuration button at bottom right.]
+
+    Click Save to apply changes."
+
+Now when an agent searches for "how to enable fingerprinting", it gets:
+✅ The text instructions
+✅ Visual description of the exact UI
+✅ Specific field values shown in screenshot
+✅ Complete context for test case generation!
+
+BEST PRACTICES:
+---------------
+
+✅ Enable for documentation with many visuals
+✅ Use Gemini Vision for cost-effectiveness
+✅ Set reasonable IMAGE_MIN_SIZE to filter icons/logos
+✅ Limit MAX_IMAGES_PER_PAGE to avoid processing decorative images
+✅ Review first few image descriptions to tune prompts
+✅ Consider disabling for text-heavy docs with few images
+
+LIMITATIONS:
+------------
+
+❌ Requires Vision LLM API (Gemini/GPT-4)
+❌ Adds ingestion time (1-2 sec per image)
+❌ Increased token costs during ingestion
+❌ Quality depends on Vision LLM's understanding
+❌ Very complex diagrams may need manual annotation
+
+WHEN TO USE:
+------------
+
+✅ YES: Admin guides with UI screenshots
+✅ YES: Architecture documentation with diagrams
+✅ YES: Workflow docs with flowcharts
+✅ YES: API docs with sequence diagrams
+✅ YES: Error handling docs with error screenshots
+
+❌ NO: Pure text documentation
+❌ NO: Code files without diagrams
+❌ NO: Simple text-based READMEs
+
+FUTURE ENHANCEMENTS:
+--------------------
+
+Planned improvements:
+- [ ] OCR for scanned documents
+- [ ] Table extraction and structuring
+- [ ] Multi-image comparison (before/after screenshots)
+- [ ] Image similarity search (find similar diagrams)
+- [ ] Diagram-to-code generation (architecture → test stubs)
+
+================================================================================
+10. AGENT INTEGRATION GUIDE
+================================================================================
+
+The system is designed to integrate with AI agents (CrewAI, LangChain, etc.)
+for automated test case generation.
+
+PYTHON API USAGE:
+-----------------
+
+from src.vector_db.vector_store import VectorStore
+from src.vector_db.search_engine import HybridSearchEngine
+
+# Initialize
+vector_store = VectorStore()
+search_engine = HybridSearchEngine(vector_store)
+
+# Search for relevant context
+results = search_engine.search(
+    query="How to configure network scanning in profiler",
+    k=5,
+    search_mode='hybrid'
+)
+
+# Extract context for LLM
+context = "\n\n".join([result.chunk_metadata.text for result in results])
+
+# Pass to your LLM/Agent
+prompt = f"""
+Based on the following documentation:
+
+{context}
+
+Generate test cases for network scanning feature.
+"""
+
+# Send to your LLM (OpenAI, Anthropic, etc.)
+# test_cases = llm.generate(prompt)
+
+INTEGRATION PATTERNS:
+
+1. CrewAI Integration:
+   - Create a custom tool that queries the RAG system
+   - Agents use the tool to retrieve context before task execution
+
+   from crewai import Agent, Task, Tool
+
+   def rag_search_tool(query: str) -> str:
+       results = search_engine.search(query, k=5)
+       return "\n\n".join([r.chunk_metadata.text for r in results])
+
+   rag_tool = Tool(
+       name="Documentation Search",
+       func=rag_search_tool,
+       description="Search internal documentation for context"
+   )
+
+   test_generator_agent = Agent(
+       role="Test Case Generator",
+       goal="Generate comprehensive test cases",
+       tools=[rag_tool],
+       ...
+   )
+
+2. LangChain Integration:
+   - Use as a custom retriever
+
+   from langchain.schema import Document
+   from langchain.retrievers import BaseRetriever
+
+   class CustomRAGRetriever(BaseRetriever):
+       def get_relevant_documents(self, query: str):
+           results = search_engine.search(query, k=5)
+           return [Document(page_content=r.chunk_metadata.text,
+                          metadata={"source": r.chunk_metadata.doc_name})
+                  for r in results]
+
+   retriever = CustomRAGRetriever()
+   qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
+
+3. Direct API Integration:
+   - Import and use programmatically in any Python script
+
+   from src.vector_db.ingestion_pipeline import IngestionPipeline
+   from src.vector_db.search_engine import HybridSearchEngine
+
+   # Ingest new docs
+   pipeline = IngestionPipeline()
+   pipeline.ingest_directory("path/to/new/docs")
+
+   # Search
+   search = HybridSearchEngine()
+   results = search.search("API authentication")
+
+RECOMMENDED WORKFLOW FOR TEST GENERATION:
+------------------------------------------
+
+Step 1: Agent receives test generation task
+    Example: "Generate test cases for user authentication API"
+
+Step 2: Agent queries RAG system for relevant docs
+    query = "user authentication API endpoints workflow"
+    results = search_engine.search(query, k=10)
+
+Step 3: Agent extracts context
+    context = [r.chunk_metadata.text for r in results]
+
+Step 4: Agent constructs prompt with context
+    prompt = f"Given documentation: {context}\nGenerate test cases..."
+
+Step 5: Agent sends to LLM
+    test_cases = llm.generate(prompt)
+
+Step 6: Agent validates and formats test cases
+    (Optional: use another agent to review/refine)
+
+================================================================================
+10. BEST PRACTICES FOR ENTERPRISE USE
+================================================================================
+
+DOCUMENT ORGANIZATION:
+----------------------
+✅ Organize docs in subdirectories by category:
+   data/docs/
+   ├── admin-guides/
+   ├── api-docs/
+   ├── workflows/
+   └── troubleshooting/
+
+✅ Use descriptive filenames:
+   ❌ Bad: doc1.pdf, file.txt
+   ✅ Good: profiler-admin-guide-v9.1.pdf, api-authentication-endpoints.md
+
+✅ Keep documents up-to-date:
+   - System auto-detects changes based on content hash
+   - Re-ingest updated files (system will update automatically)
+
+INGESTION BEST PRACTICES:
+--------------------------
+✅ Batch ingest during off-hours for large volumes
+✅ Start with smaller chunk sizes (1000) for faster ingestion
+✅ Monitor logs for errors: data/logs/rag_system.log
+✅ Verify ingestion with [V] stats command
+✅ Use [L] list command to check document metadata
+
+SEARCH BEST PRACTICES:
+-----------------------
+✅ Use Hybrid Search [H] for most queries (best accuracy)
+✅ Use Semantic Search [S] for conceptual/abstract queries
+✅ Use Keyword Search [K] for exact terms (API endpoints, error codes)
+✅ Adjust top_k based on query:
+   - Simple queries: k=3-5
+   - Complex queries needing more context: k=10-20
+✅ Use context search [T] when agents need full paragraphs
+
+PERFORMANCE OPTIMIZATION:
+--------------------------
+✅ Use GPU if available (set USE_GPU=True in config.py)
+✅ Increase EMBED_BATCH_SIZE for faster ingestion (32 → 64)
+✅ Use larger embedding model for better quality:
+   - all-mpnet-base-v2 (768 dim, slower but more accurate)
+✅ Monitor memory usage for very large document sets
+✅ Consider using FAISS IVF index for 1M+ vectors
+
+MAINTENANCE:
+------------
+✅ Regularly check logs: data/logs/rag_system.log
+✅ Monitor disk space (FAISS index and metadata can grow large)
+✅ Periodically remove outdated documents with [R] command
+✅ Backup FAISS index and metadata:
+   - data/faiss_index/faiss_index.bin
+   - data/faiss_index/chunk_metadata.pkl
+   - data/faiss_index/document_registry.pkl
+
+SECURITY:
+---------
+✅ Do NOT commit data/faiss_index/ to Git (contains embeddings)
+✅ Do NOT commit data/docs/ if sensitive (contains source docs)
+✅ Add to .gitignore:
+   data/faiss_index/
+   data/docs/
+   data/logs/
+✅ Restrict access to data/ directory
+✅ Use environment variables for sensitive config
+
+================================================================================
+11. TROUBLESHOOTING
+================================================================================
+
+PROBLEM: "pdfplumber not installed"
+SOLUTION:
+    pip install pdfplumber
+
+PROBLEM: "Index is empty. Please ingest documents first."
+SOLUTION:
+    1. Check that documents are in data/docs/
+    2. Run [I] to ingest
+    3. Verify with [V] stats
+
+PROBLEM: "No results found" for valid query
+SOLUTION:
+    1. Check documents are ingested ([V] stats)
+    2. Try different search modes ([H] hybrid, [K] keyword)
+    3. Increase k (number of results)
+    4. Lower similarity threshold in config.py
+
+PROBLEM: Ingestion is very slow
+SOLUTION:
+    1. Reduce EMBED_BATCH_SIZE in config.py
+    2. Use smaller embedding model (all-MiniLM-L6-v2)
+    3. Ingest fewer documents at a time
+    4. Check system resources (CPU, RAM)
+
+PROBLEM: "Error loading PDF: ..."
+SOLUTION:
+    1. Check PDF is not corrupted
+    2. Check PDF is not password-protected
+    3. Try extracting text manually to verify
+    4. Check logs: data/logs/rag_system.log
+
+PROBLEM: Search returns irrelevant results
+SOLUTION:
+    1. Use hybrid search [H] instead of semantic [S]
+    2. Increase chunk overlap in config.py (200 → 300)
+    3. Use better embedding model (all-mpnet-base-v2)
+    4. Refine your query to be more specific
+
+PROBLEM: "ModuleNotFoundError" when running
+SOLUTION:
+    1. Activate virtual environment: venv\Scripts\activate
+    2. Install dependencies: pip install -r requirements.txt
+    3. Verify: python -c "import faiss; print('OK')"
+
+PROBLEM: Out of memory during ingestion
+SOLUTION:
+    1. Reduce EMBED_BATCH_SIZE (32 → 16)
+    2. Ingest documents in smaller batches
+    3. Close other applications
+    4. Use a machine with more RAM
+
+================================================================================
+12. PERFORMANCE OPTIMIZATION
+================================================================================
+
+FOR FASTER INGESTION:
+---------------------
+- Increase EMBED_BATCH_SIZE: 32 → 64 (if enough RAM)
+- Use GPU: Install faiss-gpu and set USE_GPU=True
+- Use smaller embedding model: all-MiniLM-L6-v2 (384 dim)
+- Parallelize document loading (future enhancement)
+
+FOR BETTER SEARCH QUALITY:
+--------------------------
+- Use larger embedding model: all-mpnet-base-v2 (768 dim)
+- Increase CHUNK_OVERLAP: 200 → 300 (better context)
+- Use hybrid search (combines semantic + keyword)
+- Increase top_k to get more candidates
+
+FOR LARGE SCALE (1M+ documents):
+--------------------------------
+- Use FAISS IVF index instead of IndexFlatL2
+  (approximate search, much faster)
+- Implement document sharding (partition by category)
+- Use distributed FAISS (future enhancement)
+- Consider Elasticsearch for keyword search component
+
+MEMORY OPTIMIZATION:
+--------------------
+- Use float16 embeddings instead of float32 (50% smaller)
+- Compress chunk metadata (gzip pickle files)
+- Implement lazy loading of embeddings
+- Use memory-mapped FAISS index
+
+================================================================================
+13. FUTURE ENHANCEMENTS
+================================================================================
+
+PLANNED FEATURES:
+-----------------
+
+1. Advanced Chunking Strategies:
+   - Table-aware chunking (preserve table structure)
+   - Code-aware chunking (for API docs with code samples)
+   - Hierarchical chunking (sections → subsections → paragraphs)
+
+2. Multi-Modal Support:
+   - Image extraction from PDFs (diagrams, screenshots)
+   - OCR for scanned documents
+   - Vision-language model embeddings (CLIP)
+
+3. Query Expansion:
+   - Synonym expansion (authentication → login, auth, sign-in)
+   - Acronym expansion (API → Application Programming Interface)
+   - Query rewriting using LLM
+
+4. Re-Ranking:
+   - Cross-encoder re-ranking for top results
+   - Diversity-aware ranking (avoid duplicate info)
+   - Freshness scoring (prefer recent documents)
+
+5. Agent-Specific Features:
+   - Streaming search results (for real-time feedback)
+   - Cached embeddings (faster repeated queries)
+   - Query-specific chunking (dynamic chunk boundaries)
+
+6. Analytics & Monitoring:
+   - Query analytics (popular queries, failure rate)
+   - Search quality metrics (click-through rate, relevance)
+   - Performance monitoring (latency, throughput)
+
+7. Advanced Index Management:
+   - Incremental indexing (add without full rebuild)
+   - Index versioning (A/B testing, rollback)
+   - Distributed indexing (scale to billions of docs)
+
+8. UI/API:
+   - REST API for remote access
+   - Web dashboard for management
+   - Streamlit/Gradio interface for testing
+
+================================================================================
+14. MIGRATION FROM LEGACY SYSTEM
+================================================================================
+
+If you were using the old system (main.py, ingest_docs.py, query_faiss.py),
+here's how to migrate:
+
+STEP 1: Backup Old Data
+------------------------
+    mkdir backup
+    cp -r data/faiss_index backup/
+    cp -r data/docs backup/
+
+STEP 2: Clear Old Index (Optional)
+-----------------------------------
+If you want to start fresh:
+    python src/main_enterprise.py
+    [C] Clear all data
+
+If you want to keep old data:
+    Skip this step (system will detect duplicates and skip)
+
+STEP 3: Re-Ingest with New System
+----------------------------------
+    python src/main_enterprise.py
+    [I] Ingest documents
+
+The new system will:
+- Use better chunking (semantic instead of fixed 512 chars)
+- Add metadata tracking
+- Deduplicate based on content hash
+
+STEP 4: Test Search
+-------------------
+    [H] Hybrid search
+    Try a few queries to verify results are better
+
+STEP 5: Update Agent Integration
+---------------------------------
+Old:
+    from vector_db import query_faiss
+    query_faiss.search("my query")
+
+New:
+    from src.vector_db.search_engine import HybridSearchEngine
+    search = HybridSearchEngine()
+    results = search.search("my query", search_mode='hybrid')
+
+COMPATIBILITY:
+--------------
+The old files are still present for backward compatibility:
+- src/vector_db/faiss_setup.py
+- src/vector_db/ingest_docs.py
+- src/vector_db/query_faiss.py
+
+You can continue using them if needed, but the new system is recommended
+for all future work.
+
+================================================================================
+CONTACT & SUPPORT
+================================================================================
+
+For questions, issues, or feature requests:
+- Check logs: data/logs/rag_system.log
+- Review this documentation
+- Check error messages in CLI
+
+Project maintained by: Ivanti Profiler Automation Team
+Last updated: 2025-11-24
+Version: 2.0 (Enterprise Edition)
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

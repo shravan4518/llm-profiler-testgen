@@ -1,0 +1,104 @@
+# Enterprise RAG System - Git Ignore File
+
+# Virtual Environment
+venv/
+venv_*/
+env/
+.env
+*.venv
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+
+# Data Files (sensitive/large) - IMPORTANT: Contains sensitive documents
+data/faiss_index/*.bin
+data/faiss_index/*.pkl
+data/docs/*
+!data/docs/.gitkeep
+data/logs/*.log
+data/logs/
+data/embeddings/*
+data/archive/
+data/search_results_*.txt
+data/llm_answer_*.txt
+data/test_cases/*.json
+data/test_cases/*.md
+data/test_cases/*.xlsx
+
+# IDE and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vs/
+*.code-workspace
+
+# OS Specific
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Distribution / Packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Documentation builds (if generating docs)
+docs/_build/
+docs/archive/
+site/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Legacy files (if any remain)
+src/main.py.bak
+src/vector_db/faiss_setup.py.bak
+src/vector_db/ingest_docs.py.bak
+src/vector_db/query_faiss.py.bak
+
+# Environment-specific
+*.local
+.env.local
+.env.*.local
+
+# MyPy type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Scripts archive
+scripts/archive/
+scripts/tests/
