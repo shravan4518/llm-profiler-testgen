@@ -82,7 +82,7 @@ Your test cases are known for being:
 
 You NEVER miss edge cases or error scenarios."""
 
-        user_instruction = f"""Based on the documentation context provided below, generate a COMPREHENSIVE set of test cases for the following requirement:
+        user_instruction = f"""Generate a COMPREHENSIVE set of test cases for the following requirement using BOTH the provided documentation context AND your general testing knowledge.
 
 === USER REQUIREMENT ===
 {user_prompt}
@@ -91,6 +91,11 @@ You NEVER miss edge cases or error scenarios."""
 {rag_context}
 
 === YOUR TASK ===
+
+IMPORTANT INSTRUCTIONS:
+1. **Use the documentation context above** as your PRIMARY source for product-specific details
+2. **Apply your general testing knowledge** to ensure comprehensive coverage beyond what's in the docs
+3. **Combine both sources** to create realistic, executable test cases
 
 CRITICAL: You MUST generate the test cases in SECTION 1 first. Do NOT start with analysis - generate the actual test cases immediately.
 
@@ -262,8 +267,8 @@ Generate the comprehensive test suite now."""
 
                     generated_output = self.azure_llm.generate(
                         prompt=master_prompt,
-                        temperature=0.7,  # Balanced creativity
-                        max_tokens=8000   # Increased for comprehensive test cases
+                        temperature=1.0,  # Fixed for GPT-5 compatibility
+                        max_tokens=config.LLM_MAX_TOKENS  # Use config value for model switching
                     )
 
                     logger.info(f"Generated {len(generated_output)} characters")

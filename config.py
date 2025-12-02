@@ -52,16 +52,30 @@ MAX_WORKERS = 4  # For parallel processing
 EXTRACT_METADATA = True  # Extract doc metadata (title, author, etc.)      
 ENABLE_OCR = False  # Enable OCR for scanned PDFs (requires tesseract)
 
-# Azure OpenAI Configuration (Production LLM)
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "YOUR_ENDPOINT_HERE") 
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "YOUR_API_KEY_HERE")
-AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1-nano")
-AZURE_OPENAI_API_VERSION = "2024-08-01-preview"
+# ============================================================================
+# AZURE OPENAI CONFIGURATION - Easy Model Switching
+# ============================================================================
+#
+# Supported Models:
+#   - "gpt-4-1-nano"     : GPT-4.1 Nano (fast, cheap, uses max_tokens)
+#   - "gpt-4o"           : GPT-4 Optimized (balanced)
+#   - "gpt-5.1-2"        : GPT-5.1 (latest, uses max_completion_tokens)
+#   - "gpt-5-preview"    : GPT-5 Preview
+#
+# To switch models: Just change AZURE_OPENAI_DEPLOYMENT below
+# The system automatically handles parameter compatibility
+# ============================================================================
+
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "ENTER_ENDPOINT_HERE")
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "ENTER_API_HERE")
+AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5.1-2")  # <-- Change model here (gpt-4.1 or gpt-5.1-2)
+AZURE_OPENAI_API_VERSION = "2025-04-01-preview"
 
 # LLM Configuration for Test Case Generation
-LLM_TEMPERATURE = 0.7  # Balanced creativity for diverse test cases
-LLM_MAX_TOKENS = 4096  # Maximum tokens for comprehensive test generation
-LLM_TOP_P = 0.9  # Nucleus sampling for quality
+LLM_TEMPERATURE = 1.0  # Temperature (NOTE: GPT-5.1-2 only supports 1.0, GPT-4 supports 0.0-2.0)
+LLM_MAX_TOKENS = 16000  # Maximum tokens for comprehensive test generation (auto-converted for GPT-5+)
+                        # GPT-5 needs higher limits - 8000 was causing truncation with long prompts
+LLM_TOP_P = 0.9  # Nucleus sampling for quality (not used for GPT-5.1-2)
 
 # CrewAI Agent Configuration
 ENABLE_CREWAI = True  # Enable multi-agent orchestration
