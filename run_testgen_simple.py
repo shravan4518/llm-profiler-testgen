@@ -21,7 +21,7 @@ def main():
     import config
 
     if not config.AZURE_OPENAI_ENDPOINT or not config.AZURE_OPENAI_API_KEY:
-        print("[ERROR] Azure OpenAI not configured!")
+        print("⚠️  ERROR: Azure OpenAI not configured!")
         print()
         print("Please set the following environment variables:")
         print()
@@ -37,9 +37,9 @@ def main():
     try:
         from src.simple_testgen import SimpleTestGenerator
 
-        print("[OK] Azure OpenAI configured")
-        print(f"[OK] Endpoint: {config.AZURE_OPENAI_ENDPOINT}")
-        print(f"[OK] Deployment: {config.AZURE_OPENAI_DEPLOYMENT}")
+        print("✓ Azure OpenAI configured")
+        print(f"✓ Endpoint: {config.AZURE_OPENAI_ENDPOINT}")
+        print(f"✓ Deployment: {config.AZURE_OPENAI_DEPLOYMENT}")
         print()
 
         # Run interactive mode
@@ -47,7 +47,7 @@ def main():
         generator.generate_interactive()
 
     except Exception as e:
-        print(f"[ERROR] {e}")
+        print(f"⚠️  Error: {e}")
         print()
         import traceback
         traceback.print_exc()

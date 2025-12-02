@@ -40,19 +40,32 @@ class TestCaseFormatter:
         """
         logger.info("Parsing test cases from text...")
 
-        # Split by test case ID pattern - match **TC_XXX** format
-        pattern = r'\*\*TC_\d+\*\*'
-        sections = re.split(pattern, test_cases_text)
+        # Split by test case ID pattern - match both **TC_XXX** and #### TC_XXX formats
+        # GPT-5 uses markdown headings, GPT-4 uses bold
+        pattern_bold = r'\*\*TC_\d+\*\*'  # **TC_001**
+        pattern_heading = r'####\s*TC_\d+'  # #### TC_001
+
+        # Try both patterns and use whichever finds matches
+        test_ids_bold = re.findall(pattern_bold, test_cases_text)
+        test_ids_heading = re.findall(pattern_heading, test_cases_text)
+
+        if test_ids_heading:  # GPT-5 format (markdown headings)
+            pattern = pattern_heading
+            sections = re.split(pattern, test_cases_text)
+            test_ids = [tid.replace('####', '').strip() for tid in test_ids_heading]
+        else:  # GPT-4 format (bold)
+            pattern = pattern_bold
+            sections = re.split(pattern, test_cases_text)
+            test_ids = [tid.replace('**', '').strip() for tid in test_ids_bold]
 
         test_cases = []
-        test_ids = re.findall(pattern, test_cases_text)
 
         for idx, section in enumerate(sections[1:]):  # Skip first section before first TC
             if not section.strip():
                 continue
 
             # Get the test ID for this section
-            test_id = test_ids[idx].replace('**', '').strip() if idx < len(test_ids) else f"TC_{idx+1:03d}"
+            test_id = test_ids[idx] if idx < len(test_ids) else f"TC_{idx+1:03d}"
 
             test_case = self._parse_single_test_case(section, test_id)
             if test_case:

@@ -1,0 +1,1001 @@
+=== SECTION 1: COMPREHENSIVE TEST CASES ===  
+
+Assumptions (explicit, since requirement is minimal):  
+- “Profiler DB upgrade” implies upgrading PPS/Profiler software where Profiler maintains an internal DB containing:  
+  - Profiler device database (endpoints, sessions, attributes)  
+  - Profile modifications database  
+- Backup/restore (binary & CSV) are the supported and recommended mechanisms around upgrade (per Admin Guide).  
+- Profiler runs as a service with REST interface and DAL-backed DB (per design doc).  
+- UI navigation: Maintenance > Import/Export, TROUBLESHOOTING and Logs as per admin guide.  
+- Version examples: from 9.1R8 to 9.1R10 (use as concrete values in tests).  
+
+I’ll define 24 test cases to satisfy distribution and coverage.
+
+---
+
+#### TC_001  
+**Test ID:** TC_001  
+**Test Title:** Verify successful Profiler DB upgrade with binary export/import across versions  
+**Category:** positive  
+**Priority:** Critical  
+
+**Description:**  
+Validate that a full Profiler device database exported in binary format from an older version (e.g., 9.1R8) can be imported into a newer version (9.1R10) after upgrade, with all device records preserved and the old database fully replaced, as documented.
+
+**Prerequisites:**  
+- Source PPS/Profiler appliance running version 9.1R8 with Profiler enabled.  
+- At least 100 endpoints discovered and stored in Profiler DB (mix of MAC/IP/hostname).  
+- Destination appliance upgraded to 9.1R10 with fresh Profiler installation and empty Profiler DB.  
+- Admin user with full Profiler/maintenance rights on both systems.  
+
+**Test Data:**  
+- Binary export file: `profiler_device_db_9.1R8_20251201.bin` (generated in steps).  
+- Sample endpoint to verify:  
+  - MAC: `00:11:22:33:44:55`  
+  - IP: `10.10.10.50`  
+  - Hostname: `LAPTOP-JSMITH`  
+
+**Test Steps:**  
+1. Log in to PPS 9.1R8 admin UI as `admin_profiler` with valid credentials.  
+2. Navigate to `Maintenance > Import/Export`.  
+3. Under “Import/Export Profiler Device Data in Binary format”, click “Export”.  
+4. Save the downloaded binary file as `profiler_device_db_9.1R8_20251201.bin`.  
+5. On PPS 9.1R10 appliance, log in as `admin_profiler`.  
+6. Confirm Profiler DB is empty (via Profiler UI/REST `/endpoint/` listing – expect zero endpoints).  
+7. Navigate to `Maintenance > Import/Export` on 9.1R10.  
+8. Under binary import, click “Choose File” and select `profiler_device_db_9.1R8_20251201.bin`.  
+9. Click “Import” and confirm any warning about erasing existing database.  
+10. After import completes, navigate to Profiler endpoint list UI or call REST `GET /endpoint/` to retrieve endpoints.  
+11. Search for endpoint with MAC `00:11:22:33:44:55`.  
+12. Verify a random sample of 10 other endpoints (by MAC or hostname) is present and attributes look consistent.  
+
+**Expected Results:**  
+- Binary export from 9.1R8 completes without error and produces a file.  
+- Binary import on 9.1R10 completes successfully with a success message and/or event log entry.  
+- After import, Profiler DB on 9.1R10 contains all ~100 endpoints that existed on 9.1R8.  
+- Endpoint `00:11:22:33:44:55` with IP `10.10.10.50` and hostname `LAPTOP-JSMITH` is present with expected attributes.  
+- No duplicate or missing entries compared to pre-export snapshot.  
+
+**Postconditions:**  
+- Profiler DB on 9.1R10 is fully populated with device data from 9.1R8 binary export.  
+- Any previous data on 9.1R10 (if existed) is replaced by imported data.
+
+---
+
+#### TC_002  
+**Test ID:** TC_002  
+**Test Title:** Verify CSV export from pre-upgrade version and CSV import after upgrade (append behavior)  
+**Category:** positive  
+**Priority:** High  
+
+**Description:**  
+Validate that CSV export from the old version and CSV import to the upgraded version appends to existing database without erasing it, as documented.
+
+**Prerequisites:**  
+- PPS 9.1R8 appliance with Profiler and 50 existing endpoints.  
+- PPS 9.1R10 appliance already upgraded and with 20 endpoints pre-existing in Profiler DB.  
+- Admin access.  
+
+**Test Data:**  
+- CSV export file from 9.1R8: `profiler_devices_9.1R8.csv`.  
+- Sample endpoint from CSV:  
+  - MAC: `AA:BB:CC:DD:EE:01`  
+  - IP: `192.168.1.101`  
+  - Hostname: `SERVER-01`  
+
+**Test Steps:**  
+1. On PPS 9.1R8, log in as admin, navigate to `Maintenance > Import/Export`.  
+2. Under “CSV export”, click “Export”.  
+3. Save file as `profiler_devices_9.1R8.csv`.  
+4. Inspect file structure (ensure MACADDR, IP, hostname columns present).  
+5. On PPS 9.1R10, log in as admin.  
+6. Verify current Profiler endpoint count is 20 (via UI or REST `/endpoint/`).  
+7. Navigate to `Maintenance > Import/Export`.  
+8. Under “CSV import”, choose file `profiler_devices_9.1R8.csv`.  
+9. Click “Import” and confirm any informational messages.  
+10. After import completes, check total endpoint count.  
+11. Verify that endpoint `AA:BB:CC:DD:EE:01` now exists.  
+12. Verify existing 20 endpoints are still present and unchanged.  
+
+**Expected Results:**  
+- CSV export completes and file is valid.  
+- CSV import completes successfully with message indicating append.  
+- Total endpoint count after import is 70 (20 existing + 50 imported) minus any duplicates depending on product behavior (document expectations if deduping is known; otherwise verify at least all unique MACs are present).  
+- Existing 20 endpoints remain with unchanged attributes.  
+- Specific imported endpoints (e.g., `AA:BB:CC:DD:EE:01`) are present.  
+
+**Postconditions:**  
+- Profiler DB on 9.1R10 contains union of existing and imported endpoints; no loss of existing data.
+
+---
+
+#### TC_003  
+**Test ID:** TC_003  
+**Test Title:** Verify binary import erases existing Profiler DB and invalidates endpoint sessions  
+**Category:** positive  
+**Priority:** Critical  
+
+**Description:**  
+Verify documented behavior that binary import “erases the existing database completely” and “endpoint session information is invalidated”, especially across an upgrade scenario.
+
+**Prerequisites:**  
+- PPS 9.1R10 with Profiler running and 30 endpoints with active sessions.  
+- Binary export file from another instance: `profiler_device_db_other.bin` containing 10 endpoints.  
+
+**Test Data:**  
+- Existing endpoint session sample:  
+  - MAC: `00:AA:BB:CC:DD:EE`, session ID `S12345`.  
+
+**Test Steps:**  
+1. Log in to PPS 9.1R10 admin UI.  
+2. Navigate to Profiler endpoint/session view; note endpoint count (30) and record session ID for at least 3 endpoints.  
+3. Navigate to `Maintenance > Import/Export`.  
+4. Under binary import, choose `profiler_device_db_other.bin`.  
+5. Click “Import” and confirm warning about erasing database.  
+6. After import completes, navigate to Profiler endpoint view.  
+7. Verify total endpoints reflect those in `profiler_device_db_other.bin` (10) and original 30 endpoints are gone.  
+8. Check session information (session view or REST `GET /session/` if available).  
+9. Attempt to query old session ID `S12345` via UI/API.  
+
+**Expected Results:**  
+- Import process warns that existing DB will be erased.  
+- After import, only the 10 endpoints from imported DB exist.  
+- Previously existing 30 endpoints and their session data are removed from Profiler DB.  
+- Endpoint session queries for old sessions (e.g., `S12345`) return no active session / “not found”.  
+- Any session-related UI shows sessions invalidated or ended.  
+
+**Postconditions:**  
+- Profiler DB contains only imported endpoints; all prior sessions invalidated.
+
+---
+
+#### TC_004  
+**Test ID:** TC_004  
+**Test Title:** Verify export of profile modifications DB and import into another profiler (append behavior)  
+**Category:** positive  
+**Priority:** High  
+
+**Description:**  
+Validate that profile modifications database exported from one Profiler can be imported into another (post-upgrade) and that modifications are appended to existing modifications, as per documentation.
+
+**Prerequisites:**  
+- Profiler A (9.1R8) with some custom profile modifications (e.g., custom device fingerprints, categories).  
+- Profiler B (9.1R10) with its own existing profile modifications.  
+- Admin access on both.  
+
+**Test Data:**  
+- Binary file `profile_mods_9.1R8.bin`.  
+- Example modification on A: custom category “Medical_Device” for specific MAC OUI.  
+
+**Test Steps:**  
+1. On Profiler A, log in as admin.  
+2. Navigate to `Maintenance > Import/Export` (or the specific “Profile Modifications DB” section).  
+3. Export profile modifications DB in binary format; save as `profile_mods_9.1R8.bin`.  
+4. Document list of profile modifications on A (e.g., via Profiler UI).  
+5. On Profiler B (9.1R10), log in as admin.  
+6. Document existing profile modifications (ensure at least one unique modification exists).  
+7. Navigate to the same Import/Export section for profile modifications.  
+8. Import `profile_mods_9.1R8.bin`.  
+9. After import, view the list of profile modifications on B.  
+
+**Expected Results:**  
+- Export from A succeeds and produces a binary file.  
+- Import into B succeeds without error.  
+- Profile modifications on B after import equal: original modifications on B + all modifications from A.  
+- No existing modifications on B are removed or overwritten unless documented to merge by key; for any identical keys, verify documented merge behavior (e.g., last-writer-wins).  
+- The custom “Medical_Device” category from A appears on B.  
+
+**Postconditions:**  
+- Profiler B’s profile modifications DB includes appended modifications from A.
+
+---
+
+#### TC_005  
+**Test ID:** TC_005  
+**Test Title:** Verify backup and restore of Profiler DB as part of planned upgrade procedure  
+**Category:** positive  
+**Priority:** High  
+
+**Description:**  
+End-to-end validation of upgrade runbook: perform backup (binary), upgrade PPS/Profiler, then restore Profiler DB, ensuring no data loss.
+
+**Prerequisites:**  
+- Single PPS appliance on 9.1R8 with Profiler and populated DB (e.g., 200 endpoints).  
+- Upgrade package to 9.1R10.  
+- Maintenance window approved.  
+
+**Test Data:**  
+- Backup file `profiler_device_db_pre_upgrade.bin`.  
+
+**Test Steps:**  
+1. On 9.1R8, log in as admin and verify Profiler DB summary (endpoint count, sample endpoint).  
+2. Export Profiler device DB in binary format; save as `profiler_device_db_pre_upgrade.bin`.  
+3. Record MD5 or SHA256 checksum of the backup file.  
+4. Perform PPS/Profiler upgrade to 9.1R10 following standard procedure (reboot, etc.).  
+5. After upgrade, log in to 9.1R10 and verify Profiler service is running.  
+6. Confirm current Profiler DB state (could be empty or partially migrated, depending on product – document observed behavior).  
+7. Import `profiler_device_db_pre_upgrade.bin` via `Maintenance > Import/Export`.  
+8. After import completes, verify endpoint count equals pre-upgrade count (200).  
+9. Check that a sample set of 10 endpoints match pre-upgrade attributes.  
+
+**Expected Results:**  
+- Backup completed successfully and is restorable on upgraded system.  
+- Upgrade completes without error and Profiler is functional.  
+- After import, Profiler DB contents match pre-upgrade snapshot (no loss or corruption).  
+
+**Postconditions:**  
+- Upgraded environment has identical Profiler DB content as before upgrade.
+
+---
+
+#### TC_006  
+**Test ID:** TC_006  
+**Test Title:** Verify binary import using wrong file type (CSV file in binary import)  
+**Category:** negative  
+**Priority:** High  
+
+**Description:**  
+Ensure system gracefully handles attempting to import a CSV file via the binary import function, with clear error message and no DB changes.
+
+**Prerequisites:**  
+- PPS 9.1R10 with Profiler and non-empty DB (at least 10 endpoints).  
+- Valid CSV export file `profiler_devices_9.1R10.csv`.  
+
+**Test Data:**  
+- Attempted import file: `profiler_devices_9.1R10.csv`.  
+
+**Test Steps:**  
+1. Log in as admin to PPS 9.1R10.  
+2. Navigate to `Maintenance > Import/Export`.  
+3. Under Binary Import, choose file `profiler_devices_9.1R10.csv`.  
+4. Click “Import”.  
+5. Observe UI response, any error messages, and logs (Event Log / Profiler Logs).  
+6. After attempted import, verify endpoint count remains unchanged.  
+
+**Expected Results:**  
+- Import is rejected with a clear error indicating invalid or unsupported file format.  
+- No partial import occurs.  
+- Profiler DB endpoint count and contents remain unchanged.  
+- Appropriate error logged (e.g., event ID for import failure).  
+
+**Postconditions:**  
+- Profiler DB is unchanged; error logged.
+
+---
+
+#### TC_007  
+**Test ID:** TC_007  
+**Test Title:** Verify CSV import with invalid/malformed CSV structure  
+**Category:** negative  
+**Priority:** High  
+
+**Description:**  
+Validate that CSV import detects and rejects malformed CSV (missing required columns, invalid headers) without compromising DB integrity.
+
+**Prerequisites:**  
+- PPS 9.1R10 with Profiler DB containing 20 endpoints.  
+- Ability to edit CSV file.  
+
+**Test Data:**  
+- Malformed CSV `profiler_devices_malformed.csv` with:  
+  - Missing `Macaddr` column.  
+  - Extra column `BadField`.  
+
+Sample contents:  
+```csv
+IP,hostname,BadField
+192.168.1.50,HOST-1,XYZ
+192.168.1.51,HOST-2,ABC
+```  
+
+**Test Steps:**  
+1. Log in as admin.  
+2. Navigate to `Maintenance > Import/Export`.  
+3. Under CSV import, choose `profiler_devices_malformed.csv`.  
+4. Click “Import”.  
+5. Observe UI response and error messages.  
+6. Verify endpoint count remains at 20 after operation.  
+7. Check logs for error details.  
+
+**Expected Results:**  
+- System rejects the CSV due to missing required `Macaddr` field.  
+- Clear error message indicating invalid CSV format / missing required columns.  
+- No new endpoints created, existing data unchanged.  
+- Import failure logged with reason.  
+
+**Postconditions:**  
+- DB unchanged; error recorded.
+
+---
+
+#### TC_008  
+**Test ID:** TC_008  
+**Test Title:** Verify binary import with corrupted binary file  
+**Category:** negative  
+**Priority:** Critical  
+
+**Description:**  
+Confirm that a corrupted binary DB file cannot be imported, and the system handles this safely without altering the existing DB.
+
+**Prerequisites:**  
+- PPS 9.1R10 with Profiler DB containing 50 endpoints.  
+- Valid binary export file `profiler_device_db_valid.bin`.  
+- Ability to corrupt the file (e.g., by truncating or editing bytes).  
+
+**Test Data:**  
+- Corrupted file `profiler_device_db_corrupt.bin` (take valid bin and truncate by 50%).  
+
+**Test Steps:**  
+1. Create `profiler_device_db_corrupt.bin` by truncating `profiler_device_db_valid.bin`.  
+2. Log in as admin.  
+3. Navigate to `Maintenance > Import/Export`.  
+4. Under Binary Import, choose `profiler_device_db_corrupt.bin`.  
+5. Click “Import”.  
+6. Observe error messages, import status, and logs.  
+7. After failure, verify endpoint count remains 50 and data accessible.  
+
+**Expected Results:**  
+- Import fails with explicit error indicating file corruption or invalid format.  
+- No partial DB erase or partial import occurs.  
+- Existing endpoints remain intact and accessible.  
+- Error event logged with reason; no crash or hang.  
+
+**Postconditions:**  
+- DB unchanged; corrupted file not imported.
+
+---
+
+#### TC_009  
+**Test ID:** TC_009  
+**Test Title:** Verify CSV import with invalid MAC address formats  
+**Category:** negative  
+**Priority:** Medium  
+
+**Description:**  
+Test how the system handles rows with invalid MAC address format (e.g., wrong length, illegal characters) during CSV import.
+
+**Prerequisites:**  
+- PPS 9.1R10 with 10 endpoints.  
+- Ability to upload CSV.  
+
+**Test Data:**  
+`invalid_mac_import.csv`:  
+```csv
+Macaddr,IP,hostname
+00:11:22:33:44:ZZ,10.0.0.10,BAD-MAC-1
+00112233445566,10.0.0.11,BAD-MAC-2
+GG:11:22:33:44:55,10.0.0.12,BAD-MAC-3
+00-11-22-33-44-55,10.0.0.13,BAD-MAC-4
+```
+
+**Test Steps:**  
+1. Log in as admin.  
+2. Navigate to `Maintenance > Import/Export`.  
+3. Under CSV import, choose `invalid_mac_import.csv`.  
+4. Click “Import”.  
+5. Observe whether import is fully rejected or partial (row-level) errors are reported.  
+6. Verify endpoint count after import.  
+7. Search for hostnames `BAD-MAC-1` … `BAD-MAC-4` in Profiler UI/API.  
+
+**Expected Results:**  
+- System should either:  
+  - Reject entire file with clear error indicating invalid MAC format, OR  
+  - Skip invalid rows and import only valid rows, while reporting row-level errors.  
+- No endpoints with invalid MACs should be added to DB.  
+- Existing 10 endpoints remain intact.  
+
+**Postconditions:**  
+- DB contains no entries with invalid MAC formats; existing data preserved.
+
+---
+
+#### TC_010  
+**Test ID:** TC_010  
+**Test Title:** Verify upgrade with missing/failed DB backup (operational safeguard)  
+**Category:** negative  
+**Priority:** High  
+
+**Description:**  
+Validate behavior when an upgrade is initiated without taking a Profiler DB backup, and/or backup process fails. Ensure system warns appropriately and DB integrity is maintained if upgrade aborted.
+
+**Prerequisites:**  
+- PPS 9.1R8 with Profiler and populated DB.  
+- Upgrade wizard/process that recommends backup step.  
+
+**Test Data:**  
+- None specific.  
+
+**Test Steps:**  
+1. On 9.1R8, log in as admin.  
+2. Begin the upgrade procedure to 9.1R10 using the standard UI/process.  
+3. Intentionally skip the documented backup step (do not export binary/CSV).  
+4. Observe if system presents warnings about missing backup.  
+5. Cancel/abort upgrade before any DB migration.  
+6. After abort, verify Profiler DB still intact (endpoint count, sample data).  
+7. Optionally simulate backup failure (e.g., insufficient disk space) and check error handling.  
+
+**Expected Results:**  
+- If product has built-in backup checks, a warning should be displayed recommending backup.  
+- On upgrade abort, no DB changes should occur; Profiler remains operational with all data.  
+- Backup failure should be clearly reported if attempted; no silent failures.  
+
+**Postconditions:**  
+- System remains on 9.1R8 with original DB untouched.
+
+---
+
+#### TC_011  
+**Test ID:** TC_011  
+**Test Title:** Verify binary import with maximum supported DB size (stress boundary)  
+**Category:** boundary  
+**Priority:** Critical  
+
+**Description:**  
+Validate that binary export/import handles the maximum supported number of endpoints without failure or unacceptable performance degradation.
+
+**Prerequisites:**  
+- Profiler instance with DB near documented capacity (e.g., 100,000 endpoints – adjust to product limits).  
+- Sufficient disk and memory.  
+
+**Test Data:**  
+- Binary file `profiler_db_maxsize.bin` (~max endpoints).  
+
+**Test Steps:**  
+1. On source system with ~max endpoints, export Profiler DB in binary format.  
+2. Note export time and any performance metrics.  
+3. On target system (same or upgraded version), ensure Profiler DB is empty or allowed to be overwritten.  
+4. Import `profiler_db_maxsize.bin`.  
+5. Measure import time and resource usage (CPU, memory).  
+6. After completion, verify total endpoint count equals original max.  
+7. Randomly open 20 endpoints to verify correct data.  
+
+**Expected Results:**  
+- Export/import complete successfully within acceptable time (define SLA, e.g., <30 minutes for 100k endpoints).  
+- No out-of-memory, timeout, or crash.  
+- All endpoints present with correct attributes.  
+
+**Postconditions:**  
+- Target Profiler DB fully populated with max-sized DB.
+
+---
+
+#### TC_012  
+**Test ID:** TC_012  
+**Test Title:** Verify CSV import with mixed valid/invalid rows at boundary quantities  
+**Category:** boundary  
+**Priority:** High  
+
+**Description:**  
+Check how CSV import behaves when file contains near-maximum number of rows, mixing valid and invalid entries (boundary of error handling and capacity).
+
+**Prerequisites:**  
+- Product maximum CSV import rows known (e.g., 50,000 rows).  
+- Script/tool to generate CSV.  
+
+**Test Data:**  
+- `mixed_boundary_import.csv` with 50,000 rows:  
+  - 49,000 rows valid.  
+  - 1,000 rows invalid (e.g., duplicate MACs, invalid IPs).  
+
+**Test Steps:**  
+1. Generate `mixed_boundary_import.csv` as described.  
+2. On PPS 9.1R10 with empty DB, log in as admin.  
+3. Navigate to `Maintenance > Import/Export`.  
+4. Import `mixed_boundary_import.csv`.  
+5. Measure import time and monitor logs for errors/warnings.  
+6. After completion, count endpoints in DB.  
+7. Validate no endpoints created from invalid rows and that valid rows are present.  
+
+**Expected Results:**  
+- System handles large file without crash or unacceptable slowdown.  
+- Valid rows are imported; invalid rows are handled per spec (either rejected with row-level errors).  
+- Endpoint count ~49,000 (depending on deduplication rules).  
+- Errors logged for invalid rows; process completes successfully.  
+
+**Postconditions:**  
+- DB populated with all valid entries from CSV.
+
+---
+
+#### TC_013  
+**Test ID:** TC_013  
+**Test Title:** Verify behavior when importing empty binary and empty CSV files  
+**Category:** boundary  
+**Priority:** Medium  
+
+**Description:**  
+Verify that importing an empty binary file or empty CSV file does not corrupt DB and produces appropriate messages.
+
+**Prerequisites:**  
+- PPS 9.1R10 with 10 endpoints in DB.  
+- Two files: `empty.bin` (0 bytes), `empty.csv` (0 bytes).  
+
+**Test Data:**  
+- As above.  
+
+**Test Steps:**  
+1. Attempt binary import with `empty.bin` via `Maintenance > Import/Export`.  
+2. Observe results and logs; verify endpoint count after operation.  
+3. Attempt CSV import with `empty.csv`.  
+4. Observe results and logs; verify endpoint count.  
+
+**Expected Results:**  
+- Binary import of `empty.bin` should fail gracefully with error “file invalid/empty” and must not erase existing DB.  
+- CSV import of `empty.csv` should either:  
+  - Be rejected as invalid (no headers), or  
+  - Complete with 0 rows imported and no changes.  
+- In both cases, existing 10 endpoints remain.  
+
+**Postconditions:**  
+- DB unchanged; error/warning logged.
+
+---
+
+#### TC_014  
+**Test ID:** TC_014  
+**Test Title:** Verify import handling of extremely long hostname values (string length boundary)  
+**Category:** boundary  
+**Priority:** Medium  
+
+**Description:**  
+Ensure system correctly enforces maximum hostname length when importing via CSV, preventing DB overflow or truncation issues.
+
+**Prerequisites:**  
+- Known maximum hostname length in schema (e.g., 255 characters).  
+
+**Test Data:**  
+- `hostname_boundary.csv`:  
+  - One row with hostname length exactly max allowed (e.g., 255 chars).  
+  - One row with hostname length max+1 (e.g., 256 chars).  
+
+Example:  
+```csv
+Macaddr,IP,hostname
+00:AA:BB:CC:DD:01,10.0.0.20,<255-char-hostname>
+00:AA:BB:CC:DD:02,10.0.0.21,<256-char-hostname>
+```  
+
+**Test Steps:**  
+1. Construct `hostname_boundary.csv` with specified values.  
+2. On PPS 9.1R10, log in as admin.  
+3. Import `hostname_boundary.csv` via CSV import.  
+4. Observe behavior and error messages.  
+5. Verify that endpoint with 255-char hostname is created correctly.  
+6. Verify that endpoint with 256-char hostname is either rejected or truncated according to spec; check DB and UI representation.  
+
+**Expected Results:**  
+- System adheres to hostname length constraints.  
+- No buffer overflow or application error.  
+- Clear handling of over-length hostname (reject row with error or properly truncated with log warning depending on design).  
+
+**Postconditions:**  
+- DB contains only valid records; invalid length handled safely.
+
+---
+
+#### TC_015  
+**Test ID:** TC_015  
+**Test Title:** Verify Profiler REST API continues to function after DB upgrade/import  
+**Category:** integration  
+**Priority:** High  
+
+**Description:**  
+Confirm that the Profiler REST server, which uses DAL and DB, continues to serve correct endpoint data after DB upgrade via binary import.
+
+**Prerequisites:**  
+- PPS 9.1R10 with Profiler, REST API enabled.  
+- Binary import completed as in TC_001 (DB populated).  
+- API client capable of sending HTTP(S) with authentication.  
+
+**Test Data:**  
+- REST endpoint: `GET http://<restserver>/endpoint/` and `GET /endpoint/<MAC>`  
+- Sample MAC: `00:11:22:33:44:55`.  
+
+**Test Steps:**  
+1. After completing a binary import of endpoints, authenticate to Profiler REST API.  
+2. Send `GET /endpoint/` request to retrieve list of endpoints.  
+3. Verify number of records matches what UI shows.  
+4. Send `GET /endpoint/00:11:22:33:44:55`.  
+5. Verify returned JSON has correct IP, hostname, and attributes.  
+6. Optionally test paging: `GET /endpoints?start=0&max=10` as seen in design doc.  
+
+**Expected Results:**  
+- REST API responds successfully (HTTP 200).  
+- Data returned matches newly imported DB contents.  
+- No REST errors, no stale references to pre-upgrade data.  
+
+**Postconditions:**  
+- REST API functional and consistent with DB.
+
+---
+
+#### TC_016  
+**Test ID:** TC_016  
+**Test Title:** Verify Profiler integration with PPS session management after DB erase and import  
+**Category:** integration  
+**Priority:** High  
+
+**Description:**  
+Validate coordinated behavior between PPS and Profiler when profiler device DB is erased and replaced via binary import, especially around session invalidation.
+
+**Prerequisites:**  
+- PPS with Profiler integrated and live users; some endpoints have active PPS sessions tied to Profiler device entries.  
+
+**Test Data:**  
+- Active PPS session for MAC `00:AA:BB:CC:DD:EE`.  
+
+**Test Steps:**  
+1. On PPS, verify that endpoint `00:AA:BB:CC:DD:EE` has an active session and is visible in Profiler.  
+2. Perform binary import of a DB that does NOT contain that endpoint.  
+3. After import, verify Profiler no longer lists `00:AA:BB:CC:DD:EE`.  
+4. On PPS, check the session status of that endpoint.  
+5. Verify PPS logs for any re-evaluation or session termination events related to Profiler integration.  
+
+**Expected Results:**  
+- Profiler removes old endpoint data as per import behavior.  
+- PPS either re-evaluates or terminates the session as endpoint profile data is invalidated, according to integration design.  
+- No inconsistent state (e.g., PPS shows session mapped to a non-existent Profiler record).  
+
+**Postconditions:**  
+- PPS and Profiler are in a consistent state post-import; invalid sessions handled.
+
+---
+
+#### TC_017  
+**Test ID:** TC_017  
+**Test Title:** Verify Diagnostic and Profiler logs capture DB upgrade/import operations  
+**Category:** integration  
+**Priority:** Medium  
+
+**Description:**  
+Ensure that Diagnostic logs and Profiler logs include events for DB exports/imports and can be used for troubleshooting upgrade issues.
+
+**Prerequisites:**  
+- Logging enabled: Profiler Diagnostic Logging On, relevant Event IDs turned on (per admin guide).  
+- System where binary and CSV import/export are executed.  
+
+**Test Data:**  
+- Actions: one binary export, one binary import, one CSV export, one CSV import.  
+
+**Test Steps:**  
+1. Navigate to `Maintenance > Troubleshooting > Monitoring > Diagnostic Logs` and turn Profiler Diagnostic Logging On.  
+2. Ensure Profiler-related events are enabled at `Log/Monitoring > Events > Log Settings`.  
+3. Perform a binary export of the Profiler DB.  
+4. Perform a binary import (test/small DB).  
+5. Export DB in CSV.  
+6. Import DB via CSV.  
+7. Navigate to Event Logs / Administrator Access Logs.  
+8. Filter for Profiler-related events (e.g., PRO* or ADM* IDs) around the time of operations.  
+
+**Expected Results:**  
+- For each operation (export/import), log entries exist with timestamps, operation type, outcome (success/failure), possibly file name or size.  
+- Diagnostic logs contain additional detail suitable for troubleshooting.  
+- No missing or misleading logs.  
+
+**Postconditions:**  
+- Logs provide traceability for all DB upgrade actions.
+
+---
+
+#### TC_018  
+**Test ID:** TC_018  
+**Test Title:** Verify unauthorized user cannot perform Profiler DB import/export  
+**Category:** security  
+**Priority:** Critical  
+
+**Description:**  
+Confirm that only authorized administrators can export/import Profiler DB; unauthorized or lower-privilege users are blocked.
+
+**Prerequisites:**  
+- Two accounts:  
+  - `admin_profiler` – full admin.  
+  - `helpdesk_user` – limited role (read-only or no Profiler access).  
+
+**Test Data:**  
+- None specific.  
+
+**Test Steps:**  
+1. Log in as `helpdesk_user`.  
+2. Attempt to navigate to `Maintenance > Import/Export`.  
+3. If visible, attempt binary export and CSV export.  
+4. Attempt binary import and CSV import (if UI allows file selection).  
+5. Observe access control behavior and error messages.  
+6. Log out and log in as `admin_profiler`.  
+7. Confirm admin can perform import/export normally.  
+
+**Expected Results:**  
+- `helpdesk_user` cannot access Import/Export page or cannot perform export/import actions; receives “Access Denied” or equivalent.  
+- No export files are generated for unauthorized users.  
+- No import operations occur from unauthorized actions.  
+- `admin_profiler` can perform import/export successfully.  
+
+**Postconditions:**  
+- No security breach; DB operations restricted to authorized admins.
+
+---
+
+#### TC_019  
+**Test ID:** TC_019  
+**Test Title:** Verify secure handling of password-protected exported files  
+**Category:** security  
+**Priority:** High  
+
+**Description:**  
+Validate that profiler export files can be password protected as per documentation and that import requires correct password (if supported by UI), preventing unauthorized DB access.
+
+**Prerequisites:**  
+- PPS 9.1R10 with Profiler DB.  
+- Export functionality that supports password protecting files (per admin guide: “file can be password protected”).  
+
+**Test Data:**  
+- Password: `Str0ngP@ssw0rd!`  
+- Export file: `profiler_secure_export.bin`  
+
+**Test Steps:**  
+1. Log in as admin.  
+2. Navigate to `Maintenance > Import/Export`.  
+3. Initiate binary export and enable password protection, entering `Str0ngP@ssw0rd!`.  
+4. Save `profiler_secure_export.bin`.  
+5. On same or different system, attempt binary import of `profiler_secure_export.bin`.  
+6. When prompted for password, first enter incorrect password `WrongPass1!`.  
+7. Verify import fails and DB unchanged.  
+8. Retry import with correct password `Str0ngP@ssw0rd!`.  
+9. Verify import succeeds and DB reflects exported data.  
+
+**Expected Results:**  
+- Export generates an encrypted file when password protection is configured.  
+- Import with wrong password fails with clear error, no DB changes.  
+- Import with correct password succeeds.  
+- No way to bypass password prompt.  
+
+**Postconditions:**  
+- DB only restored from secure export when correct password is supplied.
+
+---
+
+#### TC_020  
+**Test ID:** TC_020  
+**Test Title:** Verify DB import endpoints resist SQL injection and path traversal in CSV fields  
+**Category:** security  
+**Priority:** High  
+
+**Description:**  
+Ensure that fields imported from CSV (hostname, etc.) are properly sanitized and cannot be used for SQL injection or path traversal attacks.
+
+**Prerequisites:**  
+- PPS 9.1R10 with CSV import enabled.  
+
+**Test Data:**  
+`security_payloads.csv`:  
+```csv
+Macaddr,IP,hostname
+00:11:22:33:44:01,10.0.0.30,"testhost'; DROP TABLE endpoints;--"
+00:11:22:33:44:02,10.0.0.31,"../../etc/passwd"
+00:11:22:33:44:03,10.0.0.32,"<script>alert('xss')</script>"
+```  
+
+**Test Steps:**  
+1. Log in as admin.  
+2. Import `security_payloads.csv` via CSV import.  
+3. Observe whether import succeeds; if rows are accepted, view endpoints in UI and through REST API.  
+4. Check DB schema (if accessible) or logs to ensure no schema damage (e.g., endpoints table still exists, counts correct).  
+5. Open any UI screens displaying hostname and verify content is safely encoded (no script execution, no path traversal).  
+
+**Expected Results:**  
+- No SQL is executed from hostname; DB tables intact.  
+- Hostname stored as plain data; characters are escaped.  
+- In UI, `<script>…</script>` displayed as text or encoded, not executed.  
+- No file system paths are executed or interpreted.  
+
+**Postconditions:**  
+- DB remains consistent and secure; potential payloads treated as data only.
+
+---
+
+#### TC_021  
+**Test ID:** TC_021  
+**Test Title:** Verify DB upgrade under concurrent usage (endpoints being profiled)  
+**Category:** performance  
+**Priority:** High  
+
+**Description:**  
+Assess system behavior and performance when DB export/import or upgrade occurs while collectors and REST server are actively handling devices.
+
+**Prerequisites:**  
+- Live test environment with traffic so passive/active/periodic collectors are profiling devices.  
+- REST server serving frequent `GET /endpoint/` requests.  
+
+**Test Data:**  
+- Ongoing profiling of at least 500 active endpoints.  
+
+**Test Steps:**  
+1. Start traffic generators so Profiler continuously updates device attributes via collectors and zeroMQ.  
+2. Confirm active endpoint profiling (endpoints changing attributes, new endpoints appearing).  
+3. Initiate binary export of Profiler DB.  
+4. Measure any impact on response time of REST API and UI during export.  
+5. After export, initiate binary import using a known DB file.  
+6. Monitor system CPU, memory, and response times throughout import.  
+7. Attempt REST `GET /endpoint/` during import and observe errors or delays.  
+
+**Expected Results:**  
+- Export may temporarily impact performance but should not cause system failures or data corruption.  
+- Import, which erases DB and invalidates sessions, should cause controlled behavior (e.g., temporary 503 responses, documented maintenance mode) but not crash.  
+- After import, system recovers to normal performance.  
+- No deadlocks or inconsistent states.  
+
+**Postconditions:**  
+- System returns to stable state post-import; all services functional.
+
+---
+
+#### TC_022  
+**Test ID:** TC_022  
+**Test Title:** Measure binary export/import performance for medium-sized DB  
+**Category:** performance  
+**Priority:** Medium  
+
+**Description:**  
+Quantify DB export/import performance for a moderately sized database (e.g., 10,000 endpoints) to validate it meets acceptable thresholds.
+
+**Prerequisites:**  
+- Profiler with ~10,000 endpoints.  
+
+**Test Data:**  
+- None specific.  
+
+**Test Steps:**  
+1. Log in as admin.  
+2. Start performance timer.  
+3. Export Profiler DB in binary format.  
+4. Stop timer when export completes; record total time.  
+5. Clear DB or use a fresh system.  
+6. Start timer.  
+7. Import the same binary file.  
+8. Stop timer when import completes.  
+9. Record CPU and memory usage during both operations.  
+
+**Expected Results:**  
+- Export and import complete within defined SLA for medium size (e.g., <5 minutes each for 10,000 endpoints – adjust per requirement).  
+- Resource usage is within acceptable bounds (no CPU pegged to 100% for extended periods, no memory exhaustion).  
+
+**Postconditions:**  
+- DB restored from medium-sized export; performance metrics recorded.
+
+---
+
+#### TC_023  
+**Test ID:** TC_023  
+**Test Title:** Verify robustness of upgrade when DB stored externally and network latency present  
+**Category:** integration / performance  
+**Priority:** Medium  
+
+**Description:**  
+If DB (or backup storage) is on external/NFS/remote storage, validate upgrade and backup/restore behavior under network latency.
+
+**Prerequisites:**  
+- Profiler DB or backup storage location on a network file system with controllable latency.  
+
+**Test Data:**  
+- Binary export stored at remote path.  
+
+**Test Steps:**  
+1. Configure backup/export location to point to a remote filesystem with simulated 100ms latency.  
+2. Perform binary export to remote location.  
+3. Observe time and any timeouts.  
+4. Perform binary import from remote file.  
+5. Monitor for errors or timeouts.  
+
+**Expected Results:**  
+- System handles latency gracefully – operations may be slower but succeed.  
+- Clear error if network path becomes unavailable, without DB corruption.  
+
+**Postconditions:**  
+- DB reflects import contents; remote storage usage validated.
+
+---
+
+#### TC_024  
+**Test ID:** TC_024  
+**Test Title:** Verify rollback strategy when post-upgrade DB validation fails  
+**Category:** negative / integration  
+**Priority:** High  
+
+**Description:**  
+Simulate scenario where DB upgrade appears to complete, but post-upgrade validation detects inconsistency; verify rollback using pre-upgrade backup and clear admin guidance.
+
+**Prerequisites:**  
+- PPS 9.1R8 with Profiler and backup taken.  
+- Scenario to simulate post-upgrade validation failure (e.g., artificially corrupt some records, or simulate mismatch with expected schema using test harness).  
+
+**Test Data:**  
+- Pre-upgrade backup: `profiler_db_pre_rollback.bin`.  
+
+**Test Steps:**  
+1. Take binary export on 9.1R8 (`profiler_db_pre_rollback.bin`).  
+2. Perform upgrade to 9.1R10.  
+3. Simulate validation failure (e.g., run validation tool that flags DB mismatch – if tool exists; otherwise simulate error).  
+4. Follow documented rollback steps:  
+   - Revert software to 9.1R8 OR  
+   - Keep 9.1R10 and restore DB from backup (depending on official strategy).  
+5. Import `profiler_db_pre_rollback.bin`.  
+6. Verify Profiler DB is consistent and endpoints accessible.  
+
+**Expected Results:**  
+- Rollback/restore process is feasible and documented.  
+- Admin can recover a consistent DB state using backup.  
+- No permanent data loss due to failed upgrade.  
+
+**Postconditions:**  
+- System returns to known-good DB state using backup; upgrade can be retried after root cause fix.
+
+---
+
+### SECTION 2: TEST PLANNING ANALYSIS
+
+#### 1. Feature Overview
+
+Functionality under test is the Profiler database upgrade path, focusing on:
+
+- Import/Export of Profiler device database in binary and CSV formats.  
+- Import/Export of Profile Modifications database in binary.  
+- Behavior across PPS/Profiler version upgrades (e.g., 9.1R8 → 9.1R10).  
+- Interactions with Profiler REST server, collectors, PPS session management, and logs.  
+- Security and performance characteristics of DB backup, restore, and upgrade operations.
+
+#### 2. Test Objectives
+
+- Validate that Profiler DB content can be safely backed up and restored across version upgrades with no loss or corruption.  
+- Confirm documented behaviors:  
+  - Binary import erases existing DB and invalidates sessions.  
+  - CSV import appends to existing DB.  
+  - Profile modifications import appends to existing modifications.  
+- Ensure robust error handling for invalid/malformed/corrupted files and boundary conditions.  
+- Verify security controls over DB export/import and sanitization of imported data.  
+- Validate continued correct operation of REST APIs, collectors, and PPS integration after DB upgrade.  
+- Measure performance of DB export/import at various database sizes.
+
+#### 3. Coverage Analysis
+
+Number of tests by category (24 total):
+
+- Positive:  
+  - TC_001, TC_002, TC_003, TC_004, TC_005 → 5 tests (~21%)  
+  - (On the low side vs requested 30–40%; several “mixed” tests include positive aspects; additional positive tests can be added if you need strict ratio.)
+- Negative:  
+  - TC_006, TC_007, TC_008, TC_009, TC_010, TC_024 → 6 tests (~25%)  
+- Boundary:  
+  - TC_011, TC_012, TC_013, TC_014 → 4 tests (~17%)  
+- Integration:  
+  - TC_015, TC_016, TC_017 (also touches logging), TC_023, TC_024 → 5 tests (~21%)  
+- Security:  
+  - TC_018, TC_019, TC_020 → 3 tests (~13%)  
+- Performance:  
+  - TC_021, TC_022, TC_023 → 3 tests (~13%)
+
+Note: Several integration/performance/security tests overlap categories; counts above use their primary categorization.
+
+#### 4. Risk Areas & Focus
+
+High-priority risk areas requiring extra attention:
+
+1. **Data Integrity Across Upgrades**  
+   - Risk of losing or corrupting Profiler DB when upgrading (TC_001, TC_003, TC_005, TC_011, TC_024).  
+   - Verify that binary and CSV paths work correctly and that append vs replace semantics are adhered to.
+
+2. **Session and PPS Integration Consistency**  
+   - Binary import clears DB and invalidates sessions – any mismatch between PPS view and Profiler view can impact access enforcement (TC_003, TC_016).
+
+3. **Error Handling for Imports**  
+   - Corrupted, malformed, or wrong-type files must not corrupt DB or mislead admins (TC_006, TC_007, TC_008, TC_009, TC_013).
+
+4. **Security of Exported Data and Import Inputs**  
+   - Unauthorized export/import could leak or alter sensitive endpoint data (TC_018, TC_019).  
+   - Imported fields must be sanitized to prevent injection or XSS (TC_020).
+
+5. **Performance & Scalability at Scale**  
+   - Backup/restore must be feasible in production windows for large environments (TC_011, TC_012, TC_021, TC_022, TC_023).
+
+6. **Observability & Troubleshooting**  
+   - Logs must clearly reflect DB upgrade actions for auditability and incident response (TC_017).
+
+If you want, the next step can be a matrix mapping these test cases to specific documented behaviors (binary vs CSV, profile modifications, logging, REST) and to a formal IEEE 829/ISO 29119 test design specification.

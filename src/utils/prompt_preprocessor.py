@@ -72,7 +72,7 @@ Extract all relevant information for documentation retrieval."""
             response = self.llm.generate(
                 prompt=prompt,
                 system_message=system_message,
-                temperature=0.3,  # Lower temperature for precise extraction
+                temperature=1.0,  # Fixed for GPT-5 compatibility (only supports 1.0)
                 max_tokens=500
             )
 

@@ -68,12 +68,13 @@ class AzureLLM:
     ) -> str:
         """
         Generate text using Azure OpenAI
+        Supports both old models (GPT-4, GPT-4.1) and new models (GPT-5+)
 
         Args:
             prompt: User prompt
             system_message: Optional system message for context
             temperature: Optional temperature override
-            max_tokens: Optional max tokens override
+            max_tokens: Optional max tokens override (converted to max_completion_tokens for GPT-5+)
 
         Returns:
             Generated text response
@@ -88,18 +89,60 @@ class AzureLLM:
             # Add user prompt
             messages.append({"role": "user", "content": prompt})
 
-            # Call Azure OpenAI
-            response = self.client.chat.completions.create(
-                model=self.deployment,
-                messages=messages,
-                temperature=temperature or config.LLM_TEMPERATURE,
-                max_tokens=max_tokens or config.LLM_MAX_TOKENS,
-                top_p=config.LLM_TOP_P
-            )
+            # Prepare API parameters
+            tokens_value = max_tokens or config.LLM_MAX_TOKENS
+            api_params = {
+                "model": self.deployment,
+                "messages": messages,
+                "temperature": temperature or config.LLM_TEMPERATURE
+                # Note: top_p removed - GPT-5.1-2 doesn't support it
+            }
+
+            # Try with max_completion_tokens first (GPT-5+ models)
+            # If that fails, fall back to max_tokens (older models)
+            try:
+                logger.debug(f"Trying max_completion_tokens={tokens_value}")
+                response = self.client.chat.completions.create(
+                    **api_params,
+                    max_completion_tokens=tokens_value
+                )
+                logger.debug("Success with max_completion_tokens")
+            except Exception as e:
+                error_msg = str(e)
+                logger.debug(f"First attempt with max_completion_tokens failed: {error_msg[:300]}")
+
+                # Only retry with max_tokens if the error is SPECIFICALLY about max_completion_tokens being unsupported
+                if ("max_completion_tokens" in error_msg and "unsupported" in error_msg.lower()) or \
+                   ("max_completion_tokens" in error_msg and "not supported" in error_msg.lower()):
+                    logger.info("Model doesn't support max_completion_tokens, trying max_tokens (GPT-4)")
+                    response = self.client.chat.completions.create(
+                        **api_params,
+                        max_tokens=tokens_value
+                    )
+                else:
+                    # Any other error (including temperature, top_p, etc.) - just raise it
+                    logger.error(f"API error (not parameter compatibility): {type(e).__name__}")
+                    raise
 
             # Extract response text
-            result = response.choices[0].message.content.strip()
+            logger.debug(f"Response object type: {type(response)}")
+            logger.debug(f"Response has choices: {hasattr(response, 'choices')}")
 
+            if not response or not response.choices:
+                logger.error("No response or no choices in response")
+                return ""
+
+            logger.debug(f"Number of choices: {len(response.choices)}")
+            logger.info(f"Finish reason: {response.choices[0].finish_reason}")  # Log finish reason to diagnose truncation
+
+            content = response.choices[0].message.content
+            logger.debug(f"Content type: {type(content)}, value: {repr(content[:200] if content else content)}")
+
+            if content is None:
+                logger.error("Response content is None")
+                return ""
+
+            result = content.strip()
             logger.info(f"Generated {len(result)} characters")
             return result
 
