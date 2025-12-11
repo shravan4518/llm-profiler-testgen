@@ -287,7 +287,8 @@ class DocumentLoaderFactory:
         '.txt': TextLoader,
         '.pdf': PDFLoader,
         '.md': MarkdownLoader,
-        '.json': JSONLoader
+        '.json': JSONLoader,
+        '.py': None  # Will be lazy-loaded from code_loader module
     }
 
     @classmethod
@@ -303,6 +304,16 @@ class DocumentLoaderFactory:
         """
         file_ext = Path(file_path).suffix.lower()
         loader = cls.LOADERS.get(file_ext)
+
+        # Lazy load PythonCodeLoader for .py files
+        if file_ext == '.py' and loader is None:
+            try:
+                from src.document_processing.code_loader import PythonCodeLoader
+                cls.LOADERS['.py'] = PythonCodeLoader
+                loader = PythonCodeLoader
+            except ImportError:
+                logger.warning("PythonCodeLoader not available, .py files will not be loaded")
+                return None
 
         if loader is None:
             logger.warning(f"Unsupported file type: {file_ext}")
