@@ -1,9 +1,17 @@
 """
 Enterprise RAG Configuration
 Centralized configuration for the RAG system with environment variable support
+
+IMPORTANT: API keys and sensitive configuration are stored in .env file
+           Copy .env.example to .env and add your actual API keys
+           The .env file is excluded from Git for security
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Base Paths
 BASE_DIR = Path(__file__).parent
@@ -66,10 +74,18 @@ ENABLE_OCR = False  # Enable OCR for scanned PDFs (requires tesseract)
 # The system automatically handles parameter compatibility
 # ============================================================================
 
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "ENTER_ENDPOINT_HERE")
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "ENTER_API_HERE")
-AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5.1-2")  # <-- Change model here (gpt-4.1 or gpt-5.1-2)
-AZURE_OPENAI_API_VERSION = "2025-04-01-preview"
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1")  # Default model
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2025-04-01-preview")
+
+# Validate required environment variables
+if not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_API_KEY:
+    raise ValueError(
+        "Missing required environment variables!\n"
+        "Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in your .env file.\n"
+        "See .env.example for template."
+    )
 
 # LLM Configuration for Test Case Generation
 LLM_TEMPERATURE = 1.0  # Temperature (NOTE: GPT-5.1-2 only supports 1.0, GPT-4 supports 0.0-2.0)
@@ -87,5 +103,23 @@ MIN_TEST_CASES_PER_FEATURE = 10  # Minimum test cases to generate
 COVERAGE_TYPES = ["positive", "negative", "boundary", "integration", "security", "performance"]
 OUTPUT_FORMATS = ["json", "markdown", "excel"]  # Supported output formats
 
-# Multimodal Image Processing (Disabled - was for Gemini)
-ENABLE_IMAGE_PROCESSING = False  # Disabled (use Azure GPT-4 Vision if needed)
+# ============================================================================
+# MULTIMODAL IMAGE PROCESSING CONFIGURATION
+# ============================================================================
+# Enable image extraction and description during document ingestion
+# Images are analyzed using Vision LLM and descriptions are added to knowledge base
+# ============================================================================
+
+ENABLE_IMAGE_PROCESSING = True  # Set to True to enable image understanding
+
+# Vision LLM Configuration for Image Analysis
+# Separate endpoint/deployment allows using different model for vision tasks
+VISION_ENDPOINT = os.getenv("VISION_ENDPOINT", AZURE_OPENAI_ENDPOINT)  # Defaults to same as text LLM
+VISION_API_KEY = os.getenv("VISION_API_KEY", AZURE_OPENAI_API_KEY)      # Defaults to same as text LLM
+VISION_DEPLOYMENT = os.getenv("VISION_DEPLOYMENT", "gpt-4o")             # Vision-capable model (gpt-4o, gpt-4-vision)
+VISION_API_VERSION = os.getenv("VISION_API_VERSION", "2024-02-15-preview")  # API version for vision features
+
+# Image Processing Parameters
+IMAGE_MIN_SIZE = 100  # Minimum image size (pixels) to process (filters out icons/logos)
+MAX_IMAGES_PER_PAGE = 10  # Maximum images to process per PDF page
+IMAGE_DESCRIPTION_MAX_TOKENS = 500  # Max tokens for each image description

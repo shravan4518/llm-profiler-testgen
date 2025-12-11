@@ -1,6 +1,6 @@
 """
 Image Processor for Multimodal RAG
-Extracts images from PDFs and uses Azure OpenAI Vision to generate searchable descriptions
+Extracts images from PDFs and uses Vision LLM to generate searchable descriptions
 """
 import sys
 import io
@@ -19,46 +19,43 @@ from src.utils.logger import setup_logger
 
 logger = setup_logger(__name__)
 
-# Try to import Azure OpenAI
+# Try to import Vision LLM packages
 try:
-    from openai import AzureOpenAI
-    AZURE_VISION_AVAILABLE = True
+    import google.generativeai as genai
+    GEMINI_VISION_AVAILABLE = True
 except ImportError:
-    AZURE_VISION_AVAILABLE = False
-    logger.warning("openai package not installed. Install: pip install openai")
+    GEMINI_VISION_AVAILABLE = False
+    logger.warning("google-generativeai not installed. Multimodal features will be limited.")
 
 
 class ImageProcessor:
     """
-    Processes images from PDF documents using Azure OpenAI Vision
+    Processes images from PDF documents using Vision LLM
 
     Extracts images, filters by size, and generates detailed text descriptions
     that can be embedded and searched alongside document text.
     """
 
     def __init__(self):
-        """Initialize Image Processor with Azure Vision LLM"""
-        self.vision_client = None
+        """Initialize Image Processor with Vision LLM"""
+        self.vision_model = None
 
         if not config.ENABLE_IMAGE_PROCESSING:
             logger.info("Image processing is disabled in config")
             return
 
-        if not AZURE_VISION_AVAILABLE:
-            logger.warning("Azure OpenAI not available. Install: pip install openai pillow")
+        if not GEMINI_VISION_AVAILABLE:
+            logger.warning("Gemini Vision not available. Install: pip install google-generativeai pillow")
             return
 
-        # Initialize Azure OpenAI Vision
+        # Initialize Gemini Vision
         try:
-            self.vision_client = AzureOpenAI(
-                azure_endpoint=config.VISION_ENDPOINT,
-                api_key=config.VISION_API_KEY,
-                api_version=config.VISION_API_VERSION
-            )
-            logger.info(f"Azure Vision LLM initialized: {config.VISION_DEPLOYMENT}")
+            genai.configure(api_key=config.GEMINI_API_KEY)
+            self.vision_model = genai.GenerativeModel(config.IMAGE_VISION_MODEL)
+            logger.info(f"Vision LLM initialized: {config.IMAGE_VISION_MODEL}")
         except Exception as e:
-            logger.error(f"Failed to initialize Azure Vision LLM: {e}")
-            self.vision_client = None
+            logger.error(f"Failed to initialize Vision LLM: {e}")
+            self.vision_model = None
 
     def extract_images_from_pdf(self, pdf_path: str) -> Dict[int, List[Image.Image]]:
         """
@@ -115,14 +112,15 @@ class ImageProcessor:
         return images_by_page
 
     def image_to_base64(self, image: Image.Image) -> str:
-        """Convert PIL Image to base64 string for Azure Vision API"""
+        """Convert PIL Image to base64 string"""
         buffered = io.BytesIO()
         image.save(buffered, format="PNG")
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     def analyze_image_with_vision_llm(self, image: Image.Image, page_context: str = "", retry_count: int = 0) -> Optional[str]:
         """
-        Analyze image using Azure OpenAI Vision and generate detailed description
+        Analyze image using Vision LLM and generate detailed description
+        Includes automatic retry for rate limits and error handling for safety blocks
 
         Args:
             image: PIL Image object
@@ -132,64 +130,72 @@ class ImageProcessor:
         Returns:
             Text description of the image
         """
-        if not self.vision_client:
-            logger.warning("Azure Vision LLM not initialized")
+        if not self.vision_model:
+            logger.warning("Vision LLM not initialized")
             return None
 
         try:
-            # Convert image to base64
-            base64_image = self.image_to_base64(image)
+            # Build simplified prompt for better compatibility
+            prompt = f"""Describe this technical documentation image. Include:
+- Image type (screenshot/diagram/flowchart)
+- Visible UI elements or components
+- Any text or labels shown
+- Technical details
 
-            # Build prompt for technical documentation
-            prompt = """Describe this technical documentation image in detail. Include:
-- Type of image (screenshot, diagram, flowchart, architecture diagram, table, chart, etc.)
-- Key components, UI elements, or diagram elements visible
-- Any text, labels, or annotations shown
-- Technical details, configurations, or settings visible
-- Relationships between components if it's a diagram
-- Data or metrics if it's a chart/table
+Keep description factual and concise."""
 
-Keep the description factual, detailed, and searchable for technical queries."""
+            # Send image and prompt to Vision LLM
+            logger.debug("Sending image to Vision LLM for analysis...")
 
-            logger.debug("Sending image to Azure Vision API for analysis...")
+            # Add safety settings to reduce blocks
+            safety_settings = [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+            ]
 
-            # Call Azure OpenAI Vision API
-            response = self.vision_client.chat.completions.create(
-                model=config.VISION_DEPLOYMENT,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/png;base64,{base64_image}"
-                                }
-                            }
-                        ]
-                    }
-                ],
-                max_tokens=config.IMAGE_DESCRIPTION_MAX_TOKENS,
-                temperature=0.1  # Low temperature for factual descriptions
+            response = self.vision_model.generate_content(
+                [prompt, image],
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.1,  # Very low temperature for factual descriptions
+                    max_output_tokens=config.IMAGE_DESCRIPTION_MAX_TOKENS
+                ),
+                safety_settings=safety_settings
             )
 
-            # Extract description
-            if response and response.choices:
-                description = response.choices[0].message.content.strip()
-                logger.info(f"Generated image description ({len(description)} chars)")
-                return f"\n\n[IMAGE DESCRIPTION]\n{description}\n\n"
+            # Handle response with safety block checking
+            if response:
+                try:
+                    description = response.text.strip()
+                    logger.info(f"Generated image description ({len(description)} chars)")
+                    return f"\n\n[IMAGE DESCRIPTION]\n{description}\n\n"
+                except ValueError as e:
+                    # Check for safety block
+                    if hasattr(response, 'candidates') and response.candidates:
+                        candidate = response.candidates[0]
+                        if hasattr(candidate, 'finish_reason') and candidate.finish_reason == 2:
+                            logger.warning("Image blocked by safety filters")
+                            return None  # Use fallback
+                    raise
 
-            logger.warning("Azure Vision API returned empty response")
+            logger.warning("Vision LLM returned empty response")
             return None
 
         except Exception as e:
             error_msg = str(e)
 
             # Handle rate limit errors with retry
-            if "429" in error_msg or "rate limit" in error_msg.lower():
+            if "429" in error_msg or "quota" in error_msg.lower():
                 if retry_count < 2:  # Max 2 retries
-                    wait_time = 10 * (retry_count + 1)  # Progressive backoff: 10s, 20s
+                    # Extract retry delay from error
+                    wait_time = 15  # Default wait time
+                    if "retry in" in error_msg:
+                        try:
+                            wait_time = int(float(error_msg.split("retry in ")[1].split("s")[0])) + 1
+                        except:
+                            pass
+
                     logger.warning(f"Rate limit hit. Waiting {wait_time}s before retry {retry_count + 1}/2...")
                     time.sleep(wait_time)
                     return self.analyze_image_with_vision_llm(image, page_context, retry_count + 1)
@@ -198,7 +204,7 @@ Keep the description factual, detailed, and searchable for technical queries."""
                     return None
 
             # Log other errors
-            logger.error(f"Error analyzing image with Azure Vision: {e}")
+            logger.error(f"Error analyzing image with Vision LLM: {e}")
             return None
 
     def process_pdf_images(
@@ -220,8 +226,8 @@ Keep the description factual, detailed, and searchable for technical queries."""
             logger.debug("Image processing disabled, skipping")
             return {}
 
-        if not self.vision_client:
-            logger.warning("Azure Vision LLM not available, skipping image processing")
+        if not self.vision_model:
+            logger.warning("Vision LLM not available, skipping image processing")
             return {}
 
         logger.info(f"Processing images from: {pdf_path}")
@@ -258,9 +264,11 @@ Keep the description factual, detailed, and searchable for technical queries."""
                     page_descriptions.append(fallback)
                     logger.warning(f"Using fallback description for image {img_idx} on page {page_num}")
 
-                # Small delay between images to avoid rate limits
-                if img_idx < len(images):
-                    time.sleep(2)
+                # Throttle to respect free tier rate limit (10 requests/minute)
+                # Wait 6 seconds between images to stay under limit
+                if img_idx < len(images):  # Don't wait after last image on page
+                    logger.debug("Waiting 6s to respect API rate limit...")
+                    time.sleep(6)
 
             descriptions_by_page[page_num] = page_descriptions
             logger.info(f"Page {page_num}: Generated {len(page_descriptions)} image descriptions")
@@ -273,8 +281,8 @@ Keep the description factual, detailed, and searchable for technical queries."""
     def is_available(self) -> bool:
         """Check if image processing is available"""
         return (config.ENABLE_IMAGE_PROCESSING and
-                AZURE_VISION_AVAILABLE and
-                self.vision_client is not None)
+                GEMINI_VISION_AVAILABLE and
+                self.vision_model is not None)
 
 
 def integrate_image_descriptions(
