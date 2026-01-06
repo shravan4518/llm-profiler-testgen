@@ -1,0 +1,182 @@
+{
+  "004793cb": {
+    "job_id": "004793cb",
+    "user_prompt": "Profiler DB upgrade",
+    "model": "gpt-4.1-nano",
+    "status": "failed",
+    "created_at": "2026-01-04T18:26:32.703188",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-04T18:26:32.717940"
+  },
+  "1c1eb73d": {
+    "job_id": "1c1eb73d",
+    "user_prompt": "Profiler DB upgrade",
+    "model": "gpt-4.1-nano",
+    "status": "failed",
+    "created_at": "2026-01-04T18:26:39.336057",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-04T18:26:39.365103"
+  },
+  "b083b930": {
+    "job_id": "b083b930",
+    "user_prompt": "Profiler DB upgrade",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-04T18:29:47.689198",
+    "script_status": "failed",
+    "updated_at": "2026-01-04T18:30:02.965225"
+  },
+  "4eedd804": {
+    "job_id": "4eedd804",
+    "user_prompt": "Agentless hostchecker",
+    "model": "gpt-4.1-nano",
+    "status": "failed",
+    "created_at": "2026-01-04T19:01:39.397653",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-04T19:01:44.919347"
+  },
+  "ef6c8349": {
+    "job_id": "ef6c8349",
+    "user_prompt": "Agentless Hostchecker with profiler",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T11:39:50.271984",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-05T11:50:15.201354"
+  },
+  "32dc539c": {
+    "job_id": "32dc539c",
+    "user_prompt": "Profiler Configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T11:46:23.558189",
+    "script_status": "failed",
+    "updated_at": "2026-01-05T11:46:38.308875"
+  },
+  "bf74b7f7": {
+    "job_id": "bf74b7f7",
+    "user_prompt": "Profiler Configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T11:58:54.894411",
+    "script_status": "failed",
+    "updated_at": "2026-01-05T11:59:09.369061"
+  },
+  "b3492a27": {
+    "job_id": "b3492a27",
+    "user_prompt": "Passive profiling",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T12:02:24.151352",
+    "script_status": "failed",
+    "updated_at": "2026-01-05T12:02:38.870942"
+  },
+  "39fa0a2b": {
+    "job_id": "39fa0a2b",
+    "user_prompt": "Passive collectors in profiler",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T12:15:37.964479",
+    "script_status": "failed",
+    "updated_at": "2026-01-05T12:15:56.265224"
+  },
+  "dd1f1b76": {
+    "job_id": "dd1f1b76",
+    "user_prompt": "Active Collectors in Profiler",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T12:31:58.435752",
+    "script_status": "failed",
+    "updated_at": "2026-01-05T12:32:17.164989"
+  },
+  "2e62395b": {
+    "job_id": "2e62395b",
+    "user_prompt": "Active collectors in profiler",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T12:36:22.041734",
+    "script_status": "failed",
+    "updated_at": "2026-01-05T12:36:39.306626"
+  },
+  "e43d871e": {
+    "job_id": "e43d871e",
+    "user_prompt": "Profiler DHCP",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T12:43:44.018470",
+    "script_status": "generated",
+    "updated_at": "2026-01-05T12:43:58.292717"
+  },
+  "a226d74e": {
+    "job_id": "a226d74e",
+    "user_prompt": "Profiler DB Upgrade",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T13:02:35.120954",
+    "script_status": "generated",
+    "updated_at": "2026-01-05T13:02:49.161043"
+  },
+  "43f4fe99": {
+    "job_id": "43f4fe99",
+    "user_prompt": "Profiler DB Upgrade",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T13:12:02.522135",
+    "script_status": "failed",
+    "updated_at": "2026-01-05T13:13:24.687852"
+  },
+  "6127b252": {
+    "job_id": "6127b252",
+    "user_prompt": "Profile Configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T21:33:53.861320",
+    "script_status": "generated",
+    "updated_at": "2026-01-05T21:35:00.091669"
+  },
+  "8d026762": {
+    "job_id": "8d026762",
+    "user_prompt": "Profiler Configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T21:39:35.940509",
+    "script_status": "generated",
+    "updated_at": "2026-01-05T21:40:40.904911"
+  },
+  "0badc155": {
+    "job_id": "0badc155",
+    "user_prompt": "Profiler Configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T21:52:09.902533",
+    "script_status": "generated",
+    "updated_at": "2026-01-05T21:53:05.092067"
+  },
+  "4d8529a8": {
+    "job_id": "4d8529a8",
+    "user_prompt": "Profiler DHCP configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-05T22:00:25.028390",
+    "script_status": "generated",
+    "updated_at": "2026-01-05T22:01:31.714774"
+  },
+  "5456a404": {
+    "job_id": "5456a404",
+    "user_prompt": "Passive collectors in Profiler",
+    "model": "gpt-4.1-nano",
+    "status": "failed",
+    "created_at": "2026-01-06T10:38:09.969918",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-06T10:38:15.366004"
+  },
+  "54693fcf": {
+    "job_id": "54693fcf",
+    "user_prompt": "Profiler SNMP Traps",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-06T10:43:41.511206",
+    "script_status": "generated",
+    "updated_at": "2026-01-06T10:44:42.460256"
+  }
+}

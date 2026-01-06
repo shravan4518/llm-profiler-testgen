@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Profiler Agentic Automation{% endblock %}
+
+{% block content %}
+<div class="container hero-section">
+    <div class="hero-content">
+        <h1><i class="fas fa-robot"></i> Profiler Agentic Automation</h1>
+        <p class="hero-subtitle">AI-Powered Test Case Generation & Automation for Profiler Testing</p>
+        <p class="hero-description">
+            Leverage Azure OpenAI GPT models combined with FAISS vector database to generate
+            comprehensive, production-ready test cases and scripts from your documentation.
+        </p>
+    </div>
+
+    <div class="features-grid">
+        <!-- Model Training Card -->
+        <div class="feature-card">
+            <div class="card-icon training-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <h2>Model Training</h2>
+            <p>Manage your knowledge base by ingesting documentation and framework code into the vector database.</p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> Document Ingestion (PDF, TXT, MD, JSON)</li>
+                <li><i class="fas fa-check"></i> Framework Code Ingestion (Python)</li>
+                <li><i class="fas fa-check"></i> View Ingested Documents</li>
+                <li><i class="fas fa-check"></i> Vector Database Status</li>
+                <li><i class="fas fa-check"></i> Database Management</li>
+            </ul>
+            <a href="{{ url_for('training_dashboard') }}" class="btn btn-primary btn-large">
+                <i class="fas fa-arrow-right"></i> Go to Model Training
+            </a>
+        </div>
+
+        <!-- Inference Card -->
+        <div class="feature-card">
+            <div class="card-icon inference-icon">
+                <i class="fas fa-magic"></i>
+            </div>
+            <h2>Inference</h2>
+            <p>Generate comprehensive test cases and executable scripts using AI-powered intelligent retrieval.</p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> Test Case Generation (GPT-4/GPT-5)</li>
+                <li><i class="fas fa-check"></i> Automated Script Generation</li>
+                <li><i class="fas fa-check"></i> AI-Enhanced Context Retrieval</li>
+                <li><i class="fas fa-check"></i> Multiple Output Formats</li>
+                <li><i class="fas fa-check"></i> Quality Assurance Validation</li>
+            </ul>
+            <a href="{{ url_for('inference_page') }}" class="btn btn-secondary btn-large">
+                <i class="fas fa-arrow-right"></i> Go to Inference
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+            <div class="stat-content">
+                <h3 id="stat-documents">-</h3>
+                <p>Documents Ingested</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-cube"></i></div>
+            <div class="stat-content">
+                <h3 id="stat-chunks">-</h3>
+                <p>Text Chunks</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-brain"></i></div>
+            <div class="stat-content">
+                <h3 id="stat-model">Loading...</h3>
+                <p>AI Model</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/health')
+        .then(response => response.json())
+        .then(data => {
+            console.log('System health:', data);
+
+            // Update stats on home page
+            const docsEl = document.getElementById('stat-documents');
+            const chunksEl = document.getElementById('stat-chunks');
+            const modelEl = document.getElementById('stat-model');
+
+            if (docsEl) {
+                docsEl.textContent = data.total_documents || 0;
+            }
+            if (chunksEl) {
+                chunksEl.textContent = data.total_chunks || 0;
+            }
+            if (modelEl) {
+                // Format model name: gpt-5.1 -> GPT-5.1, gpt-4.1-nano -> GPT-4.1 Nano
+                const modelName = data.model || 'Unknown';
+                const formattedModel = modelName
+                    .toUpperCase()
+                    .replace(/-/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                modelEl.textContent = formattedModel;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading stats:', error);
+            // Set to 0 on error
+            const docsEl = document.getElementById('stat-documents');
+            const chunksEl = document.getElementById('stat-chunks');
+            const modelEl = document.getElementById('stat-model');
+            if (docsEl) docsEl.textContent = '0';
+            if (chunksEl) chunksEl.textContent = '0';
+            if (modelEl) modelEl.textContent = 'Unknown';
+        });
+});
+</script>
+{% endblock %}

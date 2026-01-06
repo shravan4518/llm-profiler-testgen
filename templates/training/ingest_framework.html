@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Framework Ingestion - Profiler Agentic Automation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-code"></i> Framework Code Ingestion</h1>
+        <p>Ingest your Python test automation framework to help AI learn coding patterns</p>
+        <a href="{{ url_for('training_dashboard') }}" class="btn btn-secondary btn-small">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="framework-section">
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <h4>What is Framework Ingestion?</h4>
+                <p>
+                    By ingesting your existing test automation framework code, the AI learns your coding patterns,
+                    utilities, and best practices. This enables it to generate test scripts that match your framework's style.
+                </p>
+            </div>
+        </div>
+
+        <div class="framework-form">
+            <h3>Specify Framework Path</h3>
+            <div class="form-group">
+                <label for="framework-path">
+                    <i class="fas fa-folder"></i> Framework Directory Path
+                </label>
+                <input
+                    type="text"
+                    id="framework-path"
+                    class="form-input"
+                    placeholder="C:\path\to\your\framework"
+                    value="C:\Users\SaiShravan.V\OneDrive - Ivanti\Desktop\PPS desktop python files"
+                >
+                <p class="help-text">
+                    Enter the full path to your Python test framework directory
+                </p>
+            </div>
+
+            <button id="ingest-btn" class="btn btn-primary btn-large">
+                <i class="fas fa-play"></i> Start Ingestion
+            </button>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progress-section" class="progress-section" style="display: none;">
+            <h3>Ingestion Progress</h3>
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar-fill"></div>
+            </div>
+            <p id="progress-text">Initializing...</p>
+        </div>
+
+        <!-- Files Found -->
+        <div id="files-section" class="files-section" style="display: none;">
+            <h3>
+                <i class="fas fa-file-code"></i> Files Found
+                <span id="file-count" class="badge">0</span>
+            </h3>
+            <div id="files-list" class="files-list"></div>
+        </div>
+
+        <!-- Ingestion Log -->
+        <div class="upload-log">
+            <h3>
+                <i class="fas fa-terminal"></i> Ingestion Log
+                <button id="clear-framework-log" class="btn btn-small btn-secondary" style="float: right;">
+                    <i class="fas fa-trash"></i> Clear Log
+                </button>
+            </h3>
+            <div id="framework-log" class="log-output">
+                <p class="log-entry info">Ready to ingest framework code...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const frameworkPath = document.getElementById('framework-path');
+const ingestBtn = document.getElementById('ingest-btn');
+const progressSection = document.getElementById('progress-section');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+const filesSection = document.getElementById('files-section');
+const filesList = document.getElementById('files-list');
+const fileCount = document.getElementById('file-count');
+const frameworkLog = document.getElementById('framework-log');
+
+ingestBtn.addEventListener('click', startIngestion);
+
+function startIngestion() {
+    const path = frameworkPath.value.trim();
+
+    if (!path) {
+        addFrameworkLog('Please enter a framework path', 'error');
+        return;
+    }
+
+    addFrameworkLog(`Starting framework ingestion from: ${path}`, 'info');
+    progressSection.style.display = 'block';
+    filesSection.style.display = 'none';
+    ingestBtn.disabled = true;
+    progressBar.style.width = '10%';
+    progressText.textContent = 'Scanning for Python files...';
+
+    fetch('/training/ingest-framework-path', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ framework_path: path })
+    })
+    .then(response => response.json())
+    .then(data => {
+        progressBar.style.width = '100%';
+        ingestBtn.disabled = false;
+
+        if (data.success) {
+            const totalProcessed = (data.ingested || 0) + (data.skipped || 0);
+            progressText.textContent = `✓ Framework ingestion completed: ${data.ingested} ingested, ${data.skipped || 0} skipped`;
+            addFrameworkLog(`✓ Framework ingestion completed successfully`, 'success');
+            addFrameworkLog(`   - Total files found: ${data.total}`, 'success');
+            addFrameworkLog(`   - Successfully ingested: ${data.ingested}`, 'success');
+            addFrameworkLog(`   - Skipped (already up-to-date): ${data.skipped || 0}`, 'info');
+            addFrameworkLog(`   - Failed: ${data.failed}`, data.failed > 0 ? 'warning' : 'success');
+
+            // Show files
+            if (data.files && data.files.length > 0) {
+                filesSection.style.display = 'block';
+                fileCount.textContent = data.files.length;
+                filesList.innerHTML = '';
+
+                data.files.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.innerHTML = `
+                        <i class="fas fa-file-code"></i>
+                        <span>${file.filename}</span>
+                        <span class="file-chunks">${file.chunks} chunks</span>
+                    `;
+                    filesList.appendChild(fileItem);
+                    addFrameworkLog(`   ✓ ${file.filename} (${file.chunks} chunks)`, 'success');
+                });
+            }
+
+            showToast('Framework ingested successfully!', 'success');
+        } else {
+            progressText.textContent = `✗ Ingestion failed`;
+            addFrameworkLog(`✗ Framework ingestion failed: ${data.error}`, 'error');
+            showToast('Framework ingestion failed: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        progressBar.style.width = '100%';
+        progressBar.style.backgroundColor = '#ef4444';
+        progressText.textContent = `✗ Error occurred`;
+        ingestBtn.disabled = false;
+        addFrameworkLog(`✗ Error during ingestion: ${error.message}`, 'error');
+        showToast('Error during ingestion: ' + error.message, 'error');
+    });
+}
+
+function addFrameworkLog(message, type = 'info') {
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = document.createElement('p');
+    logEntry.className = `log-entry ${type}`;
+    logEntry.textContent = `[${timestamp}] ${message}`;
+    frameworkLog.appendChild(logEntry);
+    frameworkLog.scrollTop = frameworkLog.scrollHeight;
+}
+
+document.getElementById('clear-framework-log').addEventListener('click', function() {
+    frameworkLog.innerHTML = '<p class="log-entry info">Log cleared.</p>';
+});
+
+function showToast(message, type) {
+    // Simple toast notification
+    console.log(`[${type.toUpperCase()}] ${message}`);
+}
+</script>
+{% endblock %}

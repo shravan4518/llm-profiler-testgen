@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Database Status - Profiler Agentic Automation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-chart-line"></i> Vector Database Status</h1>
+        <p>System statistics and configuration</p>
+        <a href="{{ url_for('training_dashboard') }}" class="btn btn-secondary btn-small">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-triangle"></i>
+        Error loading status: {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="status-section">
+        <!-- Database Statistics -->
+        <div class="status-card">
+            <h2><i class="fas fa-database"></i> Database Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Total Documents</div>
+                    <div class="stat-value">{{ stats.total_documents if stats else 0 }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Chunks</div>
+                    <div class="stat-value">{{ stats.total_chunks if stats else 0 }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Index Size</div>
+                    <div class="stat-value">{{ stats.index_size if stats else 0 }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Chunk Size</div>
+                    <div class="stat-value">{{ stats.chunk_size if stats else 0 }} chars</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div class="status-card">
+            <h2><i class="fas fa-cog"></i> Configuration</h2>
+            <table class="config-table">
+                <tr>
+                    <td><strong>Embedding Model:</strong></td>
+                    <td>{{ stats.embedding_model if stats else 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Embedding Dimension:</strong></td>
+                    <td>{{ stats.embedding_dim if stats else 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Chunk Size:</strong></td>
+                    <td>{{ stats.chunk_size if stats else 'N/A' }} characters</td>
+                </tr>
+                <tr>
+                    <td><strong>Supported Formats:</strong></td>
+                    <td>
+                        {% if stats and stats.supported_formats %}
+                            {% for format in stats.supported_formats %}
+                                <span class="format-badge">{{ format }}</span>
+                            {% endfor %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- System Health -->
+        <div class="status-card">
+            <h2><i class="fas fa-heartbeat"></i> System Health</h2>
+            <div class="health-items">
+                <div class="health-item success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Vector Store: <strong>Active</strong></span>
+                </div>
+                <div class="health-item success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Ingestion Pipeline: <strong>Ready</strong></span>
+                </div>
+                <div class="health-item success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Embedding Model: <strong>Loaded</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="status-card danger-zone">
+            <h2><i class="fas fa-exclamation-triangle"></i> Danger Zone</h2>
+            <p>Permanently delete all documents and reset the vector database.</p>
+            <button id="clear-db-btn" class="btn btn-danger">
+                <i class="fas fa-trash-alt"></i> Clear Entire Database
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('clear-db-btn').addEventListener('click', function() {
+    const confirmation = prompt('This will delete ALL documents permanently. Type "DELETE" to confirm:');
+
+    if (confirmation === 'DELETE') {
+        fetch('/training/clear-database', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Database cleared successfully!');
+                location.reload();
+            } else {
+                alert('Failed to clear database: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error clearing database: ' + error.message);
+        });
+    }
+});
+</script>
+{% endblock %}

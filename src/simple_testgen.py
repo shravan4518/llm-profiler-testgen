@@ -97,13 +97,14 @@ IMPORTANT INSTRUCTIONS:
 2. **Apply your general testing knowledge** to ensure comprehensive coverage beyond what's in the docs
 3. **Combine both sources** to create realistic, executable test cases
 
-CRITICAL: You MUST generate the test cases in SECTION 1 first. Do NOT start with analysis - generate the actual test cases immediately.
+⚠️ CRITICAL REQUIREMENT - READ CAREFULLY ⚠️
+You MUST generate actual test cases FIRST, before any analysis or planning. Start your response IMMEDIATELY with test cases. Do NOT begin with any introduction, overview, or analysis. Your very first line MUST be a test case heading.
 
-Your output must include:
+Your output structure:
 
-**SECTION 1: COMPREHENSIVE TEST CASES (GENERATE THIS FIRST)**
+===SECTION 1: COMPREHENSIVE TEST CASES===
 
-Generate at least 15 test cases distributed across these categories:
+START IMMEDIATELY WITH TEST CASES. Generate at least 15 test cases distributed across these categories:
 
 **POSITIVE TEST CASES (30-40% of total):**
 - Happy path scenarios with valid inputs
@@ -141,23 +142,25 @@ Generate at least 15 test cases distributed across these categories:
 - Concurrent user scenarios
 - Resource utilization
 
-For EACH test case, provide ALL of the following fields:
+For EACH test case, use this EXACT format (use #### for test case headings):
 
-**Test ID:** TC_XXX (sequential numbering: TC_001, TC_002, etc.)
+#### TC_001
 **Test Title:** Clear, descriptive title (e.g., "Verify successful login with valid credentials")
 **Category:** positive | negative | boundary | integration | security | performance
 **Priority:** Critical | High | Medium | Low
 **Description:** Detailed description of what this test validates
 **Prerequisites:** Any setup required before executing this test
 **Test Data:** Specific data values to use (be precise: usernames, passwords, IDs, etc.)
-**Test Steps:** Numbered step-by-step execution instructions
+**Test Steps:**
   1. First action to perform
   2. Second action to perform
   3. Continue with all steps...
 **Expected Results:** Precise expected outcome for the test
 **Postconditions:** System state after test execution
 
-**SECTION 2: TEST PLANNING ANALYSIS (Brief overview AFTER test cases)**
+Repeat this format for TC_002, TC_003, etc.
+
+===SECTION 2: TEST PLANNING ANALYSIS===
 
 Provide a brief analysis:
 1. Feature Overview: What functionality is being tested
@@ -167,13 +170,17 @@ Provide a brief analysis:
 
 === FORMAT REQUIREMENTS ===
 
-- Use clear section headers with === markers
-- Number all test cases sequentially (TC_001, TC_002, etc.)
-- Be SPECIFIC with test data (no generic "test@example.com" - use realistic data)
-- Make test steps DETAILED and EXECUTABLE
-- Ensure expected results are PRECISE and MEASURABLE
-- Cover ALL edge cases and error scenarios
-- Think like a tester trying to BREAK the system
+MANDATORY FORMAT RULES:
+1. Start with ===SECTION 1: COMPREHENSIVE TEST CASES===
+2. Use #### TC_001, #### TC_002, etc. for each test case heading
+3. Follow the exact field structure shown above for every test case
+4. Generate at least 15-25 complete test cases before moving to Section 2
+5. End test cases with ===SECTION 2: TEST PLANNING ANALYSIS===
+6. Be SPECIFIC with test data (no generic "test@example.com" - use realistic data)
+7. Make test steps DETAILED and EXECUTABLE
+8. Ensure expected results are PRECISE and MEASURABLE
+9. Cover ALL edge cases and error scenarios
+10. Think like a tester trying to BREAK the system
 
 === QUALITY STANDARDS ===
 
@@ -184,7 +191,13 @@ Your output will be evaluated on:
 - Detail: Are test steps, data, and expected results specific?
 - Realism: Are test cases practical and executable?
 
-Generate the comprehensive test suite now."""
+⚠️ FINAL REMINDER ⚠️
+Your response MUST begin with:
+===SECTION 1: COMPREHENSIVE TEST CASES===
+#### TC_001
+**Test Title:** ...
+
+Start generating test cases NOW. Do NOT write any introduction or explanation first."""
 
         return f"{system_prompt}\n\n{user_instruction}"
 
@@ -359,18 +372,28 @@ Generate the comprehensive test suite now."""
         }
 
         # Parse based on new section order: SECTION 1 = test cases, SECTION 2 = planning
-        if 'SECTION 1' in output:
-            parts = output.split('SECTION 2')
+        # Handle both ===SECTION X=== and SECTION X formats
+        if '===SECTION 1' in output or 'SECTION 1' in output:
+            # Split on SECTION 2 (with or without ===)
+            if '===SECTION 2' in output:
+                parts = output.split('===SECTION 2')
+            elif 'SECTION 2' in output:
+                parts = output.split('SECTION 2')
+            else:
+                parts = [output]
+
             if len(parts) > 1:
-                sections['test_cases'] = parts[0].replace('SECTION 1', '').strip()
-                sections['planning'] = parts[1].strip()
+                # Both sections present
+                sections['test_cases'] = parts[0].replace('===SECTION 1', '').replace('SECTION 1', '').replace('===', '').strip()
+                sections['planning'] = parts[1].replace('===', '').strip()
             else:
                 # Only section 1 present
-                sections['test_cases'] = parts[0].replace('SECTION 1', '').strip()
+                sections['test_cases'] = parts[0].replace('===SECTION 1', '').replace('SECTION 1', '').replace('===', '').strip()
         elif 'TEST CASE' in output or 'TC_' in output:
             # Fallback: treat entire output as test cases
             sections['test_cases'] = output
         else:
+            # Last resort: assume entire output is test cases
             sections['test_cases'] = output
 
         return sections

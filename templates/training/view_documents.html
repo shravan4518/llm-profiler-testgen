@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}View Documents - Profiler Agentic Automation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-list"></i> Ingested Documents</h1>
+        <p>Browse and manage all documents in the vector database</p>
+        <a href="{{ url_for('training_dashboard') }}" class="btn btn-secondary btn-small">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-triangle"></i>
+        Error loading documents: {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="documents-section">
+        <div class="documents-header">
+            <h3>
+                <i class="fas fa-file-alt"></i> Total Documents:
+                <span class="badge">{{ documents|length }}</span>
+            </h3>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search documents..." class="form-input">
+            </div>
+        </div>
+
+        {% if documents %}
+        <div class="documents-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-file"></i> Filename</th>
+                        <th><i class="fas fa-cube"></i> Chunks</th>
+                        <th><i class="fas fa-calendar"></i> Ingested</th>
+                        <th><i class="fas fa-clock"></i> Updated</th>
+                        <th><i class="fas fa-cog"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="documents-tbody">
+                    {% for doc in documents %}
+                    <tr data-doc-id="{{ doc.doc_id }}" data-filename="{{ doc.filename }}">
+                        <td>
+                            <i class="fas fa-file-alt"></i>
+                            <strong>{{ doc.filename }}</strong>
+                            <br>
+                            <small class="text-muted">{{ doc.file_path }}</small>
+                        </td>
+                        <td>{{ doc.num_chunks }}</td>
+                        <td>{{ doc.ingested_at[:19] if doc.ingested_at else 'N/A' }}</td>
+                        <td>{{ doc.last_updated[:19] if doc.last_updated else 'N/A' }}</td>
+                        <td>
+                            <button class="btn btn-danger btn-small delete-btn" data-doc-id="{{ doc.doc_id }}" data-filename="{{ doc.filename }}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>No Documents Ingested Yet</h3>
+            <p>Start by uploading documents or ingesting your framework code.</p>
+            <a href="{{ url_for('ingest_docs_page') }}" class="btn btn-primary">
+                <i class="fas fa-upload"></i> Upload Documents
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Search functionality
+const searchInput = document.getElementById('search-input');
+const tableRows = document.querySelectorAll('#documents-tbody tr');
+
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+
+        tableRows.forEach(row => {
+            const filename = row.getAttribute('data-filename').toLowerCase();
+            if (filename.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Delete functionality
+const deleteButtons = document.querySelectorAll('.delete-btn');
+
+deleteButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+        const docId = this.getAttribute('data-doc-id');
+        const filename = this.getAttribute('data-filename');
+
+        if (confirm(`Are you sure you want to delete "${filename}"?`)) {
+            deleteDocument(docId, this.closest('tr'));
+        }
+    });
+});
+
+function deleteDocument(docId, row) {
+    fetch(`/training/delete-document/${docId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            row.remove();
+            showToast('Document deleted successfully', 'success');
+
+            // Update count
+            const countBadge = document.querySelector('.documents-header .badge');
+            if (countBadge) {
+                const newCount = parseInt(countBadge.textContent) - 1;
+                countBadge.textContent = newCount;
+            }
+
+            // Show empty state if no documents left
+            if (document.querySelectorAll('#documents-tbody tr').length === 0) {
+                location.reload();
+            }
+        } else {
+            showToast('Failed to delete document: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        showToast('Error deleting document: ' + error.message, 'error');
+    });
+}
+
+function showToast(message, type) {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    alert(message);
+}
+</script>
+{% endblock %}

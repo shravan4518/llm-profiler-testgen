@@ -1,0 +1,1498 @@
+{% extends "base.html" %}
+
+{% block title %}Inference - Profiler Agentic Automation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1><i class="fas fa-magic"></i> Test Case & Script Generation</h1>
+            <p>Generate comprehensive test cases using AI-powered intelligent retrieval</p>
+        </div>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary btn-small">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <button class="tab-btn active" data-tab="generator">
+            <i class="fas fa-plus-circle"></i> New Generation
+        </button>
+        <button class="tab-btn" data-tab="jobs">
+            <i class="fas fa-list"></i> Jobs <span id="jobs-badge" class="badge">0</span>
+        </button>
+    </div>
+
+    <!-- Generator Tab -->
+    <div id="generator-tab" class="tab-content active">
+        <div class="generator-section">
+            <form id="generation-form">
+                <div class="form-group">
+                    <label for="user-prompt">
+                        <i class="fas fa-keyboard"></i> Feature / Requirement Description
+                    </label>
+                    <textarea
+                        id="user-prompt"
+                        class="form-textarea"
+                        rows="5"
+                        placeholder="Enter feature name, API endpoint, workflow, or any test requirement&#10;Example: 'Profiler Configuration' or 'Agentless Host Checker with Profiler'"
+                        required
+                    ></textarea>
+                    <small class="form-help">Describe the feature you want to generate test cases for</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="output-format">
+                        <i class="fas fa-file-export"></i> Output Format
+                    </label>
+                    <select id="output-format" class="form-select" multiple size="3">
+                        <option value="json" selected>JSON</option>
+                        <option value="markdown" selected>Markdown</option>
+                        <option value="excel">Excel</option>
+                    </select>
+                    <small class="form-help">Hold Ctrl/Cmd to select multiple formats</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="use-iteration">
+                        <span>Use Iterative Refinement (slower but higher quality)</span>
+                    </label>
+                </div>
+
+                <!-- Target System Configuration -->
+                <div class="form-group config-section">
+                    <div class="config-header" onclick="toggleConfig()">
+                        <h3><i class="fas fa-cog"></i> Target System Configuration</h3>
+                        <i class="fas fa-chevron-down" id="config-toggle-icon"></i>
+                    </div>
+                    <div id="config-panel" class="config-panel" style="display: none;">
+                        <small class="form-help" style="display: block; margin-bottom: 1rem;">
+                            Configure the target system (Profiler/IPS) for script generation
+                        </small>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="target-url">
+                                    <i class="fas fa-link"></i> Target URL
+                                </label>
+                                <input
+                                    type="url"
+                                    id="target-url"
+                                    class="form-input"
+                                    placeholder="https://profiler.example.com"
+                                />
+                                <small class="form-help">URL of your Profiler/IPS instance</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="target-browser">
+                                    <i class="fas fa-browser"></i> Browser
+                                </label>
+                                <select id="target-browser" class="form-select">
+                                    <option value="chromium">Chromium</option>
+                                    <option value="firefox">Firefox</option>
+                                    <option value="webkit">WebKit</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="target-username">
+                                    <i class="fas fa-user"></i> Username
+                                </label>
+                                <input
+                                    type="text"
+                                    id="target-username"
+                                    class="form-input"
+                                    placeholder="admin"
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="target-password">
+                                    <i class="fas fa-lock"></i> Password
+                                </label>
+                                <input
+                                    type="password"
+                                    id="target-password"
+                                    class="form-input"
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="target-env">
+                                <i class="fas fa-server"></i> Environment
+                            </label>
+                            <select id="target-env" class="form-select">
+                                <option value="dev">Development</option>
+                                <option value="staging">Staging</option>
+                                <option value="production">Production</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-large" id="generate-btn">
+                    <i class="fas fa-magic"></i> Generate Test Cases
+                </button>
+            </form>
+
+            <!-- Generation Progress -->
+            <div id="generation-progress" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <h3><i class="fas fa-spinner fa-spin"></i> Generating Test Cases...</h3>
+                        <span id="progress-step">Initializing...</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div id="progress-bar" class="progress-bar-fill" style="width: 0%">0%</div>
+                    </div>
+                    <div id="generation-log" class="log-output"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jobs Tab -->
+    <div id="jobs-tab" class="tab-content">
+        <div class="jobs-section">
+            <div class="jobs-header">
+                <h2><i class="fas fa-briefcase"></i> Generation Jobs</h2>
+                <button class="btn btn-small btn-secondary" id="refresh-jobs">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+
+            <div id="jobs-list" class="jobs-list">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading jobs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Details Modal -->
+    <div id="job-details-modal" class="modal" style="display: none;">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-alt"></i> Job Details</h2>
+                <button class="modal-close" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="job-details-content">
+                <!-- Job details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-btn .badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Generator Section */
+.generator-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-help {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.progress-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-top: 2rem;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.progress-header h3 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+#progress-step {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Jobs Section */
+.jobs-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.jobs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.jobs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.job-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.job-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.job-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.75rem;
+}
+
+.job-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-bg);
+    margin: 0;
+}
+
+.job-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.job-status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.job-status.running {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.job-status.completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.job-status.failed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.job-meta {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+}
+
+.job-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.script-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.script-status.generated {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.script-status.not-generated {
+    background: #e2e8f0;
+    color: #64748b;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px rgba(0,0,0,0.2);
+}
+
+.modal-content.large {
+    max-width: 1200px;
+}
+
+.modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: var(--danger-color);
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.job-detail-section {
+    margin-bottom: 2rem;
+}
+
+.job-detail-section h3 {
+    color: var(--dark-bg);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.job-detail-content {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
+}
+
+.job-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Target System Configuration Section */
+.config-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.config-header:hover {
+    background-color: #f8fafc;
+}
+
+.config-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.config-header i.fa-chevron-down {
+    transition: transform 0.3s;
+    color: var(--text-secondary);
+}
+
+.config-header.active i.fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+.config-panel {
+    padding: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Test Cases Table - Excel-like styling */
+.test-cases-table-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 600px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    margin-top: 1rem;
+    background: white;
+}
+
+.test-cases-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    background: white;
+}
+
+.test-cases-table thead {
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.test-cases-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #1e293b;
+    border: 1px solid #d1d5db;
+    background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+.test-cases-table td {
+    padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+    vertical-align: top;
+    background: white;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.test-cases-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+.test-cases-table tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+.test-cases-table tbody tr:nth-child(even):hover {
+    background: #f1f5f9;
+}
+
+/* Script Generation Progress */
+.script-generation-progress {
+    padding: 2rem;
+}
+
+.script-generation-progress .progress-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.script-generation-progress .progress-header h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.script-generation-progress #script-progress-message {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+.progress-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.progress-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: #f8fafc;
+    transition: all 0.3s;
+}
+
+.progress-step i {
+    font-size: 1.25rem;
+    width: 24px;
+    text-align: center;
+}
+
+.progress-step.pending {
+    opacity: 0.5;
+}
+
+.progress-step.pending i {
+    color: #94a3b8;
+}
+
+.progress-step.complete {
+    background: #d1fae5;
+}
+
+.progress-step.complete i {
+    color: #10b981;
+}
+
+.progress-step:not(.pending):not(.complete) i {
+    color: var(--primary-color);
+}
+
+/* Column-specific styling */
+.tc-id {
+    font-weight: 600;
+    color: #3b82f6;
+    min-width: 80px;
+    max-width: 100px;
+    text-align: center;
+    background: #eff6ff !important;
+}
+
+.tc-title {
+    font-weight: 500;
+    color: #1e293b;
+    min-width: 200px;
+    max-width: 250px;
+}
+
+.tc-category,
+.tc-priority {
+    text-align: center;
+    min-width: 100px;
+    max-width: 120px;
+}
+
+.tc-description,
+.tc-prerequisites,
+.tc-steps,
+.tc-results,
+.tc-postconditions {
+    min-width: 200px;
+    max-width: 350px;
+    line-height: 1.5;
+}
+
+/* Badge styling for categories and priorities */
+.test-cases-table .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.badge-functional,
+.badge-medium {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-security,
+.badge-high {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-performance,
+.badge-critical {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-integration,
+.badge-low {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-ui,
+.badge-ux {
+    background: #e9d5ff;
+    color: #6b21a8;
+}
+
+.badge-api {
+    background: #cffafe;
+    color: #155e75;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .modal {
+        padding: 1rem;
+    }
+
+    .modal-content {
+        max-width: 100%;
+    }
+
+    .test-cases-table-container {
+        max-height: 400px;
+    }
+
+    .test-cases-table {
+        font-size: 0.75rem;
+    }
+
+    .test-cases-table th,
+    .test-cases-table td {
+        padding: 8px 12px;
+        min-width: 100px;
+    }
+}
+</style>
+
+<script>
+// Toggle configuration panel
+function toggleConfig() {
+    const panel = document.getElementById('config-panel');
+    const header = document.querySelector('.config-header');
+    const icon = document.getElementById('config-toggle-icon');
+
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        header.classList.add('active');
+    } else {
+        panel.style.display = 'none';
+        header.classList.remove('active');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab navigation
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.dataset.tab;
+
+            // Remove active from all
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            // Add active to clicked
+            btn.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            // Load jobs if jobs tab
+            if (tabName === 'jobs') {
+                loadJobs();
+            }
+        });
+    });
+
+    // Load jobs initially
+    loadJobs();
+
+    // Form submission - will implement next
+    const form = document.getElementById('generation-form');
+    form.addEventListener('submit', handleGeneration);
+
+    // Refresh jobs button
+    document.getElementById('refresh-jobs').addEventListener('click', loadJobs);
+
+    // Modal close
+    document.getElementById('close-modal').addEventListener('click', closeModal);
+});
+
+function handleGeneration(e) {
+    e.preventDefault();
+
+    const userPrompt = document.getElementById('user-prompt').value.trim();
+    const outputFormatSelect = document.getElementById('output-format');
+    const useIteration = document.getElementById('use-iteration').checked;
+
+    if (!userPrompt) {
+        showToast('Please enter a feature description', 'error');
+        return;
+    }
+
+    // Get selected output formats
+    const outputFormats = Array.from(outputFormatSelect.selectedOptions).map(opt => opt.value);
+
+    // Get target system configuration
+    const targetConfig = {
+        url: document.getElementById('target-url').value.trim() || null,
+        username: document.getElementById('target-username').value.trim() || null,
+        password: document.getElementById('target-password').value || null,
+        browser: document.getElementById('target-browser').value,
+        environment: document.getElementById('target-env').value
+    };
+
+    // Show progress
+    const form = document.getElementById('generation-form');
+    const progressSection = document.getElementById('generation-progress');
+    const generateBtn = document.getElementById('generate-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const progressStep = document.getElementById('progress-step');
+    const generationLog = document.getElementById('generation-log');
+
+    form.style.display = 'none';
+    progressSection.style.display = 'block';
+    generateBtn.disabled = true;
+
+    progressBar.style.width = '20%';
+    progressBar.textContent = '20%';
+    progressStep.textContent = 'Creating job...';
+    generationLog.innerHTML = '<p class="log-entry info">Initializing test case generation...</p>';
+
+    // Call API
+    fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            user_prompt: userPrompt,
+            output_formats: outputFormats,
+            use_iteration: useIteration,
+            target_config: targetConfig
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            progressBar.style.width = '100%';
+            progressBar.textContent = '100%';
+            progressStep.textContent = 'Completed!';
+            generationLog.innerHTML += `<p class="log-entry success">✓ Test cases generated successfully!</p>`;
+            generationLog.innerHTML += `<p class="log-entry success">Job ID: ${data.job_id}</p>`;
+
+            showToast('Test cases generated successfully!', 'success');
+
+            // Switch to jobs tab after 2 seconds
+            setTimeout(() => {
+                document.querySelector('[data-tab="jobs"]').click();
+                form.style.display = 'block';
+                progressSection.style.display = 'none';
+                generateBtn.disabled = false;
+                progressBar.style.width = '0%';
+                document.getElementById('user-prompt').value = '';
+            }, 2000);
+        } else {
+            progressBar.style.width = '100%';
+            progressBar.style.backgroundColor = '#ef4444';
+            progressBar.textContent = 'Failed';
+            progressStep.textContent = 'Generation failed';
+            generationLog.innerHTML += `<p class="log-entry error">✗ Error: ${data.error}</p>`;
+
+            showToast('Generation failed: ' + data.error, 'error');
+
+            // Reset after 3 seconds
+            setTimeout(() => {
+                form.style.display = 'block';
+                progressSection.style.display = 'none';
+                generateBtn.disabled = false;
+                progressBar.style.width = '0%';
+                progressBar.style.backgroundColor = '';
+            }, 3000);
+        }
+    })
+    .catch(error => {
+        console.error('Generation error:', error);
+        progressBar.style.width = '100%';
+        progressBar.style.backgroundColor = '#ef4444';
+        progressBar.textContent = 'Error';
+        progressStep.textContent = 'Request failed';
+        generationLog.innerHTML += `<p class="log-entry error">✗ Error: ${error.message}</p>`;
+
+        showToast('Error: ' + error.message, 'error');
+
+        // Reset after 3 seconds
+        setTimeout(() => {
+            form.style.display = 'block';
+            progressSection.style.display = 'none';
+            generateBtn.disabled = false;
+            progressBar.style.width = '0%';
+            progressBar.style.backgroundColor = '';
+        }, 3000);
+    });
+}
+
+function loadJobs() {
+    console.log('loadJobs() called');
+    const jobsList = document.getElementById('jobs-list');
+    if (!jobsList) {
+        console.error('jobs-list element not found!');
+        return;
+    }
+
+    jobsList.innerHTML = `
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading jobs...</p>
+        </div>
+    `;
+
+    fetch('/api/jobs')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Jobs API response:', data);
+            console.log('Number of jobs:', data.jobs.length);
+            displayJobs(data.jobs);
+            document.getElementById('jobs-badge').textContent = data.jobs.length;
+        })
+        .catch(error => {
+            console.error('Error loading jobs:', error);
+            jobsList.innerHTML = `
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Error loading jobs: ${error.message}</span>
+                </div>
+            `;
+        });
+}
+
+function displayJobs(jobs) {
+    console.log('displayJobs() called with', jobs.length, 'jobs');
+    const jobsList = document.getElementById('jobs-list');
+
+    if (jobs.length === 0) {
+        console.log('No jobs to display');
+        jobsList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-briefcase"></i>
+                <h3>No Jobs Yet</h3>
+                <p>Generate your first test cases to create a job</p>
+            </div>
+        `;
+        return;
+    }
+
+    console.log('Rendering', jobs.length, 'job cards');
+    jobsList.innerHTML = jobs.map(job => `
+        <div class="job-card" onclick="viewJobDetails('${job.job_id}')">
+            <div class="job-card-header">
+                <h3 class="job-title">${escapeHtml(job.user_prompt)}</h3>
+                <span class="job-status ${job.status}">${job.status.toUpperCase()}</span>
+            </div>
+            <div class="job-meta">
+                <span class="job-meta-item">
+                    <i class="fas fa-calendar"></i>
+                    ${new Date(job.created_at).toLocaleString()}
+                </span>
+                <span class="job-meta-item">
+                    <i class="fas fa-brain"></i>
+                    ${job.model}
+                </span>
+                <span class="job-meta-item">
+                    <i class="fas fa-code"></i>
+                    Script: ${job.script_status === 'generated' ? 'Generated' : 'Not Generated'}
+                </span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function viewJobDetails(jobId) {
+    const modal = document.getElementById('job-details-modal');
+    const modalContent = document.getElementById('job-details-content');
+
+    // Show loading
+    modalContent.innerHTML = `
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading job details...</p>
+        </div>
+    `;
+    modal.style.display = 'flex';
+
+    // Fetch job details
+    fetch(`/api/jobs/${jobId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const job = data.job;
+                modalContent.innerHTML = renderJobDetails(job);
+            } else {
+                modalContent.innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Error loading job: ${data.error}</span>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading job details:', error);
+            modalContent.innerHTML = `
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Error: ${error.message}</span>
+                </div>
+            `;
+        });
+}
+
+function parseTestCasesToTable(testCasesText) {
+    // Parse test cases from text format to table HTML
+    const testCases = [];
+    // Handle both #### TC_001 (markdown heading) and **TC_001** (bold) formats
+    const tcPattern = /(?:####\s*TC_\d+|\*\*TC_\d+\*\*)/g;
+    const tcBlocks = testCasesText.split(tcPattern).filter(block => block.trim());
+
+    tcBlocks.forEach((block, index) => {
+        const tc = {
+            id: `TC_${String(index + 1).padStart(3, '0')}`,
+            title: '',
+            category: '',
+            priority: '',
+            description: '',
+            prerequisites: '',
+            testData: '',
+            testSteps: '',
+            expectedResults: '',
+            postconditions: ''
+        };
+
+        // Extract fields using regex
+        const titleMatch = block.match(/\*\*Test Title:\*\*\s*(.+?)(?=\*\*|$)/s);
+        if (titleMatch) tc.title = titleMatch[1].trim();
+
+        const categoryMatch = block.match(/\*\*Category:\*\*\s*(.+?)(?=\*\*|$)/s);
+        if (categoryMatch) tc.category = categoryMatch[1].trim();
+
+        const priorityMatch = block.match(/\*\*Priority:\*\*\s*(.+?)(?=\*\*|$)/s);
+        if (priorityMatch) tc.priority = priorityMatch[1].trim();
+
+        const descMatch = block.match(/\*\*Description:\*\*\s*(.+?)(?=\*\*|$)/s);
+        if (descMatch) tc.description = descMatch[1].trim();
+
+        const preReqMatch = block.match(/\*\*Prerequisites:\*\*\s*(.+?)(?=\*\*|$)/s);
+        if (preReqMatch) tc.prerequisites = preReqMatch[1].trim();
+
+        const testDataMatch = block.match(/\*\*Test Data:\*\*\s*(.+?)(?=\*\*|$)/s);
+        if (testDataMatch) tc.testData = testDataMatch[1].trim();
+
+        const stepsMatch = block.match(/\*\*Test Steps:\*\*\s*(.+?)(?=\*\*|$)/s);
+        if (stepsMatch) tc.testSteps = stepsMatch[1].trim();
+
+        const resultsMatch = block.match(/\*\*Expected Results:\*\*\s*(.+?)(?=\*\*|$)/s);
+        if (resultsMatch) tc.expectedResults = resultsMatch[1].trim();
+
+        const postCondMatch = block.match(/\*\*Postconditions:\*\*\s*(.+?)(?=\*\*|$)/s);
+        if (postCondMatch) tc.postconditions = postCondMatch[1].trim();
+
+        testCases.push(tc);
+    });
+
+    // Generate table HTML
+    let tableHtml = `
+        <div class="test-cases-table-container">
+            <table class="test-cases-table">
+                <thead>
+                    <tr>
+                        <th>Test ID</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Description</th>
+                        <th>Prerequisites</th>
+                        <th>Test Steps</th>
+                        <th>Expected Results</th>
+                        <th>Postconditions</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    testCases.forEach(tc => {
+        const categoryClass = tc.category.toLowerCase();
+        const priorityClass = tc.priority.toLowerCase();
+
+        tableHtml += `
+            <tr>
+                <td class="tc-id">${escapeHtml(tc.id)}</td>
+                <td class="tc-title">${escapeHtml(tc.title)}</td>
+                <td class="tc-category"><span class="badge badge-${categoryClass}">${escapeHtml(tc.category)}</span></td>
+                <td class="tc-priority"><span class="badge badge-${priorityClass}">${escapeHtml(tc.priority)}</span></td>
+                <td class="tc-description">${escapeHtml(tc.description)}</td>
+                <td class="tc-prerequisites">${escapeHtml(tc.prerequisites)}</td>
+                <td class="tc-steps">${escapeHtml(tc.testSteps).replace(/\n/g, '<br>')}</td>
+                <td class="tc-results">${escapeHtml(tc.expectedResults).replace(/\n/g, '<br>')}</td>
+                <td class="tc-postconditions">${escapeHtml(tc.postconditions)}</td>
+            </tr>
+        `;
+    });
+
+    tableHtml += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    return tableHtml;
+}
+
+function renderJobDetails(job) {
+    let html = `
+        <div class="job-detail-section">
+            <h3><i class="fas fa-info-circle"></i> Job Information</h3>
+            <div class="job-detail-content">
+                <strong>Job ID:</strong> ${job.job_id}<br>
+                <strong>Status:</strong> <span class="job-status ${job.status}">${job.status.toUpperCase()}</span><br>
+                <strong>Created:</strong> ${new Date(job.created_at).toLocaleString()}<br>
+                <strong>Updated:</strong> ${new Date(job.updated_at).toLocaleString()}<br>
+                <strong>Model:</strong> ${job.model}<br>
+                <strong>Iterative Refinement:</strong> ${job.parameters?.use_iteration ? 'Yes' : 'No'}
+            </div>
+        </div>
+
+        <div class="job-detail-section">
+            <h3><i class="fas fa-keyboard"></i> User Prompt</h3>
+            <div class="job-detail-content">${escapeHtml(job.user_prompt)}</div>
+        </div>
+    `;
+
+    if (job.status === 'completed') {
+        // Test Plan
+        if (job.test_plan) {
+            html += `
+                <div class="job-detail-section">
+                    <h3><i class="fas fa-clipboard-list"></i> Test Plan</h3>
+                    <div class="job-detail-content">${escapeHtml(job.test_plan)}</div>
+                </div>
+            `;
+        }
+
+        // Test Cases
+        if (job.test_cases) {
+            html += `
+                <div class="job-detail-section">
+                    <h3><i class="fas fa-file-alt"></i> Test Cases</h3>
+                    ${parseTestCasesToTable(job.test_cases)}
+                </div>
+            `;
+        }
+
+        // Validation Report
+        if (job.validation_report) {
+            html += `
+                <div class="job-detail-section">
+                    <h3><i class="fas fa-check-circle"></i> Validation Report</h3>
+                    <div class="job-detail-content">${escapeHtml(job.validation_report)}</div>
+                </div>
+            `;
+        }
+
+        // Output Files
+        if (job.output_files && Object.keys(job.output_files).length > 0) {
+            html += `
+                <div class="job-detail-section">
+                    <h3><i class="fas fa-download"></i> Output Files</h3>
+                    <div class="job-detail-content">
+                        ${Object.entries(job.output_files).map(([format, path]) =>
+                            `<strong>${format.toUpperCase()}:</strong> ${path}<br>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Metadata
+        if (job.metadata) {
+            html += `
+                <div class="job-detail-section">
+                    <h3><i class="fas fa-info"></i> Metadata</h3>
+                    <div class="job-detail-content">
+                        <strong>Feature:</strong> ${job.metadata.feature_name || 'N/A'}<br>
+                        <strong>Intent:</strong> ${job.metadata.intent || 'N/A'}<br>
+                        <strong>Sources:</strong> ${job.metadata.sources_count || 0} documents<br>
+                        <strong>Context Results:</strong> ${job.metadata.rag_results_count || 0} chunks
+                    </div>
+                </div>
+            `;
+        }
+
+        // Script Generation Section
+        html += `
+            <div class="job-detail-section">
+                <h3><i class="fas fa-code"></i> Script Generation</h3>
+                <div class="job-detail-content">
+                    <strong>Status:</strong> <span class="script-status ${job.script_status}">${job.script_status.replace('_', ' ').toUpperCase()}</span>
+                </div>
+                <div class="job-actions">
+        `;
+
+        if (job.script_status === 'generated') {
+            html += `
+                <button class="btn btn-primary" onclick="viewScript('${job.job_id}')">
+                    <i class="fas fa-eye"></i> View Script
+                </button>
+            `;
+        } else if (job.script_status === 'not_generated') {
+            html += `
+                <button class="btn btn-secondary" onclick="generateScriptForJob('${job.job_id}')">
+                    <i class="fas fa-cog"></i> Generate Script
+                </button>
+            `;
+        }
+
+        html += `
+                </div>
+            </div>
+        `;
+    } else if (job.status === 'failed') {
+        html += `
+            <div class="job-detail-section">
+                <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
+                <div class="job-detail-content" style="color: #ef4444;">
+                    ${escapeHtml(job.error || 'Unknown error')}
+                </div>
+            </div>
+        `;
+    } else if (job.status === 'running') {
+        html += `
+            <div class="job-detail-section">
+                <h3><i class="fas fa-spinner fa-spin"></i> Generation in Progress</h3>
+                <div class="job-detail-content">
+                    Please wait while test cases are being generated...
+                </div>
+            </div>
+        `;
+    }
+
+    return html;
+}
+
+function generateScriptForJob(jobId) {
+    // Show confirmation
+    if (!confirm('Generate automated test scripts for this job? This may take a few minutes.')) {
+        return;
+    }
+
+    // Show progress in modal
+    const modalContent = document.getElementById('job-details-content');
+    const originalContent = modalContent.innerHTML;
+
+    modalContent.innerHTML = `
+        <div class="script-generation-progress">
+            <div class="progress-header">
+                <h3><i class="fas fa-spinner fa-spin"></i> Generating Test Scripts</h3>
+                <p id="script-progress-message">Initializing script generation...</p>
+            </div>
+            <div class="progress-bar-container">
+                <div id="script-progress-bar" class="progress-bar-fill" style="width: 10%">10%</div>
+            </div>
+            <div class="progress-steps">
+                <div class="progress-step" id="step-parsing">
+                    <i class="fas fa-circle-notch fa-spin"></i> Parsing test cases...
+                </div>
+                <div class="progress-step pending" id="step-framework">
+                    <i class="fas fa-circle"></i> Retrieving framework code...
+                </div>
+                <div class="progress-step pending" id="step-config">
+                    <i class="fas fa-circle"></i> Generating configuration...
+                </div>
+                <div class="progress-step pending" id="step-tests">
+                    <i class="fas fa-circle"></i> Generating test scripts...
+                </div>
+                <div class="progress-step pending" id="step-docs">
+                    <i class="fas fa-circle"></i> Creating documentation...
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Simulate progress updates (since we don't have real-time updates from backend)
+    let progress = 10;
+    const progressBar = document.getElementById('script-progress-bar');
+    const progressMessage = document.getElementById('script-progress-message');
+
+    const updateProgress = (percent, message, stepId) => {
+        progress = percent;
+        progressBar.style.width = `${percent}%`;
+        progressBar.textContent = `${percent}%`;
+        progressMessage.textContent = message;
+
+        if (stepId) {
+            // Mark previous steps as complete
+            document.querySelectorAll('.progress-step').forEach(step => {
+                if (step.id < stepId && !step.classList.contains('complete')) {
+                    step.classList.remove('pending');
+                    step.classList.add('complete');
+                    step.querySelector('i').className = 'fas fa-check-circle';
+                }
+            });
+
+            // Mark current step as active
+            const currentStep = document.getElementById(stepId);
+            if (currentStep) {
+                currentStep.classList.remove('pending');
+                currentStep.querySelector('i').className = 'fas fa-circle-notch fa-spin';
+            }
+        }
+    };
+
+    // Simulate progress stages
+    setTimeout(() => updateProgress(25, 'Retrieving framework code snippets...', 'step-framework'), 1000);
+    setTimeout(() => updateProgress(40, 'Generating pytest configuration...', 'step-config'), 3000);
+    setTimeout(() => updateProgress(60, 'Generating test scripts...', 'step-tests'), 5000);
+    setTimeout(() => updateProgress(85, 'Creating documentation files...', 'step-docs'), 8000);
+
+    // Call API to generate scripts
+    fetch(`/api/jobs/${jobId}/generate-script`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Script generation completed!', null);
+
+            // Mark all steps as complete
+            document.querySelectorAll('.progress-step').forEach(step => {
+                step.classList.remove('pending');
+                step.classList.add('complete');
+                step.querySelector('i').className = 'fas fa-check-circle';
+            });
+
+            progressBar.style.backgroundColor = '#10b981';
+
+            showToast(`Scripts generated successfully! ${data.test_count} test scripts created.`, 'success');
+
+            // Refresh job details after 2 seconds
+            setTimeout(() => {
+                viewJobDetails(jobId);
+            }, 2000);
+        } else {
+            progressBar.style.backgroundColor = '#ef4444';
+            progressBar.textContent = 'Failed';
+            progressMessage.textContent = 'Script generation failed!';
+            progressMessage.style.color = '#ef4444';
+
+            modalContent.innerHTML += `
+                <div class="alert alert-error" style="margin-top: 1rem;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>${data.error}</span>
+                </div>
+                <button class="btn btn-secondary" onclick="viewJobDetails('${jobId}')" style="margin-top: 1rem;">
+                    <i class="fas fa-arrow-left"></i> Back to Job Details
+                </button>
+            `;
+
+            showToast('Script generation failed: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error generating scripts:', error);
+        progressBar.style.backgroundColor = '#ef4444';
+        progressBar.textContent = 'Error';
+        progressMessage.textContent = 'Request failed!';
+        progressMessage.style.color = '#ef4444';
+
+        modalContent.innerHTML += `
+            <div class="alert alert-error" style="margin-top: 1rem;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${error.message}</span>
+            </div>
+            <button class="btn btn-secondary" onclick="viewJobDetails('${jobId}')" style="margin-top: 1rem;">
+                <i class="fas fa-arrow-left"></i> Back to Job Details
+            </button>
+        `;
+
+        showToast('Error: ' + error.message, 'error');
+    });
+}
+
+function viewScript(jobId) {
+    fetch(`/api/jobs/${jobId}/script`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.scripts) {
+                    // Multiple scripts - show file list
+                    const fileList = Object.keys(data.scripts).join('\n- ');
+                    const message = `✓ Scripts Generated Successfully!\n\nLocation: ${data.scripts_dir}\n\nFiles (${data.file_count}):\n- ${fileList}\n\nYou can find all the generated test scripts, configuration, and documentation in the scripts directory.`;
+                    alert(message);
+                } else if (data.script) {
+                    // Single script (legacy)
+                    alert(`Script:\n\n${data.script}`);
+                }
+            } else {
+                showToast('Error loading script: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            showToast('Error: ' + error.message, 'error');
+        });
+}
+
+function closeModal() {
+    document.getElementById('job-details-modal').style.display = 'none';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

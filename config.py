@@ -76,8 +76,8 @@ ENABLE_OCR = False  # Enable OCR for scanned PDFs (requires tesseract)
 
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1")  # Default model
-AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2025-04-01-preview")
+AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5.1")  # Default model
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview")
 
 # Validate required environment variables
 if not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_API_KEY:
@@ -118,6 +118,21 @@ VISION_ENDPOINT = os.getenv("VISION_ENDPOINT", AZURE_OPENAI_ENDPOINT)  # Default
 VISION_API_KEY = os.getenv("VISION_API_KEY", AZURE_OPENAI_API_KEY)      # Defaults to same as text LLM
 VISION_DEPLOYMENT = os.getenv("VISION_DEPLOYMENT", "gpt-4o")             # Vision-capable model (gpt-4o, gpt-4-vision)
 VISION_API_VERSION = os.getenv("VISION_API_VERSION", "2024-02-15-preview")  # API version for vision features
+
+# ============================================================================
+# GPT-5 CODEX CONFIGURATION (Script Generation)
+# ============================================================================
+# Codex is used for generating automated test scripts from test cases
+# ============================================================================
+
+CODEX_ENDPOINT = os.getenv("CODEX_ENDPOINT", AZURE_OPENAI_ENDPOINT)
+CODEX_API_KEY = os.getenv("CODEX_API_KEY", AZURE_OPENAI_API_KEY)
+CODEX_DEPLOYMENT = os.getenv("CODEX_DEPLOYMENT", "gpt-5.1")
+CODEX_API_VERSION = os.getenv("CODEX_API_VERSION", "2024-12-01-preview")
+
+# Script Generation Configuration
+SCRIPT_MAX_TOKENS = 4000  # Maximum tokens for generated scripts
+SCRIPT_TEMPERATURE = 0.7  # Temperature for code generation (lower = more deterministic)
 
 # Image Processing Parameters
 IMAGE_MIN_SIZE = 100  # Minimum image size (pixels) to process (filters out icons/logos)

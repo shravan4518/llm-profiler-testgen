@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+
+{% block title %}Test RAG Retrieval - Profiler Agentic Automation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1><i class="fas fa-search"></i> Test RAG Retrieval</h1>
+            <p>Test different retrieval strategies and validate chunking performance</p>
+        </div>
+        <a href="{{ url_for('training_dashboard') }}" class="btn btn-secondary btn-small">
+            <i class="fas fa-arrow-left"></i> Back to Training
+        </a>
+    </div>
+
+    <!-- Search Form -->
+    <div class="search-section">
+        <form id="retrieval-form">
+            <div class="form-group">
+                <label for="query">
+                    <i class="fas fa-keyboard"></i> Search Query
+                </label>
+                <textarea
+                    id="query"
+                    class="form-textarea"
+                    rows="3"
+                    placeholder="Enter your search query (e.g., 'How to configure agentless host checker?')"
+                    required
+                ></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="search-mode">
+                        <i class="fas fa-cogs"></i> Search Mode
+                    </label>
+                    <select id="search-mode" class="form-select">
+                        <option value="hybrid">Hybrid Search (Semantic + Keyword) - Recommended</option>
+                        <option value="semantic">Semantic Search (Vector Similarity)</option>
+                        <option value="keyword">Keyword Search (BM25)</option>
+                        <option value="context">Search with Context (Surrounding Chunks)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="top-k">
+                        <i class="fas fa-hashtag"></i> Number of Results
+                    </label>
+                    <input
+                        type="number"
+                        id="top-k"
+                        class="form-input"
+                        min="1"
+                        max="20"
+                        value="5"
+                    >
+                </div>
+
+                <div class="form-group" id="context-window-group" style="display: none;">
+                    <label for="context-window">
+                        <i class="fas fa-expand-arrows-alt"></i> Context Window
+                    </label>
+                    <input
+                        type="number"
+                        id="context-window"
+                        class="form-input"
+                        min="1"
+                        max="5"
+                        value="1"
+                        title="Number of chunks before/after to include"
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large" id="search-btn">
+                <i class="fas fa-search"></i> Search Vector Database
+            </button>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    <div id="results-section" style="display: none;">
+        <div class="results-header">
+            <h2><i class="fas fa-list"></i> Search Results</h2>
+            <div class="results-actions">
+                <span id="results-count" class="badge"></span>
+                <button class="btn btn-small btn-secondary" id="export-results">
+                    <i class="fas fa-download"></i> Export Results
+                </button>
+            </div>
+        </div>
+
+        <div id="results-container"></div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <i class="fas fa-info-circle"></i>
+        <div>
+            <strong>Search Modes Explained:</strong>
+            <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                <li><strong>Hybrid:</strong> Combines semantic understanding with keyword matching for best results</li>
+                <li><strong>Semantic:</strong> Uses vector embeddings to find contextually similar content</li>
+                <li><strong>Keyword:</strong> Traditional BM25 keyword matching</li>
+                <li><strong>Context:</strong> Returns matched chunks with surrounding text for better understanding</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.search-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+}
+
+.results-section {
+    margin-top: 2rem;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.results-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.result-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--primary-color);
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.result-number {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.result-metadata {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.metadata-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.metadata-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.metadata-value {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.score-badges {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.score-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.score-hybrid {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+}
+
+.score-semantic {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.score-keyword {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.result-text {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.context-section {
+    margin: 1rem 0;
+}
+
+.context-before {
+    background: #fef3c7;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 3px solid #f59e0b;
+    margin-bottom: 1rem;
+}
+
+.context-after {
+    background: #dbeafe;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 3px solid #3b82f6;
+    margin-top: 1rem;
+}
+
+.context-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.spinner {
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('retrieval-form');
+    const searchModeSelect = document.getElementById('search-mode');
+    const contextWindowGroup = document.getElementById('context-window-group');
+    const resultsSection = document.getElementById('results-section');
+    const resultsContainer = document.getElementById('results-container');
+    const resultsCount = document.getElementById('results-count');
+    const searchBtn = document.getElementById('search-btn');
+    const exportBtn = document.getElementById('export-results');
+
+    let currentResults = null;
+
+    // Show/hide context window based on search mode
+    searchModeSelect.addEventListener('change', function() {
+        if (this.value === 'context') {
+            contextWindowGroup.style.display = 'block';
+        } else {
+            contextWindowGroup.style.display = 'none';
+        }
+    });
+
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        performSearch();
+    });
+
+    // Export results
+    exportBtn.addEventListener('click', function() {
+        if (!currentResults) return;
+
+        const blob = new Blob([JSON.stringify(currentResults, null, 2)], {
+            type: 'application/json'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `search_results_${new Date().getTime()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('Results exported successfully', 'success');
+    });
+
+    function performSearch() {
+        const query = document.getElementById('query').value.trim();
+        const searchMode = document.getElementById('search-mode').value;
+        const topK = parseInt(document.getElementById('top-k').value);
+        const contextWindow = parseInt(document.getElementById('context-window').value);
+
+        if (!query) {
+            showToast('Please enter a search query', 'error');
+            return;
+        }
+
+        // Show loading
+        resultsSection.style.display = 'block';
+        resultsContainer.innerHTML = `
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Searching vector database...</p>
+            </div>
+        `;
+
+        // Disable button
+        searchBtn.disabled = true;
+        searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+
+        // Prepare request
+        const requestData = {
+            query: query,
+            search_mode: searchMode,
+            k: topK
+        };
+
+        if (searchMode === 'context') {
+            requestData.context_window = contextWindow;
+        }
+
+        // Make API request
+        fetch('/api/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            currentResults = data;
+            displayResults(data);
+            showToast(`Found ${data.results.length} results`, 'success');
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            resultsContainer.innerHTML = `
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Error: ${error.message}</span>
+                </div>
+            `;
+            showToast('Search failed: ' + error.message, 'error');
+        })
+        .finally(() => {
+            searchBtn.disabled = false;
+            searchBtn.innerHTML = '<i class="fas fa-search"></i> Search Vector Database';
+        });
+    }
+
+    function displayResults(data) {
+        const { results, query, search_mode } = data;
+
+        resultsCount.textContent = `${results.length} Results`;
+
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <h3>No Results Found</h3>
+                    <p>Try adjusting your query or search mode</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+
+        results.forEach((result, index) => {
+            if (search_mode === 'context') {
+                html += renderContextResult(result, index);
+            } else {
+                html += renderStandardResult(result, index);
+            }
+        });
+
+        resultsContainer.innerHTML = html;
+    }
+
+    function renderStandardResult(result, index) {
+        return `
+            <div class="result-card">
+                <div class="result-header">
+                    <span class="result-number">Result ${index + 1}</span>
+                </div>
+
+                <div class="result-metadata">
+                    <div class="metadata-item">
+                        <span class="metadata-label">Document</span>
+                        <span class="metadata-value">${escapeHtml(result.doc_name)}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Chunk Index</span>
+                        <span class="metadata-value">${result.chunk_index}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Doc ID</span>
+                        <span class="metadata-value">${result.doc_id.substring(0, 8)}...</span>
+                    </div>
+                    ${result.page_number ? `
+                    <div class="metadata-item">
+                        <span class="metadata-label">Page</span>
+                        <span class="metadata-value">${result.page_number}</span>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="score-badges">
+                    <div class="score-badge score-hybrid">
+                        <i class="fas fa-star"></i> Hybrid: ${result.hybrid_score.toFixed(4)}
+                    </div>
+                    <div class="score-badge score-semantic">
+                        <i class="fas fa-brain"></i> Semantic: ${result.semantic_score.toFixed(4)}
+                    </div>
+                    <div class="score-badge score-keyword">
+                        <i class="fas fa-key"></i> Keyword: ${result.keyword_score.toFixed(4)}
+                    </div>
+                </div>
+
+                <div class="result-text">${escapeHtml(result.text)}</div>
+            </div>
+        `;
+    }
+
+    function renderContextResult(result, index) {
+        let html = `
+            <div class="result-card">
+                <div class="result-header">
+                    <span class="result-number">Result ${index + 1}</span>
+                </div>
+
+                <div class="result-metadata">
+                    <div class="metadata-item">
+                        <span class="metadata-label">Document</span>
+                        <span class="metadata-value">${escapeHtml(result.doc_name)}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Main Chunk</span>
+                        <span class="metadata-value">${result.chunk_index}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Hybrid Score</span>
+                        <span class="metadata-value">${result.hybrid_score.toFixed(4)}</span>
+                    </div>
+                </div>
+
+                <div class="context-section">
+        `;
+
+        // Context before
+        const beforeCtx = result.context.filter(c => c.position === 'before');
+        if (beforeCtx.length > 0) {
+            html += `
+                <div class="context-before">
+                    <div class="context-label">
+                        <i class="fas fa-arrow-up"></i> Context Before
+                    </div>
+            `;
+            beforeCtx.forEach(ctx => {
+                html += `<div style="margin-top: 0.5rem;">${escapeHtml(ctx.text)}</div>`;
+            });
+            html += `</div>`;
+        }
+
+        // Main chunk
+        html += `
+            <div class="result-text">
+                <strong style="color: var(--primary-color);"><i class="fas fa-bullseye"></i> Matched Chunk:</strong><br>
+                ${escapeHtml(result.text)}
+            </div>
+        `;
+
+        // Context after
+        const afterCtx = result.context.filter(c => c.position === 'after');
+        if (afterCtx.length > 0) {
+            html += `
+                <div class="context-after">
+                    <div class="context-label">
+                        <i class="fas fa-arrow-down"></i> Context After
+                    </div>
+            `;
+            afterCtx.forEach(ctx => {
+                html += `<div style="margin-top: 0.5rem;">${escapeHtml(ctx.text)}</div>`;
+            });
+            html += `</div>`;
+        }
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        return html;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+});
+</script>
+{% endblock %}
