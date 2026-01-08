@@ -11,8 +11,9 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 from openai import AzureOpenAI
+from src.utils.logger import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class FrameworkExpert:
@@ -73,6 +74,8 @@ class FrameworkExpert:
             logger.info(f"Prompt size: ~{len(analysis_prompt)} characters")
 
             # Let LLM analyze the framework
+            # Note: GPT-5.1 is an o1-series model that uses reasoning tokens internally
+            # Need high max_completion_tokens to allow for both reasoning AND output
             response = self.client.chat.completions.create(
                 model="gpt-5.1",
                 messages=[
@@ -89,12 +92,29 @@ IMPORTANT: Return ONLY valid JSON, no other text."""
                     }
                 ],
                 temperature=0.1,  # Low temperature for consistent analysis
-                max_completion_tokens=8000
+                max_completion_tokens=64000  # High limit: o1 models need tokens for reasoning + output
             )
 
             # Parse LLM response
-            analysis_text = response.choices[0].message.content
-            logger.info(f"Received LLM response: {len(analysis_text)} characters")
+            logger.info(f"Response object: {response}")
+            logger.info(f"Response choices: {len(response.choices) if response.choices else 0}")
+
+            if not response.choices or len(response.choices) == 0:
+                logger.error("No choices in response!")
+                raise ValueError("LLM returned no choices")
+
+            message = response.choices[0].message
+            logger.info(f"Message object: {message}")
+            logger.info(f"Message content type: {type(message.content)}")
+
+            analysis_text = message.content
+            logger.info(f"Received LLM response: {len(analysis_text) if analysis_text else 0} characters")
+
+            if analysis_text is None:
+                logger.error("LLM response content is None!")
+                logger.error(f"Finish reason: {response.choices[0].finish_reason}")
+                logger.error(f"Full response: {response.model_dump_json()}")
+                raise ValueError("LLM response content is None")
 
             # Extract JSON from response (handle markdown code blocks)
             if '```json' in analysis_text:
