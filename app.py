@@ -27,6 +27,7 @@ from src.utils.logger import setup_logger
 from src.utils.job_manager import JobManager
 from src.simple_testgen import SimpleTestGenerator
 from src.script_generator import ScriptGenerator
+from src.framework_loader import FrameworkLoader
 
 logger = setup_logger(__name__)
 
@@ -46,10 +47,11 @@ search_engine = None
 job_manager = None
 test_generator = None
 script_generator = None
+framework_loader = None
 
 def init_components():
     """Initialize RAG components"""
-    global vector_store, ingestion_pipeline, search_engine, job_manager, test_generator, script_generator
+    global vector_store, ingestion_pipeline, search_engine, job_manager, test_generator, script_generator, framework_loader
     try:
         vector_store = VectorStore()
         ingestion_pipeline = IngestionPipeline()
@@ -57,6 +59,7 @@ def init_components():
         job_manager = JobManager()
         test_generator = SimpleTestGenerator()
         script_generator = ScriptGenerator(rag_system=search_engine)
+        framework_loader = FrameworkLoader()
         logger.info("Flask app components initialized successfully")
     except Exception as e:
         logger.error(f"Error initializing components: {e}")
@@ -678,6 +681,264 @@ def get_script(job_id):
     except Exception as e:
         logger.error(f"Error getting script for job {job_id}: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================================================
+# FRAMEWORK API ROUTES
+# ============================================================================
+
+@app.route('/api/framework/files')
+def get_framework_files():
+    """List all uploaded framework files"""
+    try:
+        if not framework_loader:
+            return jsonify({'success': False, 'error': 'Framework loader not initialized'}), 500
+
+        files = framework_loader.list_uploaded_files()
+        return jsonify({
+            'success': True,
+            'files': files
+        })
+
+    except Exception as e:
+        logger.error(f"Error listing framework files: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
+
+@app.route('/api/framework/generate-script', methods=['POST'])
+def generate_custom_script():
+    """Generate a custom test script using framework context"""
+    try:
+        if not framework_loader:
+            return jsonify({'success': False, 'error': 'Framework loader not initialized'}), 500
+
+        data = request.get_json()
+        description = data.get('description')
+        test_name = data.get('test_name')
+
+        if not description or not test_name:
+            return jsonify({'success': False, 'error': 'Description and test name are required'}), 400
+
+        # Get framework context
+        framework_context = framework_loader.get_framework_context()
+
+        if not framework_context:
+            return jsonify({
+                'success': False,
+                'error': 'No framework files uploaded. Please upload framework files first.'
+            }), 400
+
+        # Generate the script using GPT with framework context
+        script = _generate_framework_aware_script(description, test_name, framework_context)
+
+        return jsonify({
+            'success': True,
+            'script': script
+        })
+
+    except Exception as e:
+        logger.error(f"Error generating custom script: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def _generate_framework_aware_script(description: str, test_name: str, framework_context: str) -> str:
+    """Generate a test script using framework patterns"""
+    from openai import AzureOpenAI
+
+    client = AzureOpenAI(
+        api_version=config.AZURE_OPENAI_API_VERSION,
+        azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+        api_key=config.AZURE_OPENAI_API_KEY
+    )
+
+    prompt = f"""You are an expert test automation engineer. Generate a complete, production-ready Python test script based on the test case description provided.
+
+IMPORTANT FRAMEWORK CONTEXT:
+Below is the framework code and patterns you MUST follow. Study the example test suite (DemoTestSuite) carefully and use the EXACT same patterns, imports, and structure.
+
+{framework_context}
+
+=== TEST CASE TO IMPLEMENT ===
+Test Method Name: {test_name}
+
+Test Case Description:
+{description}
+
+=== CRITICAL REQUIREMENTS ===
+
+1. IMPORTS - Use the EXACT same imports as shown in DemoTestSuite:
+   from REST.REST import RestClient
+   from Initialize import *
+   from AppAccess import *
+   from BrowserActions import *
+   from Utils import *
+   from Log import *
+   from PSRSClient import *
+   from ConfigUtils import ConfigUtils
+   import sys, time, inspect
+
+2. GLOBAL OBJECT INITIALIZATION (at module level, before the class):
+   restObj = None
+   token = None
+   log = Log()
+   initObj = Initialize()
+   util = Utils()
+   appaccess = AppAccess()
+   browser = BrowserActions()
+   restObj = RestClient()
+
+3. CLASS STRUCTURE WITH INITIALIZE AND CLEANUP (MANDATORY):
+   class <TestClassName>(object):
+       ROBOT_LIBRARY_SCOPE = 'GLOBAL'
+
+       def __init__(self):
+           pass
+
+       def INITIALIZE(self):
+           '''MANDATORY FIRST METHOD - Initialize framework'''
+           tc_name = inspect.stack()[0][3]
+           try:
+               initObj.initialize()
+               util.TC_HEADER_FOOTER('Start', tc_name)
+
+               logging.info("Inside Initialize........")
+               config = ConfigUtils.getInstance()
+               logging.info("ConfigUtils - Value of HOSTNAME..............." + str(config.getConfig('HOSTNAME')))
+
+               util.TC_HEADER_FOOTER('End', tc_name)
+           except:
+               e = sys.exc_info()[1]
+               logging.error("Exception in " + tc_name + "(): " + str(e))
+               util.TC_HEADER_FOOTER('End', tc_name)
+               raise Exception(e)
+
+       def {test_name}(self):
+           # Your test method implementation here
+           pass
+
+       def SuiteCleanup(self):
+           '''MANDATORY LAST METHOD - Cleanup'''
+           tc_name = inspect.stack()[0][3]
+           input_dict = {{'filename': tc_name}}
+           return_dict = {{'status': 1}}
+
+           try:
+               log.setloggingconf()
+               util.TC_HEADER_FOOTER('Start', tc_name)
+               logging.info("Close All Browsers.... ")
+               # Cleanup code if needed
+               logging.info("Response = " + str(return_dict))
+               assert return_dict['status'] == 1, return_dict['value']
+           except:
+               e = sys.exc_info()[1]
+               logging.error("Exception in " + tc_name + "(): " + str(e))
+               util.TC_HEADER_FOOTER('End', tc_name)
+               raise Exception(e)
+
+           util.TC_HEADER_FOOTER('End', tc_name)
+
+4. TEST METHOD STRUCTURE (MANDATORY):
+   def {test_name}(self):
+       tc_name = inspect.stack()[0][3]
+       input_dict = {{'filename': tc_name}}  # For screenshot on error
+
+       try:
+           log.setloggingconf()  # MANDATORY as first line in try block
+           util.TC_HEADER_FOOTER('Start', tc_name)
+
+           config = ConfigUtils.getInstance()
+           host = str(config.getConfig('HOSTNAME'))
+
+           # Your SIMPLE test logic here
+           # Use dict-based parameters (login_dict, return_dict, etc.)
+           # Assert return_dict['status'] == 1 after each operation
+           # ALWAYS use global objects (appaccess, browser, etc.) - NEVER create new instances
+
+           util.TC_HEADER_FOOTER('End', tc_name)
+       except:
+           e = sys.exc_info()[1]
+           logging.error("Exception in " + tc_name + "(): " + str(e))
+           logging.info("Taking screenshot.............")
+           browser.capture_webpage_screenshot(input_dict)
+           return_dict = browseractions.close_browser_window()  # Use global browseractions
+           util.TC_HEADER_FOOTER('End', tc_name)
+           raise Exception(e)
+
+5. KEEP IT SIMPLE - Follow DemoTestSuite Examples EXACTLY:
+   - For admin login test: Use GEN_002_FUNC_BROWSER_ADMIN_LOGIN pattern
+   - For user login test: Use GEN_003_FUNC_BROWSER_USER_LOGIN pattern
+   - For REST API test: Use GEN_002_FUNC_GET_ACTIVE_USERS_VIA_REST pattern
+   - DO NOT make up complex xpaths or workflows
+   - DO NOT create overly complex tests
+   - Keep it simple like the examples
+
+6. BROWSER TEST PATTERN (from GEN_002_FUNC_BROWSER_ADMIN_LOGIN):
+   login_dict = {{
+       "type": "admin",
+       "url": "https://" + host + "/admin",
+       "username": "admindb",
+       "password": "dana123",
+   }}
+   return_dict = appaccess.login(login_dict)
+   assert return_dict['status'] == 1, return_dict['value']
+
+   time.sleep(15)  # Wait for page load
+
+   return_dict = appaccess.logout()
+   assert return_dict['status'] == 1, return_dict['value']
+
+   return_dict = browseractions.close_browser_window()
+   assert return_dict['status'] == 1, return_dict['value']
+
+7. REST API PATTERN (from GEN_002_FUNC_GET_ACTIVE_USERS_VIA_REST):
+   data = {{"username": "admindb", "password": "dana123"}}
+   response_details = restObj.rest_login(host, data)
+   if response_details["ResponseCode"] == 200:
+       token = response_details["ResponseContent"]
+   else:
+       raise Exception("Rest Login Failed")
+
+   response_details = restObj.get(rest_uri, token)
+   if response_details["ResponseCode"] == 200:
+       # process response
+   else:
+       raise Exception("API call failed")
+
+8. IMPORTANT - USE GLOBAL OBJECTS:
+   - NEVER write: browseractions = BrowserActions()
+   - ALWAYS use the global objects directly: browseractions, browser, appaccess, util, etc.
+
+9. Generate ONLY the Python code, no markdown formatting
+10. Include proper comments explaining each step
+11. Follow the DemoTestSuite examples as closely as possible - don't reinvent patterns
+
+Generate the complete test script now with INITIALIZE, {test_name}, and SuiteCleanup methods:"""
+
+    try:
+        response = client.chat.completions.create(
+            model=config.AZURE_OPENAI_DEPLOYMENT,
+            messages=[
+                {"role": "system", "content": "You are an expert test automation engineer specializing in Python test frameworks. Generate clean, production-ready code following framework patterns exactly."},
+                {"role": "user", "content": prompt}
+            ],
+            max_completion_tokens=4000,
+            temperature=0.3
+        )
+
+        script = response.choices[0].message.content
+
+        # Extract code from markdown if present
+        if '```python' in script:
+            script = script.split('```python')[1].split('```')[0].strip()
+        elif '```' in script:
+            script = script.split('```')[1].split('```')[0].strip()
+
+        return script
+
+    except Exception as e:
+        logger.error(f"Error calling Azure OpenAI: {e}")
+        raise
 
 # ============================================================================
 # ERROR HANDLERS

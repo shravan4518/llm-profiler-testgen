@@ -22,6 +22,9 @@
         <button class="tab-btn" data-tab="jobs">
             <i class="fas fa-list"></i> Jobs <span id="jobs-badge" class="badge">0</span>
         </button>
+        <button class="tab-btn" data-tab="framework">
+            <i class="fas fa-code"></i> Framework Setup & Custom Generation
+        </button>
     </div>
 
     <!-- Generator Tab -->
@@ -172,6 +175,87 @@
                 <div class="loading-spinner">
                     <div class="spinner"></div>
                     <p>Loading jobs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Framework Setup & Custom Generation Tab -->
+    <div id="framework-tab" class="tab-content">
+        <div class="framework-section">
+            <!-- Framework Files Section -->
+            <div class="framework-upload-section">
+                <h2><i class="fas fa-code-branch"></i> Available Framework Files</h2>
+                <p class="section-description">Framework files loaded from PSTAF_FRAMEWORK/aut-pstaf/PSTAF_Framework directory</p>
+
+                <div class="upload-area">
+                    <div class="upload-controls">
+                        <button class="btn btn-secondary" id="refresh-framework-files">
+                            <i class="fas fa-sync"></i> Refresh List
+                        </button>
+                    </div>
+
+                    <div id="framework-files-list" class="framework-files-list">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                            <p>Loading framework files...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Test Script Generation Section -->
+            <div class="custom-generation-section">
+                <h2><i class="fas fa-robot"></i> Custom Test Script Generation</h2>
+                <p class="section-description">Generate a test script for a simple test case using framework-aware AI generation</p>
+
+                <form id="custom-generation-form">
+                    <div class="form-group">
+                        <label for="custom-test-description">
+                            <i class="fas fa-keyboard"></i> Test Case Description
+                        </label>
+                        <textarea
+                            id="custom-test-description"
+                            class="form-textarea"
+                            rows="6"
+                            placeholder="Describe your test case in simple terms. Example:&#10;&#10;Test Case: Verify admin login functionality&#10;Steps:&#10;1. Navigate to admin URL&#10;2. Enter admin credentials&#10;3. Click login button&#10;4. Verify successful login"
+                            required
+                        ></textarea>
+                        <small class="form-help">The AI will generate a framework-compliant test script based on your description</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="custom-test-name">
+                            <i class="fas fa-tag"></i> Test Method Name
+                        </label>
+                        <input
+                            type="text"
+                            id="custom-test-name"
+                            class="form-input"
+                            placeholder="test_admin_login_functionality"
+                            pattern="test_[a-zA-Z0-9_]+"
+                            required
+                        >
+                        <small class="form-help">Must start with 'test_' and use snake_case</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large" id="generate-custom-script-btn">
+                        <i class="fas fa-code"></i> Generate Test Script
+                    </button>
+                </form>
+
+                <!-- Generated Script Display -->
+                <div id="custom-script-result" class="script-result" style="display: none;">
+                    <h3><i class="fas fa-file-code"></i> Generated Test Script</h3>
+                    <div class="script-actions">
+                        <button class="btn btn-small btn-secondary" id="copy-custom-script">
+                            <i class="fas fa-copy"></i> Copy Script
+                        </button>
+                        <button class="btn btn-small btn-secondary" id="download-custom-script">
+                            <i class="fas fa-download"></i> Download Script
+                        </button>
+                    </div>
+                    <pre><code id="custom-script-content" class="language-python"></code></pre>
                 </div>
             </div>
         </div>
@@ -803,6 +887,142 @@
         padding: 8px 12px;
         min-width: 100px;
     }
+}
+
+/* Framework Tab Styles */
+.framework-section {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.framework-upload-section,
+.custom-generation-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-description {
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.upload-area {
+    margin-top: 1.5rem;
+}
+
+.upload-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.file-upload-label {
+    cursor: pointer;
+}
+
+.framework-files-list {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 200px;
+}
+
+.framework-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+.framework-file-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.framework-file-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.framework-file-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.framework-file-details h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.framework-file-details p {
+    margin: 0.25rem 0 0 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.framework-file-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.script-result {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.script-result h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+.script-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.script-result pre {
+    background: #1e293b;
+    color: #f1f5f9;
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 0;
+}
+
+.script-result code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
 }
 </style>
 
@@ -1493,6 +1713,155 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ============================================================================
+// Framework Tab Functionality
+// ============================================================================
+
+// Load framework files on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadFrameworkFiles();
+
+    // Framework file refresh
+    document.getElementById('refresh-framework-files').addEventListener('click', loadFrameworkFiles);
+
+    // Custom script generation
+    document.getElementById('custom-generation-form').addEventListener('submit', handleCustomScriptGeneration);
+    document.getElementById('copy-custom-script')?.addEventListener('click', copyCustomScript);
+    document.getElementById('download-custom-script')?.addEventListener('click', downloadCustomScript);
+});
+
+function loadFrameworkFiles() {
+    const filesList = document.getElementById('framework-files-list');
+    filesList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading framework files...</p></div>';
+
+    fetch('/api/framework/files')
+        .then(response => response.json())
+        .then(data => {
+            if (data.files && data.files.length > 0) {
+                filesList.innerHTML = data.files.map(file => `
+                    <div class="framework-file-item">
+                        <div class="framework-file-info">
+                            <i class="fas fa-file-code framework-file-icon"></i>
+                            <div class="framework-file-details">
+                                <h4>${escapeHtml(file.name)}</h4>
+                                <p>${formatFileSize(file.size)} • Last modified: ${formatDate(file.modified)}</p>
+                            </div>
+                        </div>
+                        <div class="framework-file-actions">
+                            <span class="badge" style="background: #10b981; color: white;">
+                                <i class="fas fa-check-circle"></i> Loaded
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                filesList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <p>No framework files found</p>
+                        <p>Expected location: PSTAF_FRAMEWORK/aut-pstaf/PSTAF_Framework</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading framework files:', error);
+            filesList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Error loading framework files</p>
+                    <p>Make sure PSTAF_FRAMEWORK directory exists in project folder</p>
+                </div>
+            `;
+        });
+}
+
+function handleCustomScriptGeneration(event) {
+    event.preventDefault();
+
+    const description = document.getElementById('custom-test-description').value;
+    const testName = document.getElementById('custom-test-name').value;
+    const resultDiv = document.getElementById('custom-script-result');
+    const scriptContent = document.getElementById('custom-script-content');
+    const generateBtn = document.getElementById('generate-custom-script-btn');
+
+    // Disable button and show loading
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+    fetch('/api/framework/generate-script', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            description: description,
+            test_name: testName
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            scriptContent.textContent = data.script;
+            resultDiv.style.display = 'block';
+            showToast('Test script generated successfully!', 'success');
+
+            // Scroll to result
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            showToast('Error generating script: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error generating script:', error);
+        showToast('Error generating script', 'error');
+    })
+    .finally(() => {
+        // Re-enable button
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fas fa-code"></i> Generate Test Script';
+    });
+}
+
+function copyCustomScript() {
+    const scriptContent = document.getElementById('custom-script-content').textContent;
+    navigator.clipboard.writeText(scriptContent).then(() => {
+        showToast('Script copied to clipboard!', 'success');
+    }).catch(err => {
+        console.error('Error copying script:', err);
+        showToast('Error copying script', 'error');
+    });
+}
+
+function downloadCustomScript() {
+    const scriptContent = document.getElementById('custom-script-content').textContent;
+    const testName = document.getElementById('custom-test-name').value;
+    const filename = `${testName}.py`;
+
+    const blob = new Blob([scriptContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('Script downloaded!', 'success');
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function formatDate(timestamp) {
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 }
 </script>
 {% endblock %}
