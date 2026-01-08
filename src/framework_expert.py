@@ -69,6 +69,9 @@ class FrameworkExpert:
         analysis_prompt = self._build_analysis_prompt(framework_data)
 
         try:
+            logger.info(f"Sending framework data to LLM for analysis...")
+            logger.info(f"Prompt size: ~{len(analysis_prompt)} characters")
+
             # Let LLM analyze the framework
             response = self.client.chat.completions.create(
                 model="gpt-5.1",
@@ -77,7 +80,8 @@ class FrameworkExpert:
                         "role": "system",
                         "content": """You are an expert code analyzer specializing in test automation frameworks.
 Your task is to analyze a Python test framework and create a comprehensive, searchable knowledge base.
-Be thorough and precise - this knowledge will be used to intelligently select relevant code for test generation."""
+Be thorough and precise - this knowledge will be used to intelligently select relevant code for test generation.
+IMPORTANT: Return ONLY valid JSON, no other text."""
                     },
                     {
                         "role": "user",
@@ -90,13 +94,22 @@ Be thorough and precise - this knowledge will be used to intelligently select re
 
             # Parse LLM response
             analysis_text = response.choices[0].message.content
+            logger.info(f"Received LLM response: {len(analysis_text)} characters")
 
             # Extract JSON from response (handle markdown code blocks)
             if '```json' in analysis_text:
                 analysis_text = analysis_text.split('```json')[1].split('```')[0].strip()
+                logger.info("Extracted JSON from markdown json block")
             elif '```' in analysis_text:
                 analysis_text = analysis_text.split('```')[1].split('```')[0].strip()
+                logger.info("Extracted JSON from markdown block")
 
+            if not analysis_text or analysis_text.strip() == "":
+                logger.error("Extracted text is empty!")
+                logger.error(f"Original response: {response.choices[0].message.content[:500]}")
+                raise ValueError("LLM returned empty response after extraction")
+
+            logger.info(f"Attempting to parse JSON ({len(analysis_text)} chars)...")
             self.knowledge_base = json.loads(analysis_text)
 
             # Save to disk
@@ -109,8 +122,14 @@ Be thorough and precise - this knowledge will be used to intelligently select re
 
             return self.knowledge_base
 
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error: {e}")
+            logger.error(f"Failed to parse: {analysis_text[:500] if 'analysis_text' in locals() else 'N/A'}")
+            raise ValueError(f"LLM did not return valid JSON: {e}")
         except Exception as e:
             logger.error(f"Error during framework analysis: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             raise
 
     def get_relevant_context(self, test_description: str) -> str:
@@ -130,19 +149,42 @@ Be thorough and precise - this knowledge will be used to intelligently select re
         if not self.knowledge_base:
             if self.knowledge_file.exists():
                 logger.info("Loading framework knowledge base...")
-                with open(self.knowledge_file, 'r', encoding='utf-8') as f:
-                    self.knowledge_base = json.load(f)
-            else:
+                try:
+                    with open(self.knowledge_file, 'r', encoding='utf-8') as f:
+                        self.knowledge_base = json.load(f)
+                    logger.info("Knowledge base loaded successfully")
+                except Exception as e:
+                    logger.error(f"Failed to load knowledge base: {e}")
+                    logger.info("Will attempt to reanalyze framework...")
+                    self.knowledge_base = None
+
+            if not self.knowledge_base:
                 logger.info("No knowledge base found. Analyzing framework...")
-                self.analyze_framework()
+                try:
+                    self.analyze_framework()
+                except Exception as e:
+                    logger.error(f"Framework analysis failed: {e}")
+                    logger.warning("Falling back to basic context (no LLM optimization)")
+                    # Return basic framework context without optimization
+                    return self.framework_loader.get_framework_context()
 
         logger.info(f"Querying expert for: {test_description}")
 
         # Query LLM expert
-        requirements = self._query_expert(test_description)
+        try:
+            requirements = self._query_expert(test_description)
+        except Exception as e:
+            logger.error(f"Expert query failed: {e}")
+            logger.warning("Falling back to basic context")
+            return self.framework_loader.get_framework_context()
 
         # Build optimized context from requirements
-        optimized_context = self._build_optimized_context(requirements)
+        try:
+            optimized_context = self._build_optimized_context(requirements)
+        except Exception as e:
+            logger.error(f"Context building failed: {e}")
+            logger.warning("Falling back to basic context")
+            return self.framework_loader.get_framework_context()
 
         logger.info(f"Context optimized: ~{len(optimized_context)} characters")
         logger.info(f"Estimated tokens: ~{len(optimized_context) // 4}")
@@ -340,6 +382,7 @@ Be precise - only include what's truly needed. The goal is to minimize context w
 """
 
         try:
+            logger.info("Sending query to LLM expert...")
             response = self.client.chat.completions.create(
                 model="gpt-5.1",
                 messages=[
@@ -357,12 +400,19 @@ Be precise - only include what's truly needed. The goal is to minimize context w
             )
 
             response_text = response.choices[0].message.content
+            logger.info(f"Expert response received: {len(response_text)} characters")
 
             # Extract JSON
             if '```json' in response_text:
                 response_text = response_text.split('```json')[1].split('```')[0].strip()
+                logger.info("Extracted from json markdown")
             elif '```' in response_text:
                 response_text = response_text.split('```')[1].split('```')[0].strip()
+                logger.info("Extracted from markdown")
+
+            if not response_text:
+                logger.error("Empty response after extraction!")
+                raise ValueError("Empty response from LLM")
 
             requirements = json.loads(response_text)
 
@@ -371,9 +421,25 @@ Be precise - only include what's truly needed. The goal is to minimize context w
 
             return requirements
 
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error in expert query: {e}")
+            logger.error(f"Failed text: {response_text[:500] if 'response_text' in locals() else 'N/A'}")
+            # Fallback to basic requirements
+            logger.warning("Using fallback requirements")
+            return {
+                "intent_analysis": test_description,
+                "similar_example_method": "GEN_002_FUNC_BROWSER_ADMIN_LOGIN",
+                "required_methods": [],
+                "required_classes": ["AppAccess", "BrowserActions", "Utils"],
+                "test_type": "browser",
+                "expected_flow": "INITIALIZE -> test -> SuiteCleanup"
+            }
         except Exception as e:
             logger.error(f"Error querying expert: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             # Fallback to basic requirements
+            logger.warning("Using fallback requirements due to exception")
             return {
                 "intent_analysis": test_description,
                 "similar_example_method": "GEN_002_FUNC_BROWSER_ADMIN_LOGIN",
