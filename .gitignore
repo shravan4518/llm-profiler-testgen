@@ -126,3 +126,7 @@ dump_raw_output.py
 # Framework code (if you don't want to commit external framework)
 # Uncomment if framework should not be in repo:
 # PPS desktop python files/
+PSTAF_FRAMEWORK/
+
+# Framework Expert resources (generated at runtime)
+framework_resources/framework_knowledge.json

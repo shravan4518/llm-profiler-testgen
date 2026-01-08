@@ -28,6 +28,7 @@ from src.utils.job_manager import JobManager
 from src.simple_testgen import SimpleTestGenerator
 from src.script_generator import ScriptGenerator
 from src.framework_loader import FrameworkLoader
+from src.framework_expert import FrameworkExpert
 
 logger = setup_logger(__name__)
 
@@ -48,10 +49,11 @@ job_manager = None
 test_generator = None
 script_generator = None
 framework_loader = None
+framework_expert = None
 
 def init_components():
     """Initialize RAG components"""
-    global vector_store, ingestion_pipeline, search_engine, job_manager, test_generator, script_generator, framework_loader
+    global vector_store, ingestion_pipeline, search_engine, job_manager, test_generator, script_generator, framework_loader, framework_expert
     try:
         vector_store = VectorStore()
         ingestion_pipeline = IngestionPipeline()
@@ -60,6 +62,16 @@ def init_components():
         test_generator = SimpleTestGenerator()
         script_generator = ScriptGenerator(rag_system=search_engine)
         framework_loader = FrameworkLoader()
+
+        # Initialize Framework Expert with Azure OpenAI client
+        from openai import AzureOpenAI
+        azure_client = AzureOpenAI(
+            api_version=config.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+            api_key=config.AZURE_OPENAI_API_KEY
+        )
+        framework_expert = FrameworkExpert(azure_client, framework_loader)
+
         logger.info("Flask app components initialized successfully")
     except Exception as e:
         logger.error(f"Error initializing components: {e}")
@@ -708,10 +720,10 @@ def get_framework_files():
 
 @app.route('/api/framework/generate-script', methods=['POST'])
 def generate_custom_script():
-    """Generate a custom test script using framework context"""
+    """Generate a custom test script using framework context (LLM Expert optimized)"""
     try:
-        if not framework_loader:
-            return jsonify({'success': False, 'error': 'Framework loader not initialized'}), 500
+        if not framework_expert:
+            return jsonify({'success': False, 'error': 'Framework expert not initialized'}), 500
 
         data = request.get_json()
         description = data.get('description')
@@ -720,16 +732,19 @@ def generate_custom_script():
         if not description or not test_name:
             return jsonify({'success': False, 'error': 'Description and test name are required'}), 400
 
-        # Get framework context
-        framework_context = framework_loader.get_framework_context()
+        # Use LLM Expert to get optimized, relevant context
+        logger.info(f"Getting optimized context for: {description}")
+        framework_context = framework_expert.get_relevant_context(description)
 
         if not framework_context:
             return jsonify({
                 'success': False,
-                'error': 'No framework files uploaded. Please upload framework files first.'
+                'error': 'Could not generate framework context. Please check framework files.'
             }), 400
 
-        # Generate the script using GPT with framework context
+        logger.info(f"Context size: {len(framework_context)} chars (~{len(framework_context)//4} tokens)")
+
+        # Generate the script using GPT with optimized framework context
         script = _generate_framework_aware_script(description, test_name, framework_context)
 
         return jsonify({
@@ -739,6 +754,55 @@ def generate_custom_script():
 
     except Exception as e:
         logger.error(f"Error generating custom script: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/framework/analyze', methods=['POST'])
+def analyze_framework():
+    """Trigger framework analysis (or re-analysis)"""
+    try:
+        if not framework_expert:
+            return jsonify({'success': False, 'error': 'Framework expert not initialized'}), 500
+
+        data = request.get_json() or {}
+        force_reanalysis = data.get('force', False)
+
+        logger.info(f"Starting framework analysis (force={force_reanalysis})...")
+
+        # Run analysis
+        knowledge_base = framework_expert.analyze_framework(force_reanalysis=force_reanalysis)
+
+        return jsonify({
+            'success': True,
+            'message': 'Framework analysis complete',
+            'stats': {
+                'classes_count': len(knowledge_base.get('classes', {})),
+                'patterns_count': len(knowledge_base.get('test_patterns', {})),
+                'knowledge_file': str(framework_expert.knowledge_file)
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error analyzing framework: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/framework/knowledge-stats')
+def get_knowledge_stats():
+    """Get statistics about framework knowledge base"""
+    try:
+        if not framework_expert:
+            return jsonify({'success': False, 'error': 'Framework expert not initialized'}), 500
+
+        stats = framework_expert.get_knowledge_stats()
+
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting knowledge stats: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

@@ -233,6 +233,167 @@ class FrameworkLoader:
 
         return "\n".join(context_parts)
 
+    def get_specific_example(self, example_method_name: str) -> Optional[str]:
+        """
+        Extract a specific test method from DemoTestSuite
+
+        Args:
+            example_method_name: Name of the test method (e.g., 'GEN_002_FUNC_BROWSER_ADMIN_LOGIN')
+
+        Returns:
+            Code of the specific method, or None if not found
+        """
+        if not self.example_test_suite:
+            logger.warning("DemoTestSuite not loaded")
+            return None
+
+        try:
+            import ast
+            import inspect
+
+            # Parse the DemoTestSuite code
+            tree = ast.parse(self.example_test_suite)
+
+            # Find the class
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef):
+                    # Look for the specific method
+                    for item in node.body:
+                        if isinstance(item, ast.FunctionDef) and item.name == example_method_name:
+                            # Extract the method code
+                            method_lines = self.example_test_suite.split('\n')
+                            start_line = item.lineno - 1
+                            end_line = item.end_lineno if hasattr(item, 'end_lineno') else start_line + 50
+
+                            method_code = '\n'.join(method_lines[start_line:end_line])
+                            return method_code
+
+            logger.warning(f"Method {example_method_name} not found in DemoTestSuite")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error extracting example method {example_method_name}: {e}")
+            return None
+
+    def get_specific_method(self, class_name: str, method_name: str) -> Optional[str]:
+        """
+        Get code for a specific method from a framework class
+
+        Args:
+            class_name: Name of the class (e.g., 'AppAccess')
+            method_name: Name of the method (e.g., 'login')
+
+        Returns:
+            Method signature and docstring, or None if not found
+        """
+        # Look in parsed class methods
+        for class_key, class_info in self.class_methods.items():
+            if class_name in class_key:
+                for method in class_info.get('methods', []):
+                    if method['name'] == method_name:
+                        # Build method signature
+                        args_str = ', '.join(method.get('args', []))
+                        signature = f"def {method_name}({args_str})"
+
+                        parts = [signature]
+                        if method.get('docstring'):
+                            parts.append(f'    """{method["docstring"]}"""')
+
+                        if method.get('returns'):
+                            parts.append(f"    # Returns: {method['returns']}")
+
+                        return '\n'.join(parts)
+
+        logger.warning(f"Method {class_name}.{method_name} not found")
+        return None
+
+    def get_mandatory_structure(self) -> str:
+        """
+        Get the mandatory structure components (imports, globals, INITIALIZE, SuiteCleanup)
+
+        Returns:
+            String containing all mandatory components
+        """
+        parts = []
+
+        # Imports
+        parts.append("=== REQUIRED IMPORTS ===")
+        if self.imports:
+            parts.extend(self.imports)
+        else:
+            # Default imports
+            parts.extend([
+                "from REST.REST import RestClient",
+                "from Initialize import *",
+                "from AppAccess import *",
+                "from BrowserActions import *",
+                "from Utils import *",
+                "from Log import *",
+                "from PSRSClient import *",
+                "from ConfigUtils import ConfigUtils",
+                "import sys, time, inspect"
+            ])
+
+        parts.append("\n=== GLOBAL OBJECT INITIALIZATION ===")
+        if self.global_objects:
+            parts.extend(self.global_objects)
+        else:
+            # Default global objects
+            parts.extend([
+                "restObj = None",
+                "token = None",
+                "log = Log()",
+                "initObj = Initialize()",
+                "util = Utils()",
+                "appaccess = AppAccess()",
+                "browser = BrowserActions()",
+                "restObj = RestClient()"
+            ])
+
+        parts.append("\n=== CLASS STRUCTURE ===")
+        parts.append("class <TestClassName>(object):")
+        parts.append("    ROBOT_LIBRARY_SCOPE = 'GLOBAL'")
+        parts.append("    def __init__(self):")
+        parts.append("        pass")
+
+        parts.append("\n=== INITIALIZE METHOD (MANDATORY) ===")
+        parts.append("""def INITIALIZE(self):
+    '''MANDATORY FIRST METHOD - Initialize framework'''
+    tc_name = inspect.stack()[0][3]
+    try:
+        initObj.initialize()
+        util.TC_HEADER_FOOTER('Start', tc_name)
+        logging.info("Inside Initialize........")
+        config = ConfigUtils.getInstance()
+        logging.info("ConfigUtils - Value of HOSTNAME..............." + str(config.getConfig('HOSTNAME')))
+        util.TC_HEADER_FOOTER('End', tc_name)
+    except:
+        e = sys.exc_info()[1]
+        logging.error("Exception in " + tc_name + "(): " + str(e))
+        util.TC_HEADER_FOOTER('End', tc_name)
+        raise Exception(e)""")
+
+        parts.append("\n=== SuiteCleanup METHOD (MANDATORY) ===")
+        parts.append("""def SuiteCleanup(self):
+    '''MANDATORY LAST METHOD - Cleanup'''
+    tc_name = inspect.stack()[0][3]
+    input_dict = {'filename': tc_name}
+    return_dict = {'status': 1}
+    try:
+        log.setloggingconf()
+        util.TC_HEADER_FOOTER('Start', tc_name)
+        logging.info("Close All Browsers.... ")
+        logging.info("Response = " + str(return_dict))
+        assert return_dict['status'] == 1, return_dict['value']
+    except:
+        e = sys.exc_info()[1]
+        logging.error("Exception in " + tc_name + "(): " + str(e))
+        util.TC_HEADER_FOOTER('End', tc_name)
+        raise Exception(e)
+    util.TC_HEADER_FOOTER('End', tc_name)""")
+
+        return "\n".join(parts)
+
     def list_uploaded_files(self) -> List[Dict]:
         """List all framework files from PSTAF_FRAMEWORK directory"""
         files = []
