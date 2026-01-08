@@ -3,14 +3,14 @@
 # ============================================================================
 # SECURITY: API Keys and Sensitive Configuration
 # ============================================================================
-.env                    # Environment variables with API keys (NEVER COMMIT!)
+.env
 .env.local
 .env.*.local
-config.local.py         # Local config overrides
-secrets.json            # Any secrets file
-credentials.json        # Any credentials file
-*_secrets.py            # Secret Python files
-*_credentials.py        # Credential Python files
+config.local.py
+secrets.json
+credentials.json
+*_secrets.py
+*_credentials.py
 
 # Virtual Environment
 venv/
