@@ -103,13 +103,31 @@
 <script>
 // Load stats
 document.addEventListener('DOMContentLoaded', function() {
-    fetch('/training/status')
-        .then(response => response.text())
-        .then(html => {
-            // Parse stats from status page if needed
-            console.log('Stats loaded');
+    fetch('/api/health')
+        .then(response => response.json())
+        .then(data => {
+            // Update Quick Statistics
+            const totalDocs = document.getElementById('total-docs');
+            const totalChunks = document.getElementById('total-chunks');
+            const indexSize = document.getElementById('index-size');
+
+            if (totalDocs) {
+                totalDocs.textContent = (data.total_documents || 0).toLocaleString();
+            }
+            if (totalChunks) {
+                totalChunks.textContent = (data.total_chunks || 0).toLocaleString();
+            }
+            if (indexSize) {
+                indexSize.textContent = (data.index_size || 0).toLocaleString();
+            }
         })
-        .catch(error => console.error('Error loading stats:', error));
+        .catch(error => {
+            console.error('Error loading stats:', error);
+            // Set to 0 on error
+            document.getElementById('total-docs').textContent = '0';
+            document.getElementById('total-chunks').textContent = '0';
+            document.getElementById('index-size').textContent = '0';
+        });
 });
 </script>
 {% endblock %}
