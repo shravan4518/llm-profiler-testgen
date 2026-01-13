@@ -178,5 +178,14 @@
     "created_at": "2026-01-06T10:43:41.511206",
     "script_status": "generated",
     "updated_at": "2026-01-06T10:44:42.460256"
+  },
+  "3c8333a2": {
+    "job_id": "3c8333a2",
+    "user_prompt": "Profiler Configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-13T11:08:32.265332",
+    "script_status": "generating",
+    "updated_at": "2026-01-13T11:09:27.580470"
   }
 }
