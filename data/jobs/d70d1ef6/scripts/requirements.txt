@@ -1,0 +1,9 @@
+# Test Automation Dependencies
+pytest==7.4.3
+pytest-asyncio==0.21.1
+playwright==1.40.0
+pytest-html==4.1.1
+pytest-xdist==3.5.0
+
+# Install Playwright browsers after installing requirements:
+# playwright install chromium
