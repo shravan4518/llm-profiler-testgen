@@ -127,6 +127,7 @@ dump_raw_output.py
 # Uncomment if framework should not be in repo:
 # PPS desktop python files/
 PSTAF_FRAMEWORK/
+aut-pypdc/
 
 # Framework Expert resources (generated at runtime)
 framework_resources/framework_knowledge.json
