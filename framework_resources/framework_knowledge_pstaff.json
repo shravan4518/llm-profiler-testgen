@@ -1,0 +1,2222 @@
+{
+  "classes": {
+    "Initialize": {
+      "purpose": "Framework bootstrap and environment preparation: logging setup, PSRS server startup, browser cleanup, and post-test cleanup.",
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Construct Initialize object; typically stateless wrapper around utility operations.",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "None",
+          "used_in_patterns": [
+            "suite_initialize"
+          ]
+        },
+        "initialize": {
+          "signature": "initialize(self)",
+          "purpose": "Initialize logging, clean up any existing browser sessions, and perform other one-time setup before tests.",
+          "requires": [
+            "BrowserActions.cleanup_browser_session",
+            "Log",
+            "PSRSClient (indirect via other components)"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "suite_initialize"
+          ],
+          "notes": "Called at the start of INITIALIZE test in DemoTestSuite."
+        },
+        "get_psrs_logs": {
+          "signature": "get_psrs_logs(self)",
+          "purpose": "Download PSRS logs from client machine to Jenkins or local artifacts.",
+          "requires": [
+            "PSRSClient",
+            "filesystem"
+          ],
+          "input_format": "None",
+          "output_format": "Side-effect: log files downloaded; no explicit return documented.",
+          "used_in_patterns": []
+        },
+        "cleanup": {
+          "signature": "cleanup(self)",
+          "purpose": "Perform framework-level cleanup after test execution (e.g., stop servers, clean temp files).",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "Not documented; likely dict or None.",
+          "used_in_patterns": [
+            "suite_cleanup"
+          ]
+        },
+        "startservers": {
+          "signature": "startservers(self)",
+          "purpose": "Start PSRS server on client machine.",
+          "requires": [
+            "PSRSClient",
+            "SSHClient",
+            "SysUtils"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "is_server_up": {
+          "signature": "is_server_up(self, ip, port, timeout=None)",
+          "purpose": "Check if a TCP port is open on a remote machine.",
+          "requires": [
+            "socket",
+            "time"
+          ],
+          "input_format": "ip: str, port: str|int, timeout: int (optional)",
+          "output_format": "int: 1 if port open, 0 otherwise",
+          "used_in_patterns": []
+        }
+      },
+      "depends_on": [
+        "BrowserActions",
+        "PSRSClient",
+        "SysUtils",
+        "Log"
+      ],
+      "return_patterns": {
+        "success_failure_dict": true,
+        "boolean_int": true
+      }
+    },
+    "ConfigUtils": {
+      "purpose": "Central configuration manager for parsing and accessing config.xml (framework tags, devices, servers, and IVE config). Provides dynamic getters/setters and high-level getConfig/setConfig APIs.",
+      "key_methods": {
+        "getInstance": {
+          "signature": "getInstance()",
+          "purpose": "Singleton accessor for ConfigUtils instance.",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "ConfigUtils instance",
+          "used_in_patterns": [
+            "suite_initialize",
+            "browser_admin_login",
+            "browser_user_login",
+            "rest_api_call",
+            "gui_text_verification",
+            "virtual_desktop_sessions",
+            "html5_bookmark_click",
+            "multi_browser_login"
+          ]
+        },
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Parse config.xml and build internal structures for fw_tags, devices, servers, ive_config.",
+          "requires": [
+            "xmltodict",
+            "CustomSetter"
+          ],
+          "input_format": "Path to config.xml (implicit or via environment).",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "xml_parsing": {
+          "signature": "xml_parsing(self, parser)",
+          "purpose": "Internal XML parsing helper.",
+          "requires": [
+            "xmltodict"
+          ],
+          "input_format": "parser: xml parser or file handle",
+          "output_format": "Internal state updated",
+          "used_in_patterns": []
+        },
+        "flatten_dict": {
+          "signature": "flatten_dict(self, dict_values)",
+          "purpose": "Flatten nested dicts from XML into simpler key/value structures.",
+          "requires": [],
+          "input_format": "dict",
+          "output_format": "dict",
+          "used_in_patterns": []
+        },
+        "fw_tags": {
+          "signature": "fw_tags(self, input_dict=None)",
+          "purpose": "Access framework-level tags (non-nested) via dynamic getters/setters.",
+          "requires": [
+            "CustomSetter"
+          ],
+          "input_format": "Optional filter dict.",
+          "output_format": "Object with dynamic get_/set_ methods.",
+          "used_in_patterns": []
+        },
+        "tenant": {
+          "signature": "tenant(self, tenant_id)",
+          "purpose": "Access tenant-specific configuration.",
+          "requires": [
+            "CustomSetter"
+          ],
+          "input_format": "tenant_id: int|str",
+          "output_format": "Object with dynamic getters/setters.",
+          "used_in_patterns": []
+        },
+        "device": {
+          "signature": "device(self, device_id)",
+          "purpose": "Access device-specific configuration (IP, admin/user credentials, etc.).",
+          "requires": [
+            "CustomSetter"
+          ],
+          "input_format": "device_id: int|str",
+          "output_format": "Object with dynamic getters/setters.",
+          "used_in_patterns": []
+        },
+        "get_device_count": {
+          "signature": "get_device_count(self)",
+          "purpose": "Return number of devices defined in config.xml.",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "int",
+          "used_in_patterns": []
+        },
+        "get_server_count": {
+          "signature": "get_server_count(self)",
+          "purpose": "Return number of servers defined in config.xml.",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "int",
+          "used_in_patterns": []
+        },
+        "server": {
+          "signature": "server(self, server_id)",
+          "purpose": "Access server-specific configuration.",
+          "requires": [
+            "CustomSetter"
+          ],
+          "input_format": "server_id: int|str",
+          "output_format": "Object with dynamic getters/setters.",
+          "used_in_patterns": []
+        },
+        "ive_config": {
+          "signature": "ive_config(self)",
+          "purpose": "Access IVE (gateway) configuration section.",
+          "requires": [
+            "CustomSetter"
+          ],
+          "input_format": "None",
+          "output_format": "Object with dynamic getters/setters.",
+          "used_in_patterns": []
+        },
+        "method_creator": {
+          "signature": "method_creator(self, method_tag)",
+          "purpose": "Create dynamic getter/setter methods for a tag.",
+          "requires": [
+            "CustomSetter"
+          ],
+          "input_format": "method_tag: str",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "method_creator_customized": {
+          "signature": "method_creator_customized(self, tags, custom_setter)",
+          "purpose": "Create customized dynamic methods for nested tags.",
+          "requires": [
+            "CustomSetter"
+          ],
+          "input_format": "tags: list[str], custom_setter: CustomSetter",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "getConfig": {
+          "signature": "getConfig(self, tag)",
+          "purpose": "Get value of a tag from config.xml, using current device/server/tenant context.",
+          "requires": [
+            "flatten_dict",
+            "internal state"
+          ],
+          "input_format": "tag: str (e.g., 'TEST_MODE', 'BROWSER', 'HOSTNAME', 'OS_TYPE', 'ADMIN_PASSWORD')",
+          "output_format": "str|int|None",
+          "used_in_patterns": [
+            "suite_initialize",
+            "browser_admin_login",
+            "browser_user_login",
+            "rest_api_call",
+            "gui_text_verification",
+            "virtual_desktop_sessions",
+            "html5_bookmark_click",
+            "multi_browser_login"
+          ]
+        },
+        "setConfig": {
+          "signature": "setConfig(self, tag, value)",
+          "purpose": "Set or create a tag value in config.xml.",
+          "requires": [
+            "xmltodict",
+            "filesystem"
+          ],
+          "input_format": "tag: str, value: str|int",
+          "output_format": "Message string or None",
+          "used_in_patterns": [
+            "suite_initialize"
+          ]
+        },
+        "setCurrentConfig": {
+          "signature": "setCurrentConfig(self, input_dict)",
+          "purpose": "Set current device/server/tenant context for subsequent getConfig/setConfig calls.",
+          "requires": [],
+          "input_format": "dict: {'DEVICE': 'DEVICE_1', 'SERVER': 'SERVER_1', 'TENANT': 'TENANT_1'}",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "getCurrentConfig": {
+          "signature": "getCurrentConfig(self)",
+          "purpose": "Get current device/server/tenant context.",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "dict: {'DEVICE': ..., 'SERVER': ..., 'TENANT': ...}",
+          "used_in_patterns": []
+        },
+        "getDeviceConfig": {
+          "signature": "getDeviceConfig(self, device_num, tag_name)",
+          "purpose": "Get a specific tag for any device, independent of current context.",
+          "requires": [],
+          "input_format": "device_num: 'DEVICE_1', tag_name: 'IP_INTERNAL' or 'ADMIN_USER' etc.",
+          "output_format": "Value or None",
+          "used_in_patterns": []
+        },
+        "getServerConfig": {
+          "signature": "getServerConfig(self, server_num, tag_name)",
+          "purpose": "Get a specific tag for any server.",
+          "requires": [],
+          "input_format": "server_num: 'SERVER_1', tag_name: 'IP' or 'OS_TYPE'",
+          "output_format": "dict: {'status': 0|1, 'value': <tag or None>, 'message': <str>}",
+          "used_in_patterns": []
+        }
+      },
+      "depends_on": [
+        "ConfigUtils.CustomSetter",
+        "xmltodict",
+        "os",
+        "filesystem"
+      ],
+      "return_patterns": {
+        "plain_value": true,
+        "status_value_message_dict": true
+      }
+    },
+    "ConfigUtils.CustomSetter": {
+      "purpose": "Runtime dynamic getter/setter generator for configuration objects (framework tags, devices, servers, IVE config).",
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, objectType)",
+          "purpose": "Initialize a CustomSetter for a specific object type (e.g., device, server).",
+          "requires": [],
+          "input_format": "objectType: str",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "add_method": {
+          "signature": "add_method(self, property_type, propertyname)",
+          "purpose": "Create a dynamic method for a property (getter or setter).",
+          "requires": [],
+          "input_format": "property_type: 'get'|'set', propertyname: str",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "add_property": {
+          "signature": "add_property(self, property_type, propertyname)",
+          "purpose": "Create a dynamic property for a tag.",
+          "requires": [],
+          "input_format": "property_type: str, propertyname: str",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "del_property": {
+          "signature": "del_property(self, propertyname)",
+          "purpose": "Delete a dynamically created property.",
+          "requires": [],
+          "input_format": "propertyname: str",
+          "output_format": "None",
+          "used_in_patterns": []
+        }
+      },
+      "depends_on": [],
+      "return_patterns": {}
+    },
+    "BrowserActions": {
+      "purpose": "Selenium-based browser automation wrapper: launching browsers, interacting with elements, navigation, screenshots, and window management.",
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Initialize BrowserActions; likely sets up Selenium driver mapping and internal state.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "None",
+          "used_in_patterns": [
+            "all_browser_tests"
+          ]
+        },
+        "get_current_browser": {
+          "signature": "get_current_browser(self)",
+          "purpose": "Return handle or identifier of current active browser instance.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "Browser handle or dict",
+          "used_in_patterns": []
+        },
+        "cleanup_browser_session": {
+          "signature": "cleanup_browser_session(self)",
+          "purpose": "Clean up zombie browser sessions; used during framework initialization.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "suite_initialize"
+          ]
+        },
+        "launch_browser": {
+          "signature": "launch_browser(self, input_dict)",
+          "purpose": "Launch a browser and perform login-like navigation; lower-level than AppAccess.login.",
+          "requires": [
+            "selenium",
+            "ConfigUtils (for defaults)"
+          ],
+          "input_format": "dict: {'type': 'admin|user|guestuser', 'browser': 'firefox|chrome|ie|safari|edge', 'url': str, 'username': str, 'password': str}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "switch_browser_to": {
+          "signature": "switch_browser_to(self, input_dict)",
+          "purpose": "Switch active browser context between multiple open browsers.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'browser': 'firefox|chrome|ie|safari|edge'}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "multi_browser_login"
+          ]
+        },
+        "handle_login_intermediate_page": {
+          "signature": "handle_login_intermediate_page(self, input_dict)",
+          "purpose": "Handle PCS/PPS intermediate page after login (continue/readonly/cancel).",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'click': 'continue|readonly|cancel'}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "get_browser_desired_capabilities": {
+          "signature": "get_browser_desired_capabilities(self)",
+          "purpose": "Return Selenium desired capabilities of current browser.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <capabilities or error>}",
+          "used_in_patterns": [
+            "browser_admin_login"
+          ]
+        },
+        "verify": {
+          "signature": "verify(self, input_dict)",
+          "purpose": "Verify that a text or element exists in the current page.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'type': 'text|button|checkbox|element', 'value': <locator or text>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "gui_text_verification"
+          ]
+        },
+        "maximize_window": {
+          "signature": "maximize_window(self)",
+          "purpose": "Maximize browser window.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "mouse_over": {
+          "signature": "mouse_over(self, input_dict)",
+          "purpose": "Move mouse over a specified element.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'locator': <locator string>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "focus": {
+          "signature": "focus(self, input_dict)",
+          "purpose": "Set focus to a specified element.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'locator': <locator string>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "get_browser_window_size": {
+          "signature": "get_browser_window_size(self)",
+          "purpose": "Get current browser window dimensions.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <(width, height) or error>}",
+          "used_in_patterns": []
+        },
+        "get_browser_title": {
+          "signature": "get_browser_title(self)",
+          "purpose": "Get current page title.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <title or error>}",
+          "used_in_patterns": []
+        },
+        "get_browser_url": {
+          "signature": "get_browser_url(self)",
+          "purpose": "Get current page URL.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <url or error>}",
+          "used_in_patterns": []
+        },
+        "close_browser_window": {
+          "signature": "close_browser_window(self)",
+          "purpose": "Close current browser session and exit driver.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "browser_admin_login",
+            "browser_user_login",
+            "gui_text_verification",
+            "virtual_desktop_sessions",
+            "html5_bookmark_click",
+            "multi_browser_login",
+            "suite_cleanup"
+          ]
+        },
+        "close_all_browsers_window": {
+          "signature": "close_all_browsers_window(self)",
+          "purpose": "Close all open browser sessions.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "suite_cleanup (commented example)"
+          ]
+        },
+        "reload_page": {
+          "signature": "reload_page(self)",
+          "purpose": "Refresh current page.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "capture_webpage_screenshot": {
+          "signature": "capture_webpage_screenshot(self, input_dict)",
+          "purpose": "Capture screenshot and store under PSTAF_HOME/screenshots/.",
+          "requires": [
+            "selenium",
+            "os",
+            "filesystem"
+          ],
+          "input_format": "dict: {'filename': <basename>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "browser_admin_login",
+            "browser_user_login",
+            "gui_text_verification",
+            "virtual_desktop_sessions",
+            "html5_bookmark_click",
+            "multi_browser_login",
+            "suite_cleanup"
+          ]
+        },
+        "click": {
+          "signature": "click(self, input_dict)",
+          "purpose": "Click on button/link/image/element.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'type': 'button|link|image|element', 'locator': <locator string>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "navigate": {
+          "signature": "navigate(self, input_dict)",
+          "purpose": "Navigate by clicking a link (locator-based).",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'link': <locator string>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "switch_to_window": {
+          "signature": "switch_to_window(self, input_dict)",
+          "purpose": "Switch Selenium context to main or newly opened window.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'window': 'MAIN|NEW'}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "switch_browser": {
+          "signature": "switch_browser(self, aliasname)",
+          "purpose": "Switch to browser by alias (Robot Framework style).",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "aliasname: str",
+          "output_format": "None or dict",
+          "used_in_patterns": []
+        },
+        "set": {
+          "signature": "set(self, input_dict)",
+          "purpose": "Set text in textbox or select value in dropdown.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'type': 'textbox|dropdown|selectbox', 'locator': <locator>, 'value': <str>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "browse": {
+          "signature": "browse(self, input_dict)",
+          "purpose": "Open a URL in a browser (optionally specifying browser type).",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'browser': 'firefox|chrome|...', 'url': <str>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "get_html_source": {
+          "signature": "get_html_source(self)",
+          "purpose": "Return page HTML source.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "str or dict wrapper",
+          "used_in_patterns": []
+        },
+        "get": {
+          "signature": "get(self, input_dict)",
+          "purpose": "Get text or property of a web element by xpath or other locator.",
+          "requires": [
+            "selenium"
+          ],
+          "input_format": "dict: {'type': 'xpath|id|...', 'path': <locator>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <text or error>}",
+          "used_in_patterns": []
+        },
+        "handlecertpopups": {
+          "signature": "handlecertpopups(self)",
+          "purpose": "Handle Java certificate popups.",
+          "requires": [
+            "selenium",
+            "OS-specific automation"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        }
+      },
+      "depends_on": [
+        "selenium",
+        "ConfigUtils",
+        "PSRSClient (indirect)",
+        "os",
+        "time"
+      ],
+      "return_patterns": {
+        "status_value_dict": true
+      }
+    },
+    "Utils": {
+      "purpose": "Generic utility functions for test logging (header/footer) and JSON comparison.",
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Initialize Utils; stateless helper.",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "None",
+          "used_in_patterns": [
+            "all_tests"
+          ]
+        },
+        "TC_HEADER_FOOTER": {
+          "signature": "TC_HEADER_FOOTER(self, startorstop, tc_name)",
+          "purpose": "Emit standardized test case start/end markers into logs.",
+          "requires": [
+            "logging"
+          ],
+          "input_format": "startorstop: 'Start'|'End', tc_name: str",
+          "output_format": "None",
+          "used_in_patterns": [
+            "suite_initialize",
+            "demo_zephyr",
+            "rest_api_call",
+            "browser_admin_login",
+            "browser_user_login",
+            "gui_text_verification",
+            "virtual_desktop_sessions",
+            "html5_bookmark_click",
+            "multi_browser_login",
+            "suite_cleanup"
+          ]
+        },
+        "FUNC_HEADER_FOOTER": {
+          "signature": "FUNC_HEADER_FOOTER(self, enterexit, func_name)",
+          "purpose": "Emit standardized function-level start/end markers.",
+          "requires": [
+            "logging"
+          ],
+          "input_format": "enterexit: 'Enter'|'Exit', func_name: str",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "compare_json": {
+          "signature": "compare_json(self, data_a, data_b)",
+          "purpose": "Deep compare two JSON-like dicts for equality.",
+          "requires": [
+            "json (conceptually)"
+          ],
+          "input_format": "data_a: dict, data_b: dict",
+          "output_format": "bool: True if equal, False otherwise",
+          "used_in_patterns": [
+            "rest_validation_tests (potential)"
+          ]
+        }
+      },
+      "depends_on": [
+        "logging"
+      ],
+      "return_patterns": {
+        "boolean": true
+      }
+    },
+    "AppAccess": {
+      "purpose": "High-level browser-based authentication and access control for PCS/PPS and related apps. Wraps BrowserActions and config-driven defaults.",
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Initialize AppAccess; likely stores BrowserActions instance and config.",
+          "requires": [
+            "BrowserActions",
+            "ConfigUtils"
+          ],
+          "input_format": "None",
+          "output_format": "None",
+          "used_in_patterns": [
+            "all_browser_tests"
+          ]
+        },
+        "login": {
+          "signature": "login(self, input_dict)",
+          "purpose": "Perform browser login for admin/user/guest, including advanced flows (secondary auth, cert auth, RSA, client delivery).",
+          "requires": [
+            "BrowserActions",
+            "ConfigUtils",
+            "selenium"
+          ],
+          "input_format": "dict with keys depending on scenario; common keys: 'type', 'url', optional 'browser'/'browser_type', 'username', 'password', optional 'secondAuth', 'certauth', 'RSA', 'client_delivery'.",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "browser_admin_login",
+            "browser_user_login",
+            "virtual_desktop_sessions",
+            "html5_bookmark_click",
+            "multi_browser_login"
+          ]
+        },
+        "getDeviceMessage": {
+          "signature": "getDeviceMessage(self)",
+          "purpose": "Read success/failure message from PCS/PPS UI after operations.",
+          "requires": [
+            "BrowserActions"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "logout": {
+          "signature": "logout(self)",
+          "purpose": "Logout from PCS/PPS by clicking Sign Out.",
+          "requires": [
+            "BrowserActions"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "browser_admin_login",
+            "browser_user_login",
+            "gui_text_verification",
+            "virtual_desktop_sessions",
+            "html5_bookmark_click",
+            "multi_browser_login"
+          ]
+        },
+        "switch_to_old_ui": {
+          "signature": "switch_to_old_ui(self)",
+          "purpose": "Switch PCS gateway UI to old style.",
+          "requires": [
+            "PSRSClient or BrowserActions"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "switch_to_new_ui": {
+          "signature": "switch_to_new_ui(self)",
+          "purpose": "Switch PCS gateway UI to new style.",
+          "requires": [
+            "PSRSClient or BrowserActions"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "ping_login": {
+          "signature": "ping_login(self, input_dict)",
+          "purpose": "Perform Ping Federate-based SSO login.",
+          "requires": [
+            "BrowserActions"
+          ],
+          "input_format": "dict: {'url': str, 'username': str, 'password': str}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "anonymous_login": {
+          "signature": "anonymous_login(self, input_dict)",
+          "purpose": "Login as anonymous user via /anonsignin.",
+          "requires": [
+            "BrowserActions"
+          ],
+          "input_format": "dict: {'url': str}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "change_password": {
+          "signature": "change_password(self, input_dict)",
+          "purpose": "Change user password via UI.",
+          "requires": [
+            "BrowserActions"
+          ],
+          "input_format": "dict: {'old_password': str, 'new_password': str, 'confirm_password': str}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "azure_ms_login": {
+          "signature": "azure_ms_login(self, input_dict)",
+          "purpose": "Perform Azure AD-based SAML login.",
+          "requires": [
+            "BrowserActions"
+          ],
+          "input_format": "dict: {'type': 'user', 'url': str, 'username': str, 'password': str}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        },
+        "close_task_guide": {
+          "signature": "close_task_guide(self)",
+          "purpose": "Close PCS Task Guide panel on admin home page.",
+          "requires": [
+            "BrowserActions"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": []
+        }
+      },
+      "depends_on": [
+        "BrowserActions",
+        "ConfigUtils",
+        "selenium"
+      ],
+      "return_patterns": {
+        "status_value_dict": true
+      }
+    },
+    "Log": {
+      "purpose": "Logging configuration wrapper for PSTAF tests.",
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, logtype=None, loglevel=None)",
+          "purpose": "Initialize Log object with type and level.",
+          "requires": [
+            "logging",
+            "logging.config"
+          ],
+          "input_format": "logtype: optional, loglevel: optional",
+          "output_format": "None",
+          "used_in_patterns": [
+            "global_log_object"
+          ]
+        },
+        "setloggingconf": {
+          "signature": "setloggingconf(self)",
+          "purpose": "Configure Python logging for a test case; must be first line in each test.",
+          "requires": [
+            "logging.config"
+          ],
+          "input_format": "None",
+          "output_format": "None",
+          "used_in_patterns": [
+            "demo_zephyr",
+            "rest_api_call",
+            "browser_admin_login",
+            "browser_user_login",
+            "gui_text_verification",
+            "virtual_desktop_sessions",
+            "html5_bookmark_click",
+            "multi_browser_login",
+            "suite_cleanup"
+          ]
+        }
+      },
+      "depends_on": [
+        "logging",
+        "logging.config"
+      ],
+      "return_patterns": {}
+    },
+    "PSRSClient": {
+      "purpose": "Client for PSRS (Python Remote Server) to execute browser and OS-level operations on remote machines.",
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Initialize PSRSClient with default timeout and connection settings.",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "None",
+          "used_in_patterns": [
+            "psrs_usage"
+          ]
+        },
+        "execute_api": {
+          "signature": "execute_api(self, method, data, remote_machine_ip=None)",
+          "purpose": "Execute a single PSRS API on remote machine.",
+          "requires": [
+            "requests",
+            "Timeout"
+          ],
+          "input_format": "method: 'GET'|'POST'|'PUT'|'DELETE', data: dict with 'api_name' and optional 'params', remote_machine_ip: str (optional).",
+          "output_format": "dict: {'status': 0|1|9, 'value': <message or result>}",
+          "used_in_patterns": []
+        },
+        "execute_sequence_of_apis": {
+          "signature": "execute_sequence_of_apis(self, method, data, remote_machine_ip=None)",
+          "purpose": "Execute a sequence of PSRS APIs in one call.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "method: 'POST', data: dict with 'json_seq': [ { 'seq_api_name': ..., ...}, ... ]",
+          "output_format": "dict: {'status': 0|1|9, 'value': { '0_methodname': {...}, '1_methodname': {...}, ... }}",
+          "used_in_patterns": []
+        },
+        "setrequestTimeout": {
+          "signature": "setrequestTimeout(self, timeout=None)",
+          "purpose": "Set PSRS HTTP request timeout in seconds.",
+          "requires": [],
+          "input_format": "timeout: int (optional, default 300)",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "getrequestTimeout": {
+          "signature": "getrequestTimeout(self)",
+          "purpose": "Get current PSRS HTTP request timeout.",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "int",
+          "used_in_patterns": []
+        },
+        "checkReachability": {
+          "signature": "checkReachability(self, ip)",
+          "purpose": "Check if PSRS IP is reachable and port open.",
+          "requires": [
+            "socket"
+          ],
+          "input_format": "ip: str",
+          "output_format": "bool",
+          "used_in_patterns": []
+        },
+        "psrs_running": {
+          "signature": "psrs_running(self, ip)",
+          "purpose": "Check if pyremote server is running; start PSRS.py if needed.",
+          "requires": [
+            "SSHClient",
+            "subprocess"
+          ],
+          "input_format": "ip: str",
+          "output_format": "bool",
+          "used_in_patterns": []
+        },
+        "startTCHeader": {
+          "signature": "startTCHeader(self, name)",
+          "purpose": "Emit PSRS-level test case start marker.",
+          "requires": [],
+          "input_format": "name: str",
+          "output_format": "Success/failure indicator",
+          "used_in_patterns": []
+        },
+        "endTCFooter": {
+          "signature": "endTCFooter(self, name)",
+          "purpose": "Emit PSRS-level test case end marker.",
+          "requires": [],
+          "input_format": "name: str",
+          "output_format": "None",
+          "used_in_patterns": []
+        }
+      },
+      "depends_on": [
+        "requests",
+        "socket",
+        "SSHClient",
+        "subprocess",
+        "Timeout"
+      ],
+      "return_patterns": {
+        "status_value_dict": true,
+        "boolean": true
+      }
+    },
+    "REST.RestClient": {
+      "purpose": "Generic REST client for PCS/PPS and ZTA APIs, including login, CRUD operations, and ZTA-specific helpers.",
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, device_type=None)",
+          "purpose": "Initialize RestClient with optional device type and perform ZTA login if needed.",
+          "requires": [
+            "requests",
+            "ConfigUtils"
+          ],
+          "input_format": "device_type: optional str",
+          "output_format": "None",
+          "used_in_patterns": [
+            "rest_api_call",
+            "rest_based_feature_tests"
+          ]
+        },
+        "set_device_type": {
+          "signature": "set_device_type(self, type)",
+          "purpose": "Set device type (e.g., PCS, PPS, ZTA).",
+          "requires": [],
+          "input_format": "type: str",
+          "output_format": "None",
+          "used_in_patterns": []
+        },
+        "get_device_type": {
+          "signature": "get_device_type(self)",
+          "purpose": "Get current device type.",
+          "requires": [],
+          "input_format": "None",
+          "output_format": "str",
+          "used_in_patterns": []
+        },
+        "rest_login": {
+          "signature": "rest_login(self, host, credentials)",
+          "purpose": "Login to PCS/PPS REST API and obtain session token.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "host: str, credentials: dict {'username', 'password', optional 'cert', 'cert_key'}",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <token or error>}",
+          "used_in_patterns": [
+            "rest_api_call"
+          ]
+        },
+        "get": {
+          "signature": "get(self, uri_string, session_token=None)",
+          "purpose": "Perform REST GET on given URI.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "uri_string: str (path only), session_token: str (optional)",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <JSON or error>}",
+          "used_in_patterns": [
+            "rest_api_call",
+            "rest_config_tests",
+            "rest_status_tests"
+          ]
+        },
+        "put": {
+          "signature": "put(self, uri_string, request_body, session_token=None)",
+          "purpose": "Perform REST PUT to update resource.",
+          "requires": [
+            "requests",
+            "json"
+          ],
+          "input_format": "uri_string: str, request_body: dict, session_token: str (optional)",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <JSON or error>}",
+          "used_in_patterns": [
+            "rest_config_tests"
+          ]
+        },
+        "post": {
+          "signature": "post(self, uri_string, request_body, session_token=None)",
+          "purpose": "Perform REST POST to create resource or trigger action.",
+          "requires": [
+            "requests",
+            "json"
+          ],
+          "input_format": "uri_string: str, request_body: dict, session_token: str (optional)",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <JSON or error>}",
+          "used_in_patterns": [
+            "rest_action_tests"
+          ]
+        },
+        "delete": {
+          "signature": "delete(self, uri_string, session_token=None)",
+          "purpose": "Perform REST DELETE to remove resource.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "uri_string: str, session_token: str (optional)",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <JSON or error>}",
+          "used_in_patterns": [
+            "rest_cleanup_tests"
+          ]
+        },
+        "restRealmLogin": {
+          "signature": "restRealmLogin(self, host, credentials, realm)",
+          "purpose": "Login to REST API for a specific realm.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "host: str, credentials: dict, realm: str",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <token or error>}",
+          "used_in_patterns": []
+        },
+        "enable_disable_rest": {
+          "signature": "enable_disable_rest(self, input_dict)",
+          "purpose": "Enable or disable REST access for a user on a device.",
+          "requires": [
+            "ConfigUtils",
+            "REST calls"
+          ],
+          "input_format": "dict: {'device_num': str, 'rest_username': str, 'enable_disable': 'ON|OFF'}",
+          "output_format": "None or dict",
+          "used_in_patterns": []
+        },
+        "zta_login": {
+          "signature": "zta_login(self, input)",
+          "purpose": "Login to ZTA as admin and store session for subsequent zta_* calls.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "dict: {'user': str, 'password': str, 'hostname': str}",
+          "output_format": "bool: True on success, False on failure",
+          "used_in_patterns": []
+        },
+        "find_device_type": {
+          "signature": "find_device_type(self, fqdn)",
+          "purpose": "Determine device type from FQDN.",
+          "requires": [],
+          "input_format": "fqdn: str",
+          "output_format": "str",
+          "used_in_patterns": []
+        },
+        "zta_get": {
+          "signature": "zta_get(self, uri)",
+          "purpose": "Perform ZTA GET request.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "uri: str (path only)",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <JSON or error>}",
+          "used_in_patterns": []
+        },
+        "zta_post": {
+          "signature": "zta_post(self, uri, user_data)",
+          "purpose": "Perform ZTA POST request.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "uri: str, user_data: dict",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <JSON or error>}",
+          "used_in_patterns": []
+        },
+        "zta_put": {
+          "signature": "zta_put(self, uri, user_data)",
+          "purpose": "Perform ZTA PUT request.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "uri: str, user_data: dict",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <JSON or error>}",
+          "used_in_patterns": []
+        },
+        "zta_delete": {
+          "signature": "zta_delete(self, uri)",
+          "purpose": "Perform ZTA DELETE request.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "uri: str",
+          "output_format": "dict: {'ResponseCode': int, 'ResponseContent': <JSON or error>}",
+          "used_in_patterns": []
+        },
+        "get_DSID": {
+          "signature": "get_DSID(self, zta_url, username, password)",
+          "purpose": "Obtain DSID for non-admin ZTA user; requires user to be logged out elsewhere.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "zta_url: str (hostname only), username: str, password: str",
+          "output_format": "dict: {'status': 0|1, 'value': <DSID or error>}",
+          "used_in_patterns": []
+        }
+      },
+      "depends_on": [
+        "requests",
+        "ConfigUtils",
+        "json",
+        "logging"
+      ],
+      "return_patterns": {
+        "response_dict": true,
+        "status_value_dict": true,
+        "boolean": true
+      }
+    },
+    "VirtualDesktopSessions": {
+      "purpose": "Admin-side GUI automation for virtual desktop session management in PCS admin UI.",
+      "key_methods": {
+        "getActiveVirtualDesktopSessions": {
+          "signature": "getActiveVirtualDesktopSessions(self)",
+          "purpose": "Retrieve active virtual desktop sessions via GUI automation.",
+          "requires": [
+            "BrowserActions",
+            "AppAccess",
+            "selenium"
+          ],
+          "input_format": "None",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <session info or error>}",
+          "used_in_patterns": [
+            "virtual_desktop_sessions"
+          ]
+        }
+      },
+      "depends_on": [
+        "BrowserActions",
+        "AppAccess",
+        "Utils"
+      ],
+      "return_patterns": {
+        "status_value_dict": true
+      }
+    },
+    "HTML5AccessSessions": {
+      "purpose": "User-side GUI automation for HTML5 access sessions (e.g., RDP bookmarks).",
+      "key_methods": {
+        "clickBookMark": {
+          "signature": "clickBookMark(self, input_dict)",
+          "purpose": "Click a specific HTML5 bookmark (e.g., RDP) in user portal.",
+          "requires": [
+            "BrowserActions",
+            "selenium"
+          ],
+          "input_format": "dict: {'bookmark': <bookmark name>}",
+          "output_format": "dict: {'status': 1|non-zero, 'value': <message>}",
+          "used_in_patterns": [
+            "html5_bookmark_click"
+          ]
+        }
+      },
+      "depends_on": [
+        "BrowserActions",
+        "AppAccess",
+        "Utils"
+      ],
+      "return_patterns": {
+        "status_value_dict": true
+      }
+    },
+    "UpgradeDowngrade": {
+      "purpose": "Automate upgrade/downgrade workflows for devices under test.",
+      "key_methods": {
+        "upgrade_all": {
+          "signature": "upgrade_all(self)",
+          "purpose": "Perform upgrade on all configured devices as per config.xml.",
+          "requires": [
+            "REST.RestClient",
+            "ConfigUtils",
+            "SSHClient",
+            "SftpClient"
+          ],
+          "input_format": "None",
+          "output_format": "Implementation-specific (likely dict or list of results).",
+          "used_in_patterns": [
+            "suite_initialize"
+          ]
+        }
+      },
+      "depends_on": [
+        "REST.RestClient",
+        "ConfigUtils",
+        "SSHClient",
+        "SftpClient"
+      ],
+      "return_patterns": {}
+    }
+  },
+  "test_patterns": {
+    "suite_initialize": {
+      "example_method": "INITIALIZE",
+      "description": "One-time suite initialization: framework setup, config inspection, and optional upgrade.",
+      "required_classes": [
+        "Initialize",
+        "Utils",
+        "Log",
+        "ConfigUtils",
+        "UpgradeDowngrade"
+      ],
+      "required_methods": [
+        {
+          "class": "Initialize",
+          "method": "initialize"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        },
+        {
+          "class": "Log",
+          "method": "setloggingconf (indirectly recommended)"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getInstance"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getConfig"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "setConfig"
+        },
+        {
+          "class": "UpgradeDowngrade",
+          "method": "upgrade_all"
+        }
+      ],
+      "flow": [
+        "Determine tc_name via inspect.stack()",
+        "Call initObj.initialize() to set up logging and clean browsers",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Log various config values via ConfigUtils.getInstance().getConfig()",
+        "Optionally modify config via setConfig (e.g., TEST_MODE)",
+        "Call upgrade_obj.upgrade_all() and print result",
+        "On exception: log error, call TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: call TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "initialize",
+        "config",
+        "upgrade",
+        "suite",
+        "setup"
+      ]
+    },
+    "demo_zephyr": {
+      "example_method": "GEN_001_FUNC_DEMO_ZEPHYR",
+      "description": "Minimal demo test showing logging and TC header/footer usage; suitable as template for new tests.",
+      "required_classes": [
+        "Log",
+        "Utils"
+      ],
+      "required_methods": [
+        {
+          "class": "Log",
+          "method": "setloggingconf"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        }
+      ],
+      "flow": [
+        "Get tc_name via inspect.stack()",
+        "Call log.setloggingconf() as first line",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Sleep 5 seconds",
+        "Log informational message",
+        "On exception: log error, call TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: call TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "demo",
+        "logging",
+        "zephyr",
+        "template"
+      ]
+    },
+    "rest_api_call": {
+      "example_method": "GEN_002_FUNC_GET_ACTIVE_USERS_VIA_REST",
+      "description": "REST-based test that logs in via REST, obtains token, and calls an API to get active users.",
+      "required_classes": [
+        "Log",
+        "Utils",
+        "ConfigUtils",
+        "REST.RestClient"
+      ],
+      "required_methods": [
+        {
+          "class": "Log",
+          "method": "setloggingconf"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getInstance"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getConfig"
+        },
+        {
+          "class": "REST.RestClient",
+          "method": "rest_login"
+        },
+        {
+          "class": "REST.RestClient",
+          "method": "get"
+        }
+      ],
+      "flow": [
+        "Get tc_name via inspect.stack()",
+        "Call log.setloggingconf()",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Sleep 5 seconds",
+        "Get host from ConfigUtils.getInstance().getConfig('HOSTNAME')",
+        "Prepare credentials dict with username/password",
+        "Log REST login attempt and sleep 10 seconds",
+        "Call restObj.rest_login(host, data)",
+        "If ResponseCode == 200, extract token from ResponseContent; else raise Exception",
+        "Define endpoint '/api/v1/system/active-users'",
+        "Log GET attempt and sleep 10 seconds",
+        "Call restObj.get(rest_get_active_users, token)",
+        "If ResponseCode == 200, log active users; else raise Exception",
+        "On exception: log error, call TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: call TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "REST",
+        "API",
+        "active-users",
+        "token",
+        "backend"
+      ]
+    },
+    "browser_admin_login": {
+      "example_method": "GEN_002_FUNC_BROWSER_ADMIN_LOGIN",
+      "description": "Browser-based admin login test including capability retrieval and logout.",
+      "required_classes": [
+        "Log",
+        "Utils",
+        "ConfigUtils",
+        "AppAccess",
+        "BrowserActions"
+      ],
+      "required_methods": [
+        {
+          "class": "Log",
+          "method": "setloggingconf"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getInstance"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getConfig"
+        },
+        {
+          "class": "AppAccess",
+          "method": "login"
+        },
+        {
+          "class": "AppAccess",
+          "method": "logout"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "get_browser_desired_capabilities"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "close_browser_window"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "capture_webpage_screenshot"
+        }
+      ],
+      "flow": [
+        "Get tc_name and input_dict = {'filename': tc_name}",
+        "Call log.setloggingconf()",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Get host from ConfigUtils.getInstance().getConfig('HOSTNAME')",
+        "Build login_dict with type='admin', url='https://<host>/admin', username='admindb', password='dana123'",
+        "Log login_dict and sleep 2 seconds",
+        "Call appaccess.login(login_dict)",
+        "Assert return_dict['status'] == 1, else fail with return_dict['value']",
+        "Call browser.get_browser_desired_capabilities() and assert status == 1",
+        "Sleep 15 seconds",
+        "Call appaccess.logout() and assert status == 1",
+        "Sleep 5 seconds",
+        "Call browseractions.close_browser_window() and assert status == 1",
+        "On exception: log error, log screenshot capture, call browser.capture_webpage_screenshot(input_dict), close browser window, call TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: call TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "admin",
+        "login",
+        "browser",
+        "GUI",
+        "capabilities"
+      ]
+    },
+    "browser_user_login": {
+      "example_method": "GEN_003_FUNC_BROWSER_USER_LOGIN",
+      "description": "Browser-based user login and logout test.",
+      "required_classes": [
+        "Log",
+        "Utils",
+        "ConfigUtils",
+        "AppAccess",
+        "BrowserActions"
+      ],
+      "required_methods": [
+        {
+          "class": "Log",
+          "method": "setloggingconf"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getInstance"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getConfig"
+        },
+        {
+          "class": "AppAccess",
+          "method": "login"
+        },
+        {
+          "class": "AppAccess",
+          "method": "logout"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "close_browser_window"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "capture_webpage_screenshot"
+        }
+      ],
+      "flow": [
+        "Get tc_name and input_dict = {'filename': tc_name}",
+        "Call log.setloggingconf()",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Get host from ConfigUtils.getInstance().getConfig('HOSTNAME')",
+        "Build login_dict with type='user', url='https://<host>/', username='qa1', password='dana123'",
+        "Log login_dict and sleep 2 seconds",
+        "Call appaccess.login(login_dict) and assert status == 1",
+        "Sleep 15 seconds",
+        "Call appaccess.logout() and assert status == 1",
+        "Sleep 5 seconds",
+        "Call browseractions.close_browser_window() and assert status == 1",
+        "On exception: log error, capture screenshot, close browser, TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "user",
+        "login",
+        "browser",
+        "GUI"
+      ]
+    },
+    "gui_text_verification": {
+      "example_method": "GEN_004_FUNC_ADMIN_VERIFY_TEXT_EXISTS",
+      "description": "Admin login followed by verification that specific text exists on the page.",
+      "required_classes": [
+        "Log",
+        "Utils",
+        "ConfigUtils",
+        "AppAccess",
+        "BrowserActions"
+      ],
+      "required_methods": [
+        {
+          "class": "Log",
+          "method": "setloggingconf"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getInstance"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getConfig"
+        },
+        {
+          "class": "AppAccess",
+          "method": "login"
+        },
+        {
+          "class": "AppAccess",
+          "method": "logout"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "verify"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "close_browser_window"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "capture_webpage_screenshot"
+        }
+      ],
+      "flow": [
+        "Get caller_filename and tc_name",
+        "Prepare input_dict = {'type': 'text', 'value': 'Pulse Connect Secure'}",
+        "Prepare inputdict = {'filename': tc_name}",
+        "Call log.setloggingconf()",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Get host from ConfigUtils.getInstance().getConfig('HOSTNAME')",
+        "Build admin login_dict",
+        "Login via appaccess.login and assert status == 1",
+        "Sleep 5 seconds",
+        "Call browser.verify(input_dict) and assert status == 1",
+        "Sleep 5 seconds",
+        "Logout and assert status == 1",
+        "Sleep 5 seconds",
+        "Close browser window and assert status == 1",
+        "On exception: log error, capture screenshot with inputdict, close browser, TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "admin",
+        "GUI",
+        "text verification",
+        "smoke"
+      ]
+    },
+    "virtual_desktop_sessions": {
+      "example_method": "TEST_GETACTIVEVIRTUALDESKTOPSESSIONS_ADMIN",
+      "description": "Admin login followed by retrieval of active virtual desktop sessions via GUI helper.",
+      "required_classes": [
+        "Log",
+        "Utils",
+        "ConfigUtils",
+        "AppAccess",
+        "BrowserActions",
+        "VirtualDesktopSessions"
+      ],
+      "required_methods": [
+        {
+          "class": "Log",
+          "method": "setloggingconf"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getInstance"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getConfig"
+        },
+        {
+          "class": "AppAccess",
+          "method": "login"
+        },
+        {
+          "class": "VirtualDesktopSessions",
+          "method": "getActiveVirtualDesktopSessions"
+        },
+        {
+          "class": "AppAccess",
+          "method": "logout"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "close_browser_window"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "capture_webpage_screenshot"
+        }
+      ],
+      "flow": [
+        "Get tc_name and input_dict = {'filename': tc_name}",
+        "Call log.setloggingconf()",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Get host from ConfigUtils.getInstance().getConfig('HOSTNAME')",
+        "Build admin login_dict",
+        "Login and assert status == 1",
+        "Sleep 5 seconds",
+        "Call vdsobj.getActiveVirtualDesktopSessions() and assert status == 1",
+        "Logout and assert status == 1",
+        "Sleep 5 seconds",
+        "Close browser window and assert status == 1",
+        "On exception: log error, capture screenshot, close browser, TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "admin",
+        "virtual desktop",
+        "sessions",
+        "GUI"
+      ]
+    },
+    "html5_bookmark_click": {
+      "example_method": "TEST_CLICKHTML5SESSIONBOOKMARK_USER",
+      "description": "User login and click an HTML5 RDP bookmark.",
+      "required_classes": [
+        "Log",
+        "Utils",
+        "ConfigUtils",
+        "AppAccess",
+        "BrowserActions",
+        "HTML5AccessSessions"
+      ],
+      "required_methods": [
+        {
+          "class": "Log",
+          "method": "setloggingconf"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getInstance"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getConfig"
+        },
+        {
+          "class": "AppAccess",
+          "method": "login"
+        },
+        {
+          "class": "HTML5AccessSessions",
+          "method": "clickBookMark"
+        },
+        {
+          "class": "AppAccess",
+          "method": "logout"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "close_browser_window"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "capture_webpage_screenshot"
+        }
+      ],
+      "flow": [
+        "Get tc_name and input_dict = {'filename': tc_name}",
+        "Call log.setloggingconf()",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Get host from ConfigUtils.getInstance().getConfig('HOSTNAME')",
+        "Build login_dict (note: type='admin' but url='https://<host>' and user creds 'qa1'; likely a typo, but pattern is user login)",
+        "Login and assert status == 1",
+        "Sleep 15 seconds",
+        "Prepare input_dict1 = {'bookmark': 'RDP'}",
+        "Call html5_user_obj.clickBookMark(input_dict1) and assert status == 1",
+        "Sleep 10 seconds",
+        "Logout and assert status == 1",
+        "Sleep 5 seconds",
+        "Close browser window and assert status == 1",
+        "On exception: log error, capture screenshot, close browser, TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "user",
+        "HTML5",
+        "RDP",
+        "bookmark",
+        "GUI"
+      ]
+    },
+    "multi_browser_login": {
+      "example_method": "TEST_MULTIPLE_BROWSER_LOGIN_SUPPORT",
+      "description": "Demonstrate support for multiple simultaneous browser sessions (Firefox and Chrome) and switching between them.",
+      "required_classes": [
+        "Log",
+        "Utils",
+        "ConfigUtils",
+        "AppAccess",
+        "BrowserActions"
+      ],
+      "required_methods": [
+        {
+          "class": "Log",
+          "method": "setloggingconf"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getInstance"
+        },
+        {
+          "class": "ConfigUtils",
+          "method": "getConfig"
+        },
+        {
+          "class": "AppAccess",
+          "method": "login"
+        },
+        {
+          "class": "AppAccess",
+          "method": "logout"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "switch_browser_to"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "close_browser_window"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "capture_webpage_screenshot"
+        }
+      ],
+      "flow": [
+        "Get tc_name and input_dict = {'filename': tc_name}",
+        "Call log.setloggingconf()",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Get host from ConfigUtils.getInstance().getConfig('HOSTNAME')",
+        "Build login_dict for Firefox (no explicit browser key => default from config or AppAccess)",
+        "Build login_dict1 for Chrome (browser='chrome')",
+        "Login to Firefox and assert status == 1",
+        "Login to Chrome and assert status == 1",
+        "Sleep 15 seconds",
+        "Set browser_dict['browser'] = 'firefox' and call browseractions.switch_browser_to(browser_dict)",
+        "Logout from Firefox and assert status == 1; sleep 5; close Firefox and assert status == 1",
+        "Set browser_dict['browser'] = 'chrome' and switch to Chrome",
+        "Logout from Chrome and assert status == 1; sleep 5; close Chrome and assert status == 1",
+        "On exception: log error, capture screenshot, close browser, TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "multi-browser",
+        "firefox",
+        "chrome",
+        "parallel",
+        "GUI"
+      ]
+    },
+    "suite_cleanup": {
+      "example_method": "SuiteCleanup",
+      "description": "Suite-level cleanup to close browsers and perform any final logging.",
+      "required_classes": [
+        "Log",
+        "Utils",
+        "BrowserActions"
+      ],
+      "required_methods": [
+        {
+          "class": "Log",
+          "method": "setloggingconf"
+        },
+        {
+          "class": "Utils",
+          "method": "TC_HEADER_FOOTER"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "close_all_browsers_window (commented)"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "close_browser_window"
+        },
+        {
+          "class": "BrowserActions",
+          "method": "capture_webpage_screenshot"
+        }
+      ],
+      "flow": [
+        "Get tc_name and input_dict = {'filename': tc_name}",
+        "Initialize return_dict = {'status': 1}",
+        "Call log.setloggingconf()",
+        "Call util.TC_HEADER_FOOTER('Start', tc_name)",
+        "Log 'Close All Browsers....'",
+        "Optionally call browser.close_all_browsers_window() (currently commented) and assert status == 1",
+        "On exception: log error, capture screenshot, close browser, TC_HEADER_FOOTER('End', tc_name), re-raise",
+        "Finally: TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "keywords": [
+        "cleanup",
+        "suite",
+        "browsers",
+        "teardown"
+      ]
+    }
+  },
+  "method_relationships": {
+    "DemoTestSuite.INITIALIZE": {
+      "calls": [
+        "Initialize.initialize",
+        "Utils.TC_HEADER_FOOTER",
+        "ConfigUtils.getInstance",
+        "ConfigUtils.getConfig",
+        "ConfigUtils.setConfig",
+        "UpgradeDowngrade.upgrade_all"
+      ],
+      "depends_on": [
+        "initObj",
+        "util",
+        "ConfigUtils",
+        "upgrade_obj",
+        "logging",
+        "inspect",
+        "time"
+      ],
+      "input_output": {
+        "inputs": "None (Robot test keyword, uses inspect to get name)",
+        "outputs": "None; raises Exception on failure"
+      },
+      "usage_pattern": "Suite-level keyword called from Robot INITIALIZE test case."
+    },
+    "DemoTestSuite.GEN_002_FUNC_GET_ACTIVE_USERS_VIA_REST": {
+      "calls": [
+        "Log.setloggingconf",
+        "Utils.TC_HEADER_FOOTER",
+        "ConfigUtils.getInstance",
+        "ConfigUtils.getConfig",
+        "RestClient.rest_login",
+        "RestClient.get"
+      ],
+      "depends_on": [
+        "log",
+        "util",
+        "restObj",
+        "ConfigUtils",
+        "logging",
+        "time"
+      ],
+      "input_output": {
+        "inputs": "None; uses config for HOSTNAME and hard-coded credentials.",
+        "outputs": "None; asserts via exceptions on failure."
+      },
+      "usage_pattern": "REST login + GET pattern; can be adapted for other REST endpoints."
+    },
+    "AppAccess.login": {
+      "calls": [
+        "BrowserActions.launch_browser or BrowserActions.browse",
+        "BrowserActions.set",
+        "BrowserActions.click",
+        "BrowserActions.handle_login_intermediate_page",
+        "BrowserActions.handlecertpopups",
+        "ConfigUtils.getConfig (for defaults)"
+      ],
+      "depends_on": [
+        "BrowserActions",
+        "ConfigUtils",
+        "selenium"
+      ],
+      "input_output": {
+        "inputs": "login_dict with type/url and optional browser/username/password/advanced keys.",
+        "outputs": "dict: {'status': 1|non-zero, 'value': <message>}"
+      },
+      "usage_pattern": "Primary entry point for browser-based login in most GUI tests."
+    },
+    "AppAccess.logout": {
+      "calls": [
+        "BrowserActions.click",
+        "BrowserActions.navigate"
+      ],
+      "depends_on": [
+        "BrowserActions"
+      ],
+      "input_output": {
+        "inputs": "None",
+        "outputs": "dict: {'status': 1|non-zero, 'value': <message>}"
+      },
+      "usage_pattern": "Always called after login-based tests to cleanly end session."
+    },
+    "BrowserActions.verify": {
+      "calls": [
+        "selenium WebDriver find_element(s)",
+        "assertions inside method"
+      ],
+      "depends_on": [
+        "selenium"
+      ],
+      "input_output": {
+        "inputs": "dict: {'type': 'text|button|checkbox|element', 'value': locator or text}",
+        "outputs": "dict: {'status': 1|non-zero, 'value': <message>}"
+      },
+      "usage_pattern": "Used to assert presence of text or elements after navigation or login."
+    },
+    "REST.RestClient.rest_login": {
+      "calls": [
+        "requests.post"
+      ],
+      "depends_on": [
+        "requests"
+      ],
+      "input_output": {
+        "inputs": "host: str, credentials: dict",
+        "outputs": "dict: {'ResponseCode': int, 'ResponseContent': token or error}"
+      },
+      "usage_pattern": "First step in REST-based tests to obtain token."
+    },
+    "REST.RestClient.get": {
+      "calls": [
+        "requests.get"
+      ],
+      "depends_on": [
+        "requests"
+      ],
+      "input_output": {
+        "inputs": "uri_string: str, session_token: str",
+        "outputs": "dict: {'ResponseCode': int, 'ResponseContent': JSON or error}"
+      },
+      "usage_pattern": "Used for configuration/status retrieval in REST tests."
+    },
+    "Utils.TC_HEADER_FOOTER": {
+      "calls": [
+        "logging.info"
+      ],
+      "depends_on": [
+        "logging"
+      ],
+      "input_output": {
+        "inputs": "startorstop: 'Start'|'End', tc_name: str",
+        "outputs": "None"
+      },
+      "usage_pattern": "Called at beginning and end of every test method."
+    },
+    "Log.setloggingconf": {
+      "calls": [
+        "logging.config.dictConfig or fileConfig"
+      ],
+      "depends_on": [
+        "logging.config"
+      ],
+      "input_output": {
+        "inputs": "None",
+        "outputs": "None"
+      },
+      "usage_pattern": "First call in each test to ensure logging is configured."
+    }
+  },
+  "mandatory_components": {
+    "imports": {
+      "core_for_all_tests": [
+        "from Initialize import *",
+        "from Utils import *",
+        "from Log import *"
+      ],
+      "browser_tests": [
+        "from AppAccess import *",
+        "from BrowserActions import *"
+      ],
+      "rest_tests": [
+        "from REST.REST import RestClient"
+      ],
+      "psrs_dependent": [
+        "from PSRSClient import *"
+      ],
+      "feature_specific": [
+        "from admin.status.VirtualDesktopSessions import *",
+        "from user.HTML5AccessSessions import *",
+        "from UpgradeDowngrade import UpgradeDowngrade",
+        "from ConfigUtils import ConfigUtils"
+      ],
+      "standard_imports": [
+        "import sys",
+        "import time",
+        "import inspect",
+        "import logging",
+        "import logging.config",
+        "import json",
+        "import os",
+        "import requests",
+        "from requests.exceptions import Timeout",
+        "import selenium",
+        "from SysUtils import SysUtils",
+        "from Gateway import *",
+        "from SftpClient import *",
+        "from SSHClient import *",
+        "import subprocess",
+        "from subprocess import getoutput as go",
+        "import shutil",
+        "import socket",
+        "import platform",
+        "import xmltodict"
+      ]
+    },
+    "global_objects": {
+      "pattern": [
+        "restObj = None",
+        "token = None",
+        "log = Log()",
+        "initObj = Initialize()",
+        "util = Utils()",
+        "appaccess = AppAccess()",
+        "browser = BrowserActions()",
+        "browseractions = BrowserActions()",
+        "vdsobj = VirtualDesktopSessions()",
+        "html5_user_obj = HTML5AccessSessions()",
+        "upgrade_obj = UpgradeDowngrade()",
+        "psrsclient = PSRSClient()",
+        "sysutils = SysUtils()",
+        "gateway = Gateway()"
+      ],
+      "usage_notes": [
+        "Global objects are instantiated at module level and reused across test methods.",
+        "Both 'browser' and 'browseractions' refer to BrowserActions; tests sometimes use one or the other.",
+        "Log object 'log' is used to call setloggingconf() at the start of each test."
+      ]
+    },
+    "class_structure": {
+      "robot_library": [
+        "class DemoTestSuite(object):",
+        "    ROBOT_LIBRARY_SCOPE = 'GLOBAL'",
+        "    def __init__(self):",
+        "        pass"
+      ],
+      "initialize_method": [
+        "def INITIALIZE(self):",
+        "    tc_name = inspect.stack()[0][3]",
+        "    try:",
+        "        initObj.initialize()",
+        "        util.TC_HEADER_FOOTER('Start', tc_name)",
+        "        # additional setup and logging",
+        "    except:",
+        "        # log error, footer, re-raise",
+        "    util.TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "test_method_template": [
+        "def TEST_OR_GEN_xxx(self):",
+        "    tc_name = inspect.stack()[0][3]",
+        "    input_dict = {'filename': tc_name}  # for screenshots",
+        "    try:",
+        "        log.setloggingconf()  # mandatory first line",
+        "        util.TC_HEADER_FOOTER('Start', tc_name)",
+        "        # test-specific steps",
+        "    except:",
+        "        # log error, capture screenshot, close browser, footer, re-raise",
+        "    util.TC_HEADER_FOOTER('End', tc_name)"
+      ],
+      "suite_cleanup_method": [
+        "def SuiteCleanup(self):",
+        "    tc_name = inspect.stack()[0][3]",
+        "    input_dict = {'filename': tc_name}",
+        "    return_dict = {'status': 1}",
+        "    try:",
+        "        log.setloggingconf()",
+        "        util.TC_HEADER_FOOTER('Start', tc_name)",
+        "        logging.info('Close All Browsers.... ')",
+        "        # optionally call browser.close_all_browsers_window()",
+        "        assert return_dict['status'] == 1, return_dict['value']",
+        "    except:",
+        "        # log error, capture screenshot, close browser, footer, re-raise",
+        "    util.TC_HEADER_FOOTER('End', tc_name)"
+      ]
+    }
+  },
+  "common_dependencies": {
+    "browser_tests": [
+      "AppAccess",
+      "BrowserActions",
+      "Utils",
+      "ConfigUtils",
+      "Log"
+    ],
+    "rest_tests": [
+      "REST.RestClient",
+      "Utils",
+      "ConfigUtils",
+      "Log"
+    ],
+    "virtual_desktop_tests": [
+      "VirtualDesktopSessions",
+      "AppAccess",
+      "BrowserActions",
+      "Utils",
+      "ConfigUtils",
+      "Log"
+    ],
+    "html5_access_tests": [
+      "HTML5AccessSessions",
+      "AppAccess",
+      "BrowserActions",
+      "Utils",
+      "ConfigUtils",
+      "Log"
+    ],
+    "upgrade_tests": [
+      "UpgradeDowngrade",
+      "REST.RestClient",
+      "ConfigUtils",
+      "Initialize",
+      "Log",
+      "Utils"
+    ],
+    "all_tests": [
+      "Initialize",
+      "Utils",
+      "Log"
+    ]
+  }
+}

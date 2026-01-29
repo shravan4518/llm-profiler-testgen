@@ -183,10 +183,45 @@
     <!-- Framework Setup & Custom Generation Tab -->
     <div id="framework-tab" class="tab-content">
         <div class="framework-section">
+            <!-- Framework Selection - FIRST -->
+            <div class="framework-selection-section">
+                <h2><i class="fas fa-code-branch"></i> Select Test Framework</h2>
+                <p class="section-description">Choose the framework for viewing files and generating test scripts</p>
+
+                <div class="framework-selector">
+                    <label class="framework-option">
+                        <input type="radio" name="framework-type" value="pstaff" checked>
+                        <div class="framework-card">
+                            <div class="framework-card-header">
+                                <i class="fas fa-robot"></i>
+                                <strong>PSTAFF Framework</strong>
+                            </div>
+                            <p class="framework-card-description">
+                                Robot Framework + Python (aut-pstaf)<br>
+                                <small>Test suite + Python methods + Data file</small>
+                            </p>
+                        </div>
+                    </label>
+                    <label class="framework-option">
+                        <input type="radio" name="framework-type" value="client">
+                        <div class="framework-card">
+                            <div class="framework-card-header">
+                                <i class="fas fa-flask"></i>
+                                <strong>Client Framework</strong>
+                            </div>
+                            <p class="framework-card-description">
+                                pytest + PPS modules (aut-pypdc)<br>
+                                <small>TestSuite + Test runner + Data file</small>
+                            </p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <!-- Framework Files Section -->
             <div class="framework-upload-section">
-                <h2><i class="fas fa-code-branch"></i> Available Framework Files</h2>
-                <p class="section-description">Framework files loaded from PSTAF_FRAMEWORK/aut-pstaf/PSTAF_Framework directory</p>
+                <h2><i class="fas fa-folder-open"></i> Available Framework Files</h2>
+                <p class="section-description" id="framework-files-description">Framework files loaded from PSTAF_FRAMEWORK/aut-pstaf/PSTAF_Framework directory</p>
 
                 <div class="upload-area">
                     <div class="upload-controls">
@@ -204,48 +239,71 @@
                 </div>
             </div>
 
-            <!-- Custom Test Script Generation Section -->
-            <div class="custom-generation-section">
-                <h2><i class="fas fa-robot"></i> Custom Test Script Generation</h2>
-                <p class="section-description">Generate a test script for a simple test case using framework-aware AI generation</p>
+            <!-- Framework File Upload Section -->
+            <div class="framework-ingest-section">
+                <h2><i class="fas fa-upload"></i> Upload Framework Files</h2>
+                <p class="section-description">Upload Python files to enhance the selected framework's knowledge base</p>
 
-                <form id="custom-generation-form">
-                    <!-- Framework Selection -->
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-code-branch"></i> Test Framework
-                        </label>
-                        <div class="framework-selector">
-                            <label class="framework-option">
-                                <input type="radio" name="framework-type" value="pstaff" checked>
-                                <div class="framework-card">
-                                    <div class="framework-card-header">
-                                        <i class="fas fa-robot"></i>
-                                        <strong>PSTAFF Framework</strong>
-                                    </div>
-                                    <p class="framework-card-description">
-                                        Robot Framework + Python (aut-pstaf)<br>
-                                        <small>Test suite + Python methods + Data file</small>
-                                    </p>
-                                </div>
-                            </label>
-                            <label class="framework-option">
-                                <input type="radio" name="framework-type" value="client">
-                                <div class="framework-card">
-                                    <div class="framework-card-header">
-                                        <i class="fas fa-flask"></i>
-                                        <strong>Client Framework</strong>
-                                    </div>
-                                    <p class="framework-card-description">
-                                        pytest + PPS modules (aut-pypdc)<br>
-                                        <small>TestSuite + Test runner + Data file</small>
-                                    </p>
-                                </div>
-                            </label>
-                        </div>
-                        <small class="form-help">Select the framework that matches your project setup</small>
+                <div class="upload-area">
+                    <div class="file-drop-zone" id="framework-drop-zone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag & drop Python files here or click to browse</p>
+                        <input type="file" id="framework-file-input" multiple accept=".py" hidden>
+                        <button type="button" class="btn btn-secondary" id="browse-framework-files">
+                            <i class="fas fa-folder-open"></i> Browse Files
+                        </button>
                     </div>
 
+                    <div id="framework-upload-queue" class="upload-queue" style="display: none;">
+                        <h4><i class="fas fa-list"></i> Files to Upload</h4>
+                        <div id="framework-upload-list"></div>
+                        <div class="upload-actions">
+                            <button type="button" class="btn btn-primary" id="ingest-framework-files">
+                                <i class="fas fa-brain"></i> Ingest into Framework Expert
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="clear-framework-queue">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="framework-ingest-status" class="ingest-status" style="display: none;">
+                        <div class="status-message"></div>
+                    </div>
+                </div>
+
+                <!-- Knowledge Base Stats -->
+                <div class="knowledge-stats" id="framework-knowledge-stats">
+                    <h4><i class="fas fa-database"></i> Framework Knowledge Base</h4>
+                    <div class="stats-content">
+                        <span class="stat-item"><i class="fas fa-code"></i> Classes: <span id="kb-classes-count">-</span></span>
+                        <span class="stat-item"><i class="fas fa-sitemap"></i> Patterns: <span id="kb-patterns-count">-</span></span>
+                        <span class="stat-item"><i class="fas fa-file-code"></i> File: <span id="kb-file-name">-</span></span>
+                    </div>
+                    <div class="knowledge-actions">
+                        <button type="button" class="btn btn-small btn-secondary" id="refresh-knowledge-stats">
+                            <i class="fas fa-sync"></i> Refresh Stats
+                        </button>
+                        <button type="button" class="btn btn-small btn-primary" id="analyze-framework-btn">
+                            <i class="fas fa-brain"></i> Analyze Existing Files
+                        </button>
+                        <button type="button" class="btn btn-small btn-warning" id="reanalyze-framework-btn" style="display: none;">
+                            <i class="fas fa-redo"></i> Re-analyze (Force)
+                        </button>
+                    </div>
+                    <div id="analyze-status" class="analyze-status" style="display: none;"></div>
+                    <p class="help-text" id="kb-help-text">
+                        <i class="fas fa-info-circle"></i> Click "Analyze Existing Files" to process all framework files shown above into the knowledge base.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Custom Test Script Generation Section -->
+            <div class="custom-generation-section">
+                <h2><i class="fas fa-magic"></i> Custom Test Script Generation</h2>
+                <p class="section-description">Generate a test script for a simple test case using the selected framework</p>
+
+                <form id="custom-generation-form">
                     <div class="form-group">
                         <label for="custom-test-description">
                             <i class="fas fa-keyboard"></i> Test Case Description
@@ -963,12 +1021,199 @@
     gap: 3rem;
 }
 
+.framework-selection-section,
 .framework-upload-section,
+.framework-ingest-section,
 .custom-generation-section {
     background: white;
     border-radius: 12px;
     padding: 2rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.framework-ingest-section {
+    border: 2px dashed #e2e8f0;
+    background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+}
+
+/* File Drop Zone */
+.file-drop-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #f8fafc;
+}
+
+.file-drop-zone:hover,
+.file-drop-zone.dragover {
+    border-color: var(--primary-color);
+    background: #eff6ff;
+}
+
+.file-drop-zone i {
+    font-size: 2.5rem;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+}
+
+.file-drop-zone p {
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+}
+
+/* Upload Queue */
+.upload-queue {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.upload-queue h4 {
+    margin: 0 0 0.75rem 0;
+    color: var(--dark-bg);
+    font-size: 0.95rem;
+}
+
+.upload-queue-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.upload-queue-item i {
+    color: var(--primary-color);
+}
+
+.upload-queue-item span {
+    flex: 1;
+}
+
+.upload-queue-item .file-size {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    flex: none;
+}
+
+.upload-queue-item .btn-remove {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.upload-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+/* Ingest Status */
+.ingest-status {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.ingest-status .success-message {
+    color: #059669;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ingest-status .error-message {
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stats-summary {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Knowledge Stats */
+.knowledge-stats {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%);
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.knowledge-stats h4 {
+    margin: 0 0 0.75rem 0;
+    color: var(--dark-bg);
+    font-size: 0.95rem;
+}
+
+.knowledge-stats .stats-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.knowledge-stats .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.knowledge-stats .stat-item i {
+    color: var(--primary-color);
+}
+
+.knowledge-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.knowledge-stats .help-text {
+    margin: 0.75rem 0 0 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.analyze-status {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    background: #f8fafc;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.framework-selection-section {
+    border: 2px solid var(--primary-color);
+    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
 }
 
 /* Framework Selector */
@@ -2076,8 +2321,8 @@ function escapeHtml(text) {
 document.addEventListener('DOMContentLoaded', function() {
     loadFrameworkFiles();
 
-    // Framework file refresh
-    document.getElementById('refresh-framework-files').addEventListener('click', loadFrameworkFiles);
+    // Framework file refresh - uses current selected framework
+    document.getElementById('refresh-framework-files').addEventListener('click', () => loadFrameworkFiles());
 
     // Custom script generation
     document.getElementById('custom-generation-form').addEventListener('submit', handleCustomScriptGeneration);
@@ -2091,15 +2336,37 @@ document.addEventListener('DOMContentLoaded', function() {
             switchFileTab(fileType);
         });
     });
+
+    // Framework selection change - reload files
+    document.querySelectorAll('input[name="framework-type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            loadFrameworkFiles(this.value);
+        });
+    });
 });
 
-function loadFrameworkFiles() {
+function getSelectedFramework() {
+    const selected = document.querySelector('input[name="framework-type"]:checked');
+    return selected ? selected.value : 'pstaff';
+}
+
+function loadFrameworkFiles(frameworkType = null) {
     const filesList = document.getElementById('framework-files-list');
+    const descriptionEl = document.getElementById('framework-files-description');
+
+    // Use provided type or get from selection
+    const fwType = frameworkType || getSelectedFramework();
+
     filesList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading framework files...</p></div>';
 
-    fetch('/api/framework/files')
+    fetch(`/api/framework/files?framework_type=${fwType}`)
         .then(response => response.json())
         .then(data => {
+            // Update description based on framework
+            if (descriptionEl) {
+                descriptionEl.textContent = `Framework files loaded from ${data.framework_path || 'framework directory'}`;
+            }
+
             if (data.files && data.files.length > 0) {
                 filesList.innerHTML = data.files.map(file => `
                     <div class="framework-file-item">
@@ -2118,11 +2385,14 @@ function loadFrameworkFiles() {
                     </div>
                 `).join('');
             } else {
+                const expectedPath = fwType === 'client'
+                    ? 'aut-pypdc/Generic/Framework and aut-pypdc/PPS/Framework'
+                    : 'PSTAF_FRAMEWORK/aut-pstaf/PSTAF_Framework';
                 filesList.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-folder-open"></i>
                         <p>No framework files found</p>
-                        <p>Expected location: PSTAF_FRAMEWORK/aut-pstaf/PSTAF_Framework</p>
+                        <p>Expected location: ${expectedPath}</p>
                     </div>
                 `;
             }
@@ -2133,11 +2403,334 @@ function loadFrameworkFiles() {
                 <div class="empty-state">
                     <i class="fas fa-exclamation-circle"></i>
                     <p>Error loading framework files</p>
-                    <p>Make sure PSTAF_FRAMEWORK directory exists in project folder</p>
+                    <p>${error.message}</p>
                 </div>
             `;
         });
 }
+
+// ============================================================================
+// Framework File Upload and Ingestion
+// ============================================================================
+
+let frameworkUploadQueue = [];
+
+function initFrameworkUpload() {
+    const dropZone = document.getElementById('framework-drop-zone');
+    const fileInput = document.getElementById('framework-file-input');
+    const browseBtn = document.getElementById('browse-framework-files');
+    const ingestBtn = document.getElementById('ingest-framework-files');
+    const clearBtn = document.getElementById('clear-framework-queue');
+    const refreshStatsBtn = document.getElementById('refresh-knowledge-stats');
+
+    // Browse button
+    if (browseBtn) {
+        browseBtn.addEventListener('click', () => fileInput.click());
+    }
+
+    // File input change
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            handleFrameworkFiles(e.target.files);
+        });
+    }
+
+    // Drag and drop
+    if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFrameworkFiles(e.dataTransfer.files);
+        });
+
+        dropZone.addEventListener('click', () => fileInput.click());
+    }
+
+    // Ingest button
+    if (ingestBtn) {
+        ingestBtn.addEventListener('click', ingestFrameworkFiles);
+    }
+
+    // Clear button
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearFrameworkQueue);
+    }
+
+    // Refresh stats button
+    if (refreshStatsBtn) {
+        refreshStatsBtn.addEventListener('click', loadKnowledgeStats);
+    }
+
+    // Load initial stats
+    loadKnowledgeStats();
+
+    // Update stats when framework changes
+    document.querySelectorAll('input[name="framework-type"]').forEach(radio => {
+        radio.addEventListener('change', loadKnowledgeStats);
+    });
+}
+
+function handleFrameworkFiles(files) {
+    const queueEl = document.getElementById('framework-upload-queue');
+    const listEl = document.getElementById('framework-upload-list');
+
+    for (const file of files) {
+        if (file.name.endsWith('.py')) {
+            frameworkUploadQueue.push(file);
+        }
+    }
+
+    if (frameworkUploadQueue.length > 0) {
+        queueEl.style.display = 'block';
+        listEl.innerHTML = frameworkUploadQueue.map((file, index) => `
+            <div class="upload-queue-item">
+                <i class="fas fa-file-code"></i>
+                <span>${escapeHtml(file.name)}</span>
+                <span class="file-size">${formatFileSize(file.size)}</span>
+                <button type="button" class="btn-remove" onclick="removeFromFrameworkQueue(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+}
+
+function removeFromFrameworkQueue(index) {
+    frameworkUploadQueue.splice(index, 1);
+    const listEl = document.getElementById('framework-upload-list');
+    const queueEl = document.getElementById('framework-upload-queue');
+
+    if (frameworkUploadQueue.length === 0) {
+        queueEl.style.display = 'none';
+    } else {
+        listEl.innerHTML = frameworkUploadQueue.map((file, idx) => `
+            <div class="upload-queue-item">
+                <i class="fas fa-file-code"></i>
+                <span>${escapeHtml(file.name)}</span>
+                <span class="file-size">${formatFileSize(file.size)}</span>
+                <button type="button" class="btn-remove" onclick="removeFromFrameworkQueue(${idx})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+}
+
+function clearFrameworkQueue() {
+    frameworkUploadQueue = [];
+    document.getElementById('framework-upload-queue').style.display = 'none';
+    document.getElementById('framework-upload-list').innerHTML = '';
+}
+
+async function ingestFrameworkFiles() {
+    if (frameworkUploadQueue.length === 0) {
+        showToast('No files to ingest', 'warning');
+        return;
+    }
+
+    const frameworkType = getSelectedFramework();
+    const statusEl = document.getElementById('framework-ingest-status');
+    const ingestBtn = document.getElementById('ingest-framework-files');
+
+    statusEl.style.display = 'block';
+    statusEl.querySelector('.status-message').innerHTML = `
+        <div class="loading-spinner" style="display: inline-flex; align-items: center; gap: 10px;">
+            <div class="spinner"></div>
+            <span>Ingesting ${frameworkUploadQueue.length} files into ${frameworkType.toUpperCase()} knowledge base...</span>
+        </div>
+    `;
+    ingestBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('framework_type', frameworkType);
+    frameworkUploadQueue.forEach(file => {
+        formData.append('files', file);
+    });
+
+    try {
+        const response = await fetch('/api/framework/ingest-files', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            statusEl.querySelector('.status-message').innerHTML = `
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <span>${data.message}</span>
+                    <div class="stats-summary">
+                        <span>Classes: ${data.stats.classes_count}</span>
+                        <span>Patterns: ${data.stats.patterns_count}</span>
+                    </div>
+                </div>
+            `;
+            showToast(data.message, 'success');
+            clearFrameworkQueue();
+            loadKnowledgeStats();
+        } else {
+            statusEl.querySelector('.status-message').innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Error: ${data.error}</span>
+                </div>
+            `;
+            showToast('Ingestion failed: ' + data.error, 'error');
+        }
+    } catch (error) {
+        statusEl.querySelector('.status-message').innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Error: ${error.message}</span>
+            </div>
+        `;
+        showToast('Ingestion failed: ' + error.message, 'error');
+    }
+
+    ingestBtn.disabled = false;
+}
+
+function loadKnowledgeStats() {
+    const frameworkType = getSelectedFramework();
+    const classesEl = document.getElementById('kb-classes-count');
+    const patternsEl = document.getElementById('kb-patterns-count');
+    const fileEl = document.getElementById('kb-file-name');
+    const analyzeBtn = document.getElementById('analyze-framework-btn');
+    const reanalyzeBtn = document.getElementById('reanalyze-framework-btn');
+    const helpText = document.getElementById('kb-help-text');
+
+    fetch(`/api/framework/knowledge-stats?framework_type=${frameworkType}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.stats) {
+                const stats = data.stats;
+                classesEl.textContent = stats.classes_count || '0';
+                patternsEl.textContent = stats.patterns_count || '0';
+
+                if (stats.knowledge_file) {
+                    const fileName = stats.knowledge_file.split(/[/\\]/).pop();
+                    fileEl.textContent = fileName;
+                } else {
+                    fileEl.textContent = stats.status === 'not_analyzed' ? 'Not analyzed yet' : '-';
+                }
+
+                // Show/hide buttons based on analysis status
+                const isAnalyzed = stats.status === 'ready' && stats.classes_count > 0;
+                if (isAnalyzed) {
+                    analyzeBtn.style.display = 'none';
+                    reanalyzeBtn.style.display = 'inline-flex';
+                    helpText.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> Knowledge base is ready. Use "Re-analyze" to update with latest files.';
+                } else {
+                    analyzeBtn.style.display = 'inline-flex';
+                    reanalyzeBtn.style.display = 'none';
+                    helpText.innerHTML = '<i class="fas fa-info-circle"></i> Click "Analyze Existing Files" to process all framework files shown above into the knowledge base.';
+                }
+            } else {
+                classesEl.textContent = '0';
+                patternsEl.textContent = '0';
+                fileEl.textContent = 'Not analyzed yet';
+                analyzeBtn.style.display = 'inline-flex';
+                reanalyzeBtn.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading knowledge stats:', error);
+            classesEl.textContent = '-';
+            patternsEl.textContent = '-';
+            fileEl.textContent = 'Error loading';
+        });
+}
+
+async function analyzeFramework(force = false) {
+    const frameworkType = getSelectedFramework();
+    const analyzeBtn = document.getElementById('analyze-framework-btn');
+    const reanalyzeBtn = document.getElementById('reanalyze-framework-btn');
+    const statusEl = document.getElementById('analyze-status');
+
+    const activeBtn = force ? reanalyzeBtn : analyzeBtn;
+    const originalText = activeBtn.innerHTML;
+
+    activeBtn.disabled = true;
+    activeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+    statusEl.style.display = 'block';
+    statusEl.innerHTML = `
+        <div class="loading-spinner" style="display: inline-flex; align-items: center; gap: 10px;">
+            <div class="spinner"></div>
+            <span>Analyzing ${frameworkType.toUpperCase()} framework files... This may take a minute.</span>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/framework/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ framework_type: frameworkType, force: force })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            statusEl.innerHTML = `
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <span>${data.message}</span>
+                    <div class="stats-summary">
+                        <span>Classes: ${data.stats.classes_count}</span>
+                        <span>Patterns: ${data.stats.patterns_count}</span>
+                    </div>
+                </div>
+            `;
+            showToast(data.message, 'success');
+            loadKnowledgeStats();
+        } else {
+            statusEl.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Error: ${data.error}</span>
+                </div>
+            `;
+            showToast('Analysis failed: ' + data.error, 'error');
+        }
+    } catch (error) {
+        statusEl.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Error: ${error.message}</span>
+            </div>
+        `;
+        showToast('Analysis failed: ' + error.message, 'error');
+    }
+
+    activeBtn.disabled = false;
+    activeBtn.innerHTML = originalText;
+}
+
+// Initialize framework upload on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initFrameworkUpload();
+
+    // Analyze framework buttons
+    const analyzeBtn = document.getElementById('analyze-framework-btn');
+    const reanalyzeBtn = document.getElementById('reanalyze-framework-btn');
+
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', () => analyzeFramework(false));
+    }
+    if (reanalyzeBtn) {
+        reanalyzeBtn.addEventListener('click', () => analyzeFramework(true));
+    }
+});
 
 // Global variable to store generated files
 let generatedFiles = null;

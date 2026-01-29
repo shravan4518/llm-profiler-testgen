@@ -1,0 +1,2571 @@
+{
+  "classes": {
+    "Initialize": {
+      "module": "Initialize",
+      "purpose": "End‑to‑end environment bootstrap and remote host orchestration for PDC auto client tests (Jenkins host, test hosts, pyRome, Selenium, PCS/ICS, ESXi/Fusion VMs, logs).",
+      "depends_on": [
+        "FWUtils",
+        "SshClient",
+        "FtpClient",
+        "vSphereUtils",
+        "CommonUtils",
+        "paramiko",
+        "scp",
+        "redis",
+        "requests",
+        "xmltodict",
+        "logging",
+        "os",
+        "subprocess",
+        "socket"
+      ],
+      "return_patterns": {
+        "status_dict": {
+          "status": "0 | 1",
+          "msg": "optional error message",
+          "other_keys": "method specific (e.g. assigned_ext_ipv6, assigned_int_ipv6)"
+        },
+        "bool": "for some is_* helpers (e.g. is_pcs_up, is_remote_host_reachable)",
+        "None": "for internal helpers that only raise/log on error"
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Construct Initialize object, set up logger, config, SSH/FTP/vSphere helpers and any cached state.",
+          "requires": [],
+          "input_format": "no arguments",
+          "output_format": "Initialize instance"
+        },
+        "initialize": {
+          "signature": "initialize(self)",
+          "purpose": "Top‑level environment setup entry point used by tests; typically called from INITIALIZE() in test modules.",
+          "requires": [
+            "_initialize_pdc_auto",
+            "FWUtils.get_config",
+            "SshClient.connect",
+            "wait_for_pdcauto_service_up",
+            "wait_for_pyRome_server_up",
+            "wait_for_selenium_server_up"
+          ],
+          "input_format": "no arguments; uses config.xml via FWUtils internally",
+          "output_format": "dict with at least 'status' (0|1) and optional 'msg'"
+        },
+        "_initialize_pdc_auto": {
+          "signature": "_initialize_pdc_auto(self)",
+          "purpose": "Internal helper to bring up PDC auto service, pyRome server, Selenium server on remote test host(s).",
+          "requires": [
+            "_find_remote_os",
+            "_start_pyRome_server",
+            "_start_selenium_server",
+            "wait_for_pyRome_server_up",
+            "wait_for_selenium_server_up"
+          ],
+          "input_format": "no external input; uses config",
+          "output_format": "dict status pattern or raises/logs on failure"
+        },
+        "_disconnect_ssh_session": {
+          "signature": "_disconnect_ssh_session(self)",
+          "purpose": "Close any active SSH sessions to remote hosts.",
+          "requires": [
+            "SshClient.disconnect"
+          ],
+          "input_format": "none",
+          "output_format": "None or status dict"
+        },
+        "_find_remote_os": {
+          "signature": "_find_remote_os(self, server_id)",
+          "purpose": "Determine remote OS type (Windows/Linux/Mac) for a given server_id from config.xml and/or remote commands.",
+          "requires": [
+            "FWUtils.get_config",
+            "SshClient.execute_command"
+          ],
+          "input_format": "server_id from config.xml (e.g. 'SERVER_1')",
+          "output_format": "string like 'windows' | 'linux' | 'mac' or status dict"
+        },
+        "_execute_remote_windows_cmd": {
+          "signature": "_execute_remote_windows_cmd(self, cmd_input, server_id)",
+          "purpose": "Execute a command on a remote Windows host via SSH or other mechanism.",
+          "requires": [
+            "SshClient.execute_command",
+            "_get_windows_session_info"
+          ],
+          "input_format": "cmd_input: command string; server_id: config server id",
+          "output_format": "dict with 'status', 'stdout', 'stderr' or similar"
+        },
+        "wait_for_pdcauto_service_up": {
+          "signature": "wait_for_pdcauto_service_up(self, server_id)",
+          "purpose": "Poll until the PDC auto service on target host is reachable.",
+          "requires": [
+            "is_remote_host_reachable",
+            "FWUtils.pdcauto_service_request",
+            "time.sleep"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "bool or dict with 'status'"
+        },
+        "wait_for_pyRome_server_up": {
+          "signature": "wait_for_pyRome_server_up(self, server_id)",
+          "purpose": "Poll until pyRome HTTP server is up on target host.",
+          "requires": [
+            "is_pyRome_server_up",
+            "time.sleep"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "bool or dict with 'status'"
+        },
+        "is_pyRome_server_up": {
+          "signature": "is_pyRome_server_up(self, server_id)",
+          "purpose": "Check if pyRome server is listening/responding on configured port.",
+          "requires": [
+            "FWUtils.rome_request",
+            "socket",
+            "requests"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "bool"
+        },
+        "wait_for_selenium_server_up": {
+          "signature": "wait_for_selenium_server_up(self, server_id)",
+          "purpose": "Poll until Selenium server is up on target host.",
+          "requires": [
+            "is_selenium_server_up",
+            "time.sleep"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "bool or dict with 'status'"
+        },
+        "is_selenium_server_up": {
+          "signature": "is_selenium_server_up(self, server_id)",
+          "purpose": "Check if Selenium server is listening/responding on configured port.",
+          "requires": [
+            "requests",
+            "socket"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "bool"
+        },
+        "_kill_pyRome_server": {
+          "signature": "_kill_pyRome_server(self, server_id)",
+          "purpose": "Terminate pyRome server process on remote host.",
+          "requires": [
+            "get_pid_of_port",
+            "_execute_remote_windows_cmd",
+            "SshClient.execute_command"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "dict with 'status'"
+        },
+        "_kill_selenium_server": {
+          "signature": "_kill_selenium_server(self, server_id)",
+          "purpose": "Terminate Selenium server process on remote host.",
+          "requires": [
+            "get_pid_of_port",
+            "_execute_remote_windows_cmd",
+            "SshClient.execute_command"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "dict with 'status'"
+        },
+        "get_pid_of_port": {
+          "signature": "get_pid_of_port(self, port, server_id)",
+          "purpose": "Find process ID bound to a given TCP port on remote host.",
+          "requires": [
+            "_execute_remote_windows_cmd",
+            "SshClient.execute_command"
+          ],
+          "input_format": "port: int; server_id: config server id",
+          "output_format": "int pid or None / dict with 'status'"
+        },
+        "_download_remote_file": {
+          "signature": "_download_remote_file(self, download_info, server_id)",
+          "purpose": "Download a single file from remote host to Jenkins host via SCP/SFTP.",
+          "requires": [
+            "SshClient.download_file",
+            "scp.SCPClient"
+          ],
+          "input_format": "download_info dict (remote path, local path, etc.), server_id",
+          "output_format": "dict with 'status'"
+        },
+        "_download_remote_dir": {
+          "signature": "_download_remote_dir(self, download_info, server_id)",
+          "purpose": "Download a directory recursively from remote host to Jenkins host.",
+          "requires": [
+            "SshClient.download_dir",
+            "scp.SCPClient"
+          ],
+          "input_format": "download_info dict (remote dir, local dir, etc.), server_id",
+          "output_format": "dict with 'status'"
+        },
+        "_get_windows_session_info": {
+          "signature": "_get_windows_session_info(self, server_id)",
+          "purpose": "Retrieve Windows session details (user, password, etc.) for remote command execution.",
+          "requires": [
+            "FWUtils.get_config"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "dict with connection/session parameters"
+        },
+        "_start_pyRome_server": {
+          "signature": "_start_pyRome_server(self, pyrome_file_info, server_id)",
+          "purpose": "Start pyRome server on remote host using given script/binary info.",
+          "requires": [
+            "SshClient.execute_command",
+            "wait_for_pyRome_server_up"
+          ],
+          "input_format": "pyrome_file_info dict (path, args), server_id",
+          "output_format": "dict with 'status'"
+        },
+        "_start_selenium_server": {
+          "signature": "_start_selenium_server(self, server_id)",
+          "purpose": "Start Selenium server on remote host.",
+          "requires": [
+            "SshClient.execute_command",
+            "wait_for_selenium_server_up"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "dict with 'status'"
+        },
+        "download_pyrome_log": {
+          "signature": "download_pyrome_log(self, log_info=None, server_id=None)",
+          "api_name": "download_pyrome_log",
+          "purpose": "Download pyRome.log from remote host into Jenkins host.",
+          "requires": [
+            "_download_remote_file",
+            "FWUtils.get_config"
+          ],
+          "input_format": "log_info dict with 'log_file_name' (optional, default 'pyRome.log'); server_id from config.xml",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }",
+          "usage_examples": [
+            "rc = objInitialize.download_pyrome_log()"
+          ]
+        },
+        "download_log_from_target_host": {
+          "signature": "download_log_from_target_host(self, server_id)",
+          "api_name": "download_from_target_host",
+          "purpose": "Download pisa/log directory from remote host into Jenkins host.",
+          "requires": [
+            "_download_remote_dir",
+            "FWUtils.get_config"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }",
+          "usage_examples": [
+            "rc = objInitialize.download_log_from_target_host()"
+          ]
+        },
+        "restore_vm_on_esxi": {
+          "signature": "restore_vm_on_esxi(self, snapshot_info)",
+          "purpose": "Restore a VM snapshot on ESXi using vSphere utilities.",
+          "requires": [
+            "vSphereUtils.restore_snapshot"
+          ],
+          "input_format": "snapshot_info dict (vm name, snapshot name, ESXi connection info)",
+          "output_format": "dict with 'status'"
+        },
+        "restore_vm_on_fusion": {
+          "signature": "restore_vm_on_fusion(self, snapshot_info)",
+          "purpose": "Restore a VM snapshot on VMware Fusion.",
+          "requires": [
+            "subprocess",
+            "os"
+          ],
+          "input_format": "snapshot_info dict (vmx path, snapshot name, host info)",
+          "output_format": "dict with 'status'"
+        },
+        "is_pcs_up": {
+          "signature": "is_pcs_up(self, device_id)",
+          "purpose": "Check if PCS/ICS device is reachable and services are up.",
+          "requires": [
+            "FWUtils.get_config",
+            "requests",
+            "socket"
+          ],
+          "input_format": "device_id from config.xml",
+          "output_format": "bool"
+        },
+        "is_admin_rest_service_enabled_in_pcs": {
+          "signature": "is_admin_rest_service_enabled_in_pcs(self, device_id)",
+          "purpose": "Check if admin REST service is enabled on PCS/ICS.",
+          "requires": [
+            "PpsRestClient.execute_request or pcsRest",
+            "FWUtils.get_config"
+          ],
+          "input_format": "device_id from config.xml",
+          "output_format": "bool or dict with 'status'"
+        },
+        "create_webgui_admin_user_in_pcs": {
+          "signature": "create_webgui_admin_user_in_pcs(self, device_id)",
+          "purpose": "Create a Web GUI admin user on PCS/ICS via REST or XMLRPC.",
+          "requires": [
+            "pcsRest",
+            "PpsRestClient",
+            "FWUtils.get_config"
+          ],
+          "input_format": "device_id from config.xml",
+          "output_format": "dict with 'status'"
+        },
+        "wait_for_pcs_up": {
+          "signature": "wait_for_pcs_up(self, device_id)",
+          "purpose": "Poll until PCS/ICS device is up and reachable.",
+          "requires": [
+            "is_pcs_up",
+            "time.sleep"
+          ],
+          "input_format": "device_id from config.xml",
+          "output_format": "bool or dict with 'status'"
+        },
+        "is_remote_host_reachable": {
+          "signature": "is_remote_host_reachable(self, remote_host_ip)",
+          "purpose": "Check reachability of remote host (ping/TCP).",
+          "requires": [
+            "socket",
+            "subprocess"
+          ],
+          "input_format": "remote_host_ip string",
+          "output_format": "bool"
+        },
+        "upload_test_host_dirs_to_file_server": {
+          "signature": "upload_test_host_dirs_to_file_server(self, upload_info, server_id)",
+          "api_name": "upload_test_host_dirs_to_file_server",
+          "purpose": "Archive and upload directories from test host to a file server.",
+          "requires": [
+            "SshClient.upload_dir",
+            "FtpClient.upload_dir",
+            "FWUtils.get_config",
+            "shutil.make_archive or zip utilities"
+          ],
+          "input_format": "upload_info: list of directory paths (currently only first is used); server_id from config.xml",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }",
+          "usage_examples": [
+            "upload_info = ['c:/pisa/crash_dump']",
+            "rc = objInitialize.upload_test_host_dirs_to_file_server(upload_info)"
+          ]
+        },
+        "get_current_ip": {
+          "signature": "get_current_ip(self)",
+          "purpose": "Return IP address of current host (Jenkins or test host).",
+          "requires": [
+            "socket"
+          ],
+          "input_format": "none",
+          "output_format": "string IP or dict with 'status', 'ip'"
+        },
+        "upload_log_from_target_host_to_jenkins": {
+          "signature": "upload_log_from_target_host_to_jenkins(self, server_id)",
+          "api_name": "upload_log_from_target_host_to_jenkins",
+          "purpose": "Archive pisa/log on test host and upload it to Jenkins workspace.",
+          "requires": [
+            "SshClient.upload_dir",
+            "SshClient.download_dir",
+            "FWUtils.get_config"
+          ],
+          "input_format": "server_id from config.xml",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }",
+          "usage_examples": [
+            "rc = objInitialize.upload_log_from_target_host_to_jenkins()"
+          ]
+        },
+        "assign_ics_ipv6_address": {
+          "signature": "assign_ics_ipv6_address(self, device_id)",
+          "api_name": "assign_ics_ipv6_address",
+          "purpose": "Reserve and assign IPv6 addresses to ICS external and internal interfaces.",
+          "requires": [
+            "CommonUtils.generate_ipv6_subnet_cidr",
+            "CommonUtils.pick_random_ipv6",
+            "PpsRestClient.execute_request or pcsRest",
+            "FWUtils.get_config"
+          ],
+          "input_format": "device_id from config.xml",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional>, 'assigned_ext_ipv6': str, 'assigned_int_ipv6': str }"
+        }
+      }
+    },
+    "FWUtils": {
+      "module": "FWUtils",
+      "purpose": "Framework utility hub for logging, config.xml access, Jenkins parameter handling, HTTP/ROME/PDC auto service requests, notifications, and IP reservation.",
+      "depends_on": [
+        "logging",
+        "xmltodict",
+        "json",
+        "requests",
+        "pymsteams",
+        "smtplib",
+        "email.mime",
+        "redis",
+        "IDC_GA_BUILD_MAPPER",
+        "admin.RestApiSA",
+        "CommonUtils"
+      ],
+      "return_patterns": {
+        "config_access": "dict or False",
+        "http_request": "dict with 'status', 'msg', and response payload or raw requests.Response",
+        "simple": "None for side‑effect methods (logging, report writing)"
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Initialize FWUtils, load config.xml, set up logger and shared state.",
+          "requires": [],
+          "input_format": "none",
+          "output_format": "FWUtils instance"
+        },
+        "get_logger": {
+          "signature": "get_logger(self, module_name, log_to_console)",
+          "purpose": "Create or retrieve a logger configured for the given module.",
+          "requires": [
+            "logging"
+          ],
+          "input_format": "module_name: string; log_to_console: bool/int",
+          "output_format": "logging.Logger instance"
+        },
+        "get_config": {
+          "signature": "get_config(self, node_name)",
+          "purpose": "Fetch configuration subtree from config.xml as JSON‑like dict.",
+          "requires": [
+            "xmltodict",
+            "json"
+          ],
+          "input_format": "node_name: string (e.g. 'DEVICE', 'DEVICE_2', 'SERVERS', 'BUILD_1')",
+          "output_format": "dict if found, else False",
+          "usage_examples": [
+            "package_version = objFwUtils.get_config('BUILD_1')['PACKAGE_VERSION']"
+          ]
+        },
+        "set_config": {
+          "signature": "set_config(self, node_name, root_direct_child_node_value=None)",
+          "purpose": "Return reference to config node for in‑place modification, or set direct child of root.",
+          "requires": [
+            "xmltodict",
+            "json"
+          ],
+          "input_format": "node_name: string; root_direct_child_node_value: optional value for direct child nodes",
+          "output_format": "reference to parent node dict or False",
+          "usage_examples": [
+            "objFwUtils.set_config('BUILD_1')['PACKAGE_VERSION'] = '22.4.7.1087'",
+            "objFwUtils.set_config('IVE_CONFIG')['UPGARDE'] = '1'",
+            "objFwUtils.set_config('BROWSER_TYPE', 'Chrome')"
+          ]
+        },
+        "get_jenkins_param_value": {
+          "signature": "get_jenkins_param_value(self, param_name)",
+          "purpose": "Read Jenkins build parameter value from environment or config.",
+          "requires": [
+            "os"
+          ],
+          "input_format": "param_name: string",
+          "output_format": "string or None"
+        },
+        "append_to_report_data_param": {
+          "signature": "append_to_report_data_param(self, string_to_append)",
+          "purpose": "Append text to an internal report data buffer (for Jenkins/Allure).",
+          "requires": [],
+          "input_format": "string_to_append: string",
+          "output_format": "None"
+        },
+        "write_report_data": {
+          "signature": "write_report_data(self)",
+          "purpose": "Flush accumulated report data to file or Jenkins artifact.",
+          "requires": [
+            "os",
+            "Path"
+          ],
+          "input_format": "none",
+          "output_format": "None"
+        },
+        "rome_request": {
+          "signature": "rome_request(self, method, uri, input_dict=None, rome_server=None, timeout=None, json=True, reconnect_on_connection_error=True)",
+          "purpose": "Low‑level HTTP client for pyRome server operations.",
+          "requires": [
+            "requests",
+            "Timeout",
+            "ConnectTimeout",
+            "ReadTimeout",
+            "NewConnectionError"
+          ],
+          "input_format": "method: 'get'|'post'|...; uri: '/Utils/operations'; input_dict: dict payload; rome_server: host:port; timeout: seconds; json: bool; reconnect_on_connection_error: bool",
+          "output_format": "dict response hash (status, msg, data) or requests.Response depending on implementation",
+          "usage_examples": [
+            "input_hash['name'] = 'my_fw_conn'",
+            "output_hash = self.rome_request('post', '/Utils/downloadmobileBuild', input_hash)"
+          ]
+        },
+        "request_desktop": {
+          "signature": "request_desktop(self, cmd, input, server_ip, timeout=None)",
+          "purpose": "Send commands to desktop agent (PDC client) via pyRome or PDC auto service.",
+          "requires": [
+            "rome_request",
+            "pdcauto_service_request"
+          ],
+          "input_format": "cmd: string; input: dict; server_ip: string; timeout: seconds",
+          "output_format": "dict with 'status', 'msg', and command‑specific data"
+        },
+        "stop_pytest_execution": {
+          "signature": "stop_pytest_execution(self, exit_msg)",
+          "purpose": "Abort pytest run with a specific message (e.g., fatal environment error).",
+          "requires": [
+            "pytest",
+            "sys"
+          ],
+          "input_format": "exit_msg: string",
+          "output_format": "raises pytest.Exit or SystemExit"
+        },
+        "pdcauto_service_request": {
+          "signature": "pdcauto_service_request(self, method, uri, input_dict=None, service_host_ip=None, timeout=None, json=True)",
+          "purpose": "HTTP client for PDC auto service running on target host.",
+          "requires": [
+            "requests",
+            "Timeout",
+            "ConnectTimeout",
+            "ReadTimeout",
+            "NewConnectionError"
+          ],
+          "input_format": "method: 'get'|'post'; uri: e.g. 'exec_cmd'; input_dict: dict; service_host_ip: IP; timeout: seconds; json: bool",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional>, ... }",
+          "usage_examples": [
+            "input_hash['command'] = 'dir'",
+            "output_hash = self.pdcauto_service_request('post', 'exec_cmd', input_hash)"
+          ]
+        },
+        "send_email": {
+          "signature": "send_email(self, to, subject, body, attach_file=None)",
+          "purpose": "Send email notifications (e.g., test results, incident alerts).",
+          "requires": [
+            "smtplib",
+            "MIMEMultipart",
+            "MIMEText"
+          ],
+          "input_format": "to: list or string; subject: string; body: string; attach_file: optional path",
+          "output_format": "dict with 'status', 'msg'"
+        },
+        "notify_msteams_channel": {
+          "signature": "notify_msteams_channel(self, webhook_url, title, text, at_mention_ids=None)",
+          "purpose": "Send a message to an MS Teams channel via webhook.",
+          "requires": [
+            "pymsteams"
+          ],
+          "input_format": "webhook_url: string; title: string; text: string; at_mention_ids: optional list",
+          "output_format": "dict with 'status', 'msg'"
+        },
+        "create_incident": {
+          "signature": "create_incident(self, webhook_url, incident_summary, incident_text)",
+          "purpose": "Create an incident notification (likely via Teams or another webhook).",
+          "requires": [
+            "requests",
+            "pymsteams"
+          ],
+          "input_format": "webhook_url: string; incident_summary: string; incident_text: string",
+          "output_format": "dict with 'status', 'msg'"
+        },
+        "reserve_static_ip": {
+          "signature": "reserve_static_ip(self, vlan_name, vm_name, ip_type='ipv4')",
+          "purpose": "Reserve a static IP (IPv4/IPv6) for a VM from IPAM/Redis.",
+          "requires": [
+            "redis",
+            "CommonUtils"
+          ],
+          "input_format": "vlan_name: string; vm_name: string; ip_type: 'ipv4'|'ipv6'",
+          "output_format": "dict with 'status', 'ip', 'msg'"
+        },
+        "release_static_ip": {
+          "signature": "release_static_ip(self, vm_name)",
+          "purpose": "Release a previously reserved static IP for a VM.",
+          "requires": [
+            "redis"
+          ],
+          "input_format": "vm_name: string",
+          "output_format": "dict with 'status', 'msg'"
+        }
+      }
+    },
+    "CommonUtils": {
+      "module": "CommonUtils",
+      "purpose": "Cross‑cutting utilities for file paths, screenshots, certificates, build download, Jenkins info, networking/IP calculations, DNS/FQDN parsing, and random IP selection.",
+      "depends_on": [
+        "os",
+        "Path",
+        "subprocess",
+        "OpenSSL.crypto",
+        "cryptography",
+        "requests",
+        "tldextract",
+        "socket",
+        "ipaddress",
+        "random",
+        "FWUtils",
+        "SshClient"
+      ],
+      "return_patterns": {
+        "status_dict": "Most public APIs return dict with 'status', 'msg', and method‑specific keys.",
+        "simple": "Some helpers return raw values (e.g., get_pisa_home path)."
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Initialize CommonUtils, possibly with logger and FWUtils reference.",
+          "requires": [],
+          "input_format": "none",
+          "output_format": "CommonUtils instance"
+        },
+        "convert_file_path": {
+          "signature": "convert_file_path(self, file_path, os)",
+          "purpose": "Normalize file path for target OS (Windows vs Unix).",
+          "requires": [
+            "os.path"
+          ],
+          "input_format": "file_path: string; os: 'windows'|'linux'|'mac'",
+          "output_format": "string normalized path"
+        },
+        "get_pisa_home": {
+          "signature": "get_pisa_home(self)",
+          "purpose": "Return base directory for PISA framework on current host.",
+          "requires": [
+            "os",
+            "Path"
+          ],
+          "input_format": "none",
+          "output_format": "string absolute path"
+        },
+        "get_screenshot": {
+          "signature": "get_screenshot(self, file_name, ipaddr=None)",
+          "purpose": "Capture UI screenshot from remote desktop or local environment.",
+          "requires": [
+            "pyRome / Selenium / OS tools"
+          ],
+          "input_format": "file_name: string; ipaddr: optional remote host IP",
+          "output_format": "dict with 'status', 'file_path', 'msg'"
+        },
+        "_pem_to_pfx": {
+          "signature": "_pem_to_pfx(cert_path, key_path, pfx_path, password)",
+          "api_name": "_pem_to_pfx",
+          "purpose": "Convert PEM certificate and key to PFX/P12 format.",
+          "requires": [
+            "OpenSSL.crypto",
+            "os"
+          ],
+          "input_format": "cert_path: string; key_path: string; pfx_path: string; password: string",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }",
+          "usage_examples": [
+            "rc = _pem_to_pfx(cert_path, key_path, pfx_path, password)"
+          ]
+        },
+        "generate_root_ca_certificate": {
+          "signature": "generate_root_ca_certificate(self, cert_info)",
+          "api_name": "generate_root_ca_certificate",
+          "purpose": "Generate a Root CA certificate and key in PEM or PFX format.",
+          "requires": [
+            "cryptography.x509",
+            "cryptography.hazmat.primitives.asymmetric.rsa",
+            "cryptography.hazmat.primitives.hashes",
+            "OpenSSL.crypto",
+            "datetime"
+          ],
+          "input_format": "cert_info dict with keys: CN, O, OU, C, S, serial, valid_from, valid_to, cert_path, key_path, encoding ('PEM'|'PFX'), password (if PFX)",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional>, 'serial': <serial> }"
+        },
+        "generate_intermediate_ca_certificate": {
+          "signature": "generate_intermediate_ca_certificate(self, cert_info)",
+          "api_name": "generate_intermediate_ca_certificate",
+          "purpose": "Generate an Intermediate CA certificate signed by a given CA.",
+          "requires": [
+            "cryptography.x509",
+            "OpenSSL.crypto",
+            "datetime"
+          ],
+          "input_format": "cert_info dict with keys: CN, O, OU, C, S, serial, valid_from, valid_to, cert_path, key_path, encoding, ca_cert_path, ca_key_path, password (if PFX)",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional>, 'serial': <serial> }"
+        },
+        "generate_device_certificate": {
+          "signature": "generate_device_certificate(self, cert_info)",
+          "api_name": "generate_device_certificate",
+          "purpose": "Generate client/device certificate signed by Root or Intermediate CA.",
+          "requires": [
+            "cryptography.x509",
+            "OpenSSL.crypto",
+            "datetime"
+          ],
+          "input_format": "cert_info dict with keys: CN (FQDN), O, OU, C, S, serial, valid_from, valid_to, cert_path, key_path, encoding, ca_cert_path, ca_key_path, password (if PFX)",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional>, 'serial': <serial> }"
+        },
+        "get_debug_log": {
+          "signature": "get_debug_log(self, test_case)",
+          "purpose": "Retrieve debug log path/content for a given test case.",
+          "requires": [
+            "os",
+            "FWUtils"
+          ],
+          "input_format": "test_case: string or pytest node",
+          "output_format": "string path or dict"
+        },
+        "get_ui_mode_from_config": {
+          "signature": "get_ui_mode_from_config(self)",
+          "api_name": "get_ui_mode_from_config",
+          "purpose": "Determine UI mode (classic, classic_ivanti, new_ux) from config.xml <CLIENT><UI_TYPE>.",
+          "requires": [
+            "FWUtils.get_config"
+          ],
+          "input_format": "none",
+          "output_format": "string: 'classic' | 'classic_ivanti' | 'new_ux'",
+          "usage_examples": [
+            "ui_mode = objCommonUtils.get_ui_mode_from_config()"
+          ]
+        },
+        "get_build_info_from_bamboo": {
+          "signature": "get_build_info_from_bamboo(self, plan_branch_url, build_number)",
+          "api_name": "get_build_info_from_bamboo",
+          "purpose": "Query Bamboo for build metadata and download URL.",
+          "requires": [
+            "requests",
+            "_bamboo_request"
+          ],
+          "input_format": "plan_branch_url: string; build_number: string/int",
+          "output_format": "dict { 'status': 0|1, 'msg': str, 'bamboo_msg': str, 'build_download_url': str, 'possible_package_version': str, 'build_label': str }"
+        },
+        "_bamboo_request": {
+          "signature": "_bamboo_request(self, input_dict)",
+          "purpose": "Internal helper to perform Bamboo REST API calls.",
+          "requires": [
+            "requests"
+          ],
+          "input_format": "input_dict: dict with URL, auth, params",
+          "output_format": "requests.Response or dict"
+        },
+        "download_build_from_bamboo": {
+          "signature": "download_build_from_bamboo(self, bamboo_download_info=None, server_ip=None)",
+          "api_name": "download_build_from_bamboo",
+          "purpose": "Download PDC client build from Bamboo to target host using config.xml or explicit parameters.",
+          "requires": [
+            "FWUtils.get_config",
+            "SshClient",
+            "requests",
+            "_bamboo_request"
+          ],
+          "input_format": "bamboo_download_info dict with plan_branch_url, build_number, build_type, build_arch, distro, pkg_version; server_ip: target host IP",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional>, 'fileName': str, 'saveLocation': str, 'buildKey': str }",
+          "usage_examples": [
+            "rc = objCommonUtils.download_build_from_bamboo()"
+          ]
+        },
+        "download_build": {
+          "signature": "download_build(self)",
+          "api_name": "download_build",
+          "purpose": "High‑level wrapper to download PDC client build to target host using configured Bamboo/portal settings.",
+          "requires": [
+            "download_build_from_bamboo",
+            "FWUtils.get_config"
+          ],
+          "input_format": "none",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional>, 'saveLocation': str }"
+        },
+        "download_build_from_build_portal": {
+          "signature": "download_build_from_build_portal(self, build_portal_url, build_portal_username, build_portal_password, payload, server_ip)",
+          "api_name": "download_build_from_build_portal",
+          "purpose": "Download PDC build installer from psbuild portal to pisa/build/ on target host.",
+          "requires": [
+            "requests",
+            "SshClient.upload_file"
+          ],
+          "input_format": "build_portal_url: string; build_portal_username: string; build_portal_password: string; payload: dict; server_ip: string",
+          "output_format": "string absolute filepath of downloaded build",
+          "usage_examples": [
+            "objCommonUtils.download_build_from_build_portal(build_portal_url=build_portal_url, build_portal_username=build_portal_username, build_portal_password=build_portal_password, payload=data, server_ip=server_ip)"
+          ]
+        },
+        "pause_execution": {
+          "signature": "pause_execution(self)",
+          "purpose": "Pause test execution (e.g., wait for manual intervention).",
+          "requires": [
+            "input or time.sleep"
+          ],
+          "input_format": "none",
+          "output_format": "None"
+        },
+        "start_screen_recorder": {
+          "signature": "start_screen_recorder(self)",
+          "purpose": "Start recording screen on test host.",
+          "requires": [
+            "subprocess",
+            "pyRome or OS tools"
+          ],
+          "input_format": "none",
+          "output_format": "dict with 'status'"
+        },
+        "stop_screen_recorder": {
+          "signature": "stop_screen_recorder(self)",
+          "purpose": "Stop screen recording and save artifact.",
+          "requires": [
+            "subprocess"
+          ],
+          "input_format": "none",
+          "output_format": "dict with 'status', 'file_path'"
+        },
+        "get_jenkins_ip": {
+          "signature": "get_jenkins_ip(self)",
+          "api_name": "get_jenkins_ip",
+          "purpose": "Return IP address of Jenkins node running the tests.",
+          "requires": [
+            "socket",
+            "os"
+          ],
+          "input_format": "none",
+          "output_format": "dict { 'jenkins_ip': str, 'status': 0|1, 'msg': <optional> }"
+        },
+        "generate_subnet_cidr": {
+          "signature": "generate_subnet_cidr(self, ip, bits)",
+          "api_name": "generate_subnet_cidr",
+          "purpose": "Generate subnet CIDR from IPv4 address and prefix length.",
+          "requires": [
+            "ipaddress"
+          ],
+          "input_format": "ip: '10.168.10.5'; bits: int (e.g., 24)",
+          "output_format": "dict { 'status': 0|1, 'subnet_cidr': '10.168.10.0/24', 'msg': <optional> }"
+        },
+        "get_network": {
+          "signature": "get_network(self, ip, subnet_mask)",
+          "api_name": "get_network",
+          "purpose": "Compute network address from IP and subnet mask.",
+          "requires": [
+            "ipaddress"
+          ],
+          "input_format": "ip: '10.39.235.5'; subnet_mask: '255.255.252.0'",
+          "output_format": "dict { 'status': 0|1, 'network': '10.39.232.0/255.255.252.0', 'msg': <optional> }"
+        },
+        "generate_ipv6_subnet_cidr": {
+          "signature": "generate_ipv6_subnet_cidr(self, ipv6, prefix_length)",
+          "api_name": "generate_ipv6_subnet_cidr",
+          "purpose": "Generate IPv6 subnet CIDR from IPv6 address and prefix length.",
+          "requires": [
+            "ipaddress"
+          ],
+          "input_format": "ipv6: 'fd70:1889:79fb:168::4'; prefix_length: int (e.g., 64)",
+          "output_format": "dict { 'status': 0|1, 'subnet_cidr': 'fd70:1889:79fb:168::/64', 'msg': <optional> }"
+        },
+        "generate_ips_in_network": {
+          "signature": "generate_ips_in_network(self, ip_with_subnet, max_list=None)",
+          "api_name": "generate_ips_in_network",
+          "purpose": "Generate list of IPs in a network and range string.",
+          "requires": [
+            "ipaddress"
+          ],
+          "input_format": "ip_with_subnet: '10.168.10.5/24'; max_list: optional int",
+          "output_format": "dict { 'status': 0|1, 'ip_list': [..], 'ip_range': 'start-end', 'msg': <optional> }"
+        },
+        "generate_ips_outside_network": {
+          "signature": "generate_ips_outside_network(self, ip, subnet, num_addresses)",
+          "api_name": "generate_ips_outside_network",
+          "purpose": "Generate IP addresses just outside a given network.",
+          "requires": [
+            "ipaddress"
+          ],
+          "input_format": "ip: '10.39.235.5'; subnet: '255.255.252.0'; num_addresses: int",
+          "output_format": "dict { 'status': 0|1, 'outside_network_ips': [..], 'msg': <optional> }"
+        },
+        "get_fqdn_and_tld": {
+          "signature": "get_fqdn_and_tld(self, url)",
+          "api_name": "get_fqdn_and_tld",
+          "purpose": "Extract subdomain, SLD, TLD, FQDN and hostname from URL.",
+          "requires": [
+            "tldextract",
+            "socket"
+          ],
+          "input_format": "url: 'https://www.google.com'",
+          "output_format": "dict { 'status': 0|1, 'subdomain': str, 'second_level_domain': str, 'top_level_domain': str, 'fqdn': str, 'hostname': str }"
+        },
+        "get_ip_address": {
+          "signature": "get_ip_address(self, url)",
+          "api_name": "get_ip_address",
+          "purpose": "Resolve URL to IPv4/IPv6 addresses.",
+          "requires": [
+            "socket",
+            "urlparse"
+          ],
+          "input_format": "url: 'https://www.google.com'",
+          "output_format": "dict { 'status': 0|1, 'ipv4_list': [..], 'ipv6_list': [..] }"
+        },
+        "get_ip_address_from_hostname": {
+          "signature": "get_ip_address_from_hostname(self, hostname)",
+          "api_name": "get_ip_address_from_hostname",
+          "purpose": "Resolve hostname to IPv4/IPv6 addresses.",
+          "requires": [
+            "socket"
+          ],
+          "input_format": "hostname: 'linuxserver.pdcteam.com'",
+          "output_format": "dict { 'status': 0|1, 'ipv4_list': [..], 'ipv6_list': [..] }"
+        },
+        "pick_random_ip": {
+          "signature": "pick_random_ip(self, ip_range)",
+          "api_name": "pick_random_ip",
+          "purpose": "Pick random IPv4 address from range (short or full).",
+          "requires": [
+            "random",
+            "ipaddress"
+          ],
+          "input_format": "ip_range: '10.168.10.20-25' or '10.168.10.20-10.168.10.25'",
+          "output_format": "dict { 'status': 0|1, 'random_ip': str }"
+        },
+        "pick_random_ipv6": {
+          "signature": "pick_random_ipv6(self, ip_range)",
+          "api_name": "pick_random_ipv6",
+          "purpose": "Pick random IPv6 address from range (short or full).",
+          "requires": [
+            "random",
+            "ipaddress"
+          ],
+          "input_format": "ip_range: 'fd70:1889:79fb:168::240-252' or 'fd70:1889:79fb:168::240-fd70:1889:79fb:168::252'",
+          "output_format": "dict { 'status': 0|1, 'random_ip': str }"
+        },
+        "get_extended_ip_range": {
+          "signature": "get_extended_ip_range(self, shorthand_ip_range, limit=None)",
+          "api_name": "get_extended_ip_range",
+          "purpose": "Convert shorthand IPv4 range to full range, optionally limited.",
+          "requires": [
+            "ipaddress"
+          ],
+          "input_format": "shorthand_ip_range: '10.168.10.20-25'; limit: optional int",
+          "output_format": "dict { 'status': 0|1, 'extended_ip_range': '10.168.10.20-10.168.10.23', 'msg': <optional> }"
+        },
+        "get_shorthand_ip_range": {
+          "signature": "get_shorthand_ip_range(self, extended_ip_range, limit=None)",
+          "api_name": "get_shorthand_ip_range",
+          "purpose": "Convert full IPv4 range to shorthand, optionally limited.",
+          "requires": [
+            "ipaddress"
+          ],
+          "input_format": "extended_ip_range: '192.168.10.20-192.168.10.25'; limit: optional int",
+          "output_format": "dict { 'status': 0|1, 'shorthand_ip_range': '192.168.10.20-22', 'msg': <optional> }"
+        },
+        "get_limited_ip_range": {
+          "signature": "get_limited_ip_range(self, extended_ip_range, limit)",
+          "api_name": "get_limited_ip_range",
+          "purpose": "Return limited IPv4 range from extended range.",
+          "requires": [
+            "ipaddress"
+          ],
+          "input_format": "extended_ip_range: '192.168.10.20-192.168.10.25'; limit: int",
+          "output_format": "dict { 'status': 0|1, 'limited_ip_range': '192.168.10.20-192.168.10.22', 'msg': <optional> }"
+        },
+        "is_ip_in_range": {
+          "signature": "is_ip_in_range(self, ip, ip_range)",
+          "purpose": "Check if IPv4 address is within given range (short, full, or CIDR).",
+          "requires": [
+            "ipaddress"
+          ],
+          "input_format": "ip: '10.168.10.22'; ip_range: '10.168.10.20-25' | '10.168.10.20-10.168.10.25' | '10.168.10.0/24'",
+          "output_format": "bool; raises ValueError on invalid input"
+        }
+      }
+    },
+    "SshClient": {
+      "module": "SshClient",
+      "purpose": "Wrapper around paramiko/SCP for SSH connections, remote command execution, and file/directory transfer.",
+      "depends_on": [
+        "paramiko",
+        "scp",
+        "logging",
+        "os"
+      ],
+      "return_patterns": {
+        "status_dict": "All public methods return dict with 'status', 'msg', and method‑specific keys."
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Initialize SSH client, internal paramiko.SSHClient, and SCP client.",
+          "requires": [],
+          "input_format": "none",
+          "output_format": "SshClient instance"
+        },
+        "connect": {
+          "signature": "connect(self, connect_info)",
+          "purpose": "Establish SSH connection to remote server.",
+          "requires": [
+            "paramiko.SSHClient.connect"
+          ],
+          "input_format": "connect_info dict: { 'hostname': str, 'username': str, 'password' or 'pkey': ..., 'port': int }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        },
+        "disconnect": {
+          "signature": "disconnect(self)",
+          "purpose": "Close SSH and SCP sessions.",
+          "requires": [
+            "paramiko.SSHClient.close"
+          ],
+          "input_format": "none",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        },
+        "execute_command": {
+          "signature": "execute_command(self, input_dict)",
+          "purpose": "Execute shell command on remote host.",
+          "requires": [
+            "paramiko.SSHClient.exec_command"
+          ],
+          "input_format": "input_dict: { 'command': str, 'timeout': optional int }",
+          "output_format": "dict { 'status': 0|1, 'stdout': str, 'stderr': str, 'exit_code': int }"
+        },
+        "upload_dir": {
+          "signature": "upload_dir(self, input_dict)",
+          "purpose": "Upload local directory recursively to remote host.",
+          "requires": [
+            "scp.SCPClient.put"
+          ],
+          "input_format": "input_dict: { 'local_dir': str, 'remote_dir': str }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        },
+        "upload_file": {
+          "signature": "upload_file(self, input_dict)",
+          "purpose": "Upload single file to remote host.",
+          "requires": [
+            "scp.SCPClient.put"
+          ],
+          "input_format": "input_dict: { 'local_file': str, 'remote_file': optional str }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        },
+        "download_file": {
+          "signature": "download_file(self, input_dict)",
+          "purpose": "Download single file from remote host.",
+          "requires": [
+            "scp.SCPClient.get"
+          ],
+          "input_format": "input_dict: { 'remote_file': str, 'download_as_file': str }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        },
+        "download_dir": {
+          "signature": "download_dir(self, input_dict)",
+          "purpose": "Download directory recursively from remote host.",
+          "requires": [
+            "scp.SCPClient.get"
+          ],
+          "input_format": "input_dict: { 'remote_dir': str, 'local_dir': str }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        }
+      }
+    },
+    "FtpClient": {
+      "module": "FtpClient",
+      "purpose": "Simple FTP client wrapper for file and directory operations and remote command execution.",
+      "depends_on": [
+        "ftplib.FTP",
+        "os",
+        "logging"
+      ],
+      "return_patterns": {
+        "status_dict": "All public methods return dict with 'status', 'msg', and method‑specific keys."
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self)",
+          "purpose": "Initialize FTP client and logger.",
+          "requires": [],
+          "input_format": "none",
+          "output_format": "FtpClient instance"
+        },
+        "connect": {
+          "signature": "connect(self, connect_info)",
+          "purpose": "Connect to FTP server.",
+          "requires": [
+            "FTP.connect",
+            "FTP.login"
+          ],
+          "input_format": "connect_info dict: { 'hostname': str, 'username': str, 'password': str }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }",
+          "usage_examples": [
+            "server_info = {'hostname': '192.168.10.148', 'username': 'qa1', 'password': 'dana123'}",
+            "rc = objFtpClient.connect(server_info)"
+          ]
+        },
+        "disconnect": {
+          "signature": "disconnect(self)",
+          "purpose": "Disconnect FTP session.",
+          "requires": [
+            "FTP.quit"
+          ],
+          "input_format": "none",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        },
+        "upload_file": {
+          "signature": "upload_file(self, input_dict)",
+          "purpose": "Upload file to FTP server.",
+          "requires": [
+            "FTP.storbinary"
+          ],
+          "input_format": "input_dict: { 'local_file': str, 'remote_file': optional str }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        },
+        "download_file": {
+          "signature": "download_file(self, input_dict)",
+          "purpose": "Download file from FTP server.",
+          "requires": [
+            "FTP.retrbinary"
+          ],
+          "input_format": "input_dict: { 'remote_file': str, 'download_as_file': str }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        },
+        "download_dir": {
+          "signature": "download_dir(self, input_dict)",
+          "purpose": "Download directory recursively from FTP server.",
+          "requires": [
+            "FTP.nlst",
+            "FTP.retrbinary"
+          ],
+          "input_format": "input_dict: { 'remote_dir': str, 'local_dir': str }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        },
+        "execute_command": {
+          "signature": "execute_command(self, input_dict)",
+          "purpose": "Execute FTP server commands (e.g., LIST).",
+          "requires": [
+            "FTP.sendcmd"
+          ],
+          "input_format": "input_dict: { 'command': str }",
+          "output_format": "dict { 'status': 0|1, 'output': str, 'msg': <optional> }"
+        },
+        "upload_dir": {
+          "signature": "upload_dir(self, input_dict)",
+          "purpose": "Upload directory recursively to FTP server.",
+          "requires": [
+            "FTP.storbinary",
+            "FTP.mkd"
+          ],
+          "input_format": "input_dict: { 'local_dir': str, 'remote_dir': str }",
+          "output_format": "dict { 'status': 0|1, 'msg': <optional> }"
+        }
+      }
+    },
+    "Singleton": {
+      "module": "Singleton",
+      "purpose": "Metaclass implementing Singleton pattern for framework classes that must have only one instance.",
+      "depends_on": [],
+      "return_patterns": {
+        "instance": "Same instance returned on every call for a given class."
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(cls, name, bases, attrs)",
+          "purpose": "Metaclass initialization; sets up internal instance cache.",
+          "requires": [],
+          "input_format": "standard metaclass args",
+          "output_format": "Singleton metaclass instance"
+        },
+        "__call__": {
+          "signature": "__call__(cls, *args, **kwargs)",
+          "purpose": "Return existing instance or create new one on first call.",
+          "requires": [],
+          "input_format": "class constructor args",
+          "output_format": "singleton instance of target class"
+        }
+      }
+    },
+    "authentication.Authentication": {
+      "module": "authentication",
+      "purpose": "REST API wrapper for ICS/PPS Authentication > Sign In configuration (URLs, notifications, sign‑in pages).",
+      "depends_on": [
+        "PpsRestClient or pcsRest",
+        "requests",
+        "FWUtils"
+      ],
+      "return_patterns": {
+        "rest_response": "requests.Response for low‑level methods, or dict { 'status': 0|1, 'msg': <optional> } for create/modify helpers."
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, device_name, admin_username, admin_password, device_id)",
+          "purpose": "Initialize REST client context for a specific ICS/PPS device.",
+          "requires": [
+            "PpsRestClient or pcsRest"
+          ],
+          "input_format": "device_name: str; admin_username: str; admin_password: str; device_id: str",
+          "output_format": "Authentication instance"
+        },
+        "modify_sign_in_url": {
+          "signature": "modify_sign_in_url(self, sign_in_url, data)",
+          "api_name": "modify_sign_in_url",
+          "purpose": "Modify existing sign‑in URL configuration.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "sign_in_url: string; data: dict payload as documented",
+          "output_format": "requests.Response or dict",
+          "usage_examples": [
+            "response = authentication().modify_sign_in_url(url_details['sign_in_url'], url_details['payload'])"
+          ]
+        },
+        "get_sign_in_url": {
+          "signature": "get_sign_in_url(self, sign_in_url)",
+          "api_name": "get_sign_in_url",
+          "purpose": "Retrieve JSON configuration for a sign‑in URL.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "sign_in_url: string",
+          "output_format": "requests.Response (response.json() returns payload)"
+        },
+        "modify_sign_in_notification": {
+          "signature": "modify_sign_in_notification(self, notification, data)",
+          "api_name": "modify_sign_in_notification",
+          "purpose": "Modify existing sign‑in notification.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "notification: string; data: dict payload",
+          "output_format": "requests.Response or dict"
+        },
+        "create_sign_in_url": {
+          "signature": "create_sign_in_url(self, data)",
+          "api_name": "create_sign_in_url",
+          "purpose": "Create new sign‑in URL.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "data: dict payload",
+          "output_format": "dict { 'status': 1|0, 'msg': <optional> }"
+        },
+        "create_sign_in_notification": {
+          "signature": "create_sign_in_notification(self, data)",
+          "api_name": "create_sign_in_notification",
+          "purpose": "Create new sign‑in notification with text.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "data: dict payload",
+          "output_format": "dict { 'status': 1|0, 'msg': <optional> }"
+        },
+        "create_sign_in_notification_by_package": {
+          "signature": "create_sign_in_notification_by_package(self, data)",
+          "api_name": "create_sign_in_notification_by_package",
+          "purpose": "Create sign‑in notification by uploading encrypted package archive.",
+          "requires": [
+            "PpsRestClient.execute_request",
+            "base64"
+          ],
+          "input_format": "data: dict payload with 'archive' and 'file-name'",
+          "output_format": "dict { 'status': 1|0, 'msg': <optional> }"
+        },
+        "delete_sign_in_url": {
+          "signature": "delete_sign_in_url(self, url)",
+          "api_name": "delete_sign_in_url",
+          "purpose": "Delete sign‑in URL.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "url: string",
+          "output_format": "requests.Response with status_code (204 on success)"
+        },
+        "delete_sign_in_notification": {
+          "signature": "delete_sign_in_notification(self, notification)",
+          "api_name": "delete_sign_in_notification",
+          "purpose": "Delete sign‑in notification.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "notification: string",
+          "output_format": "requests.Response with status_code (204 on success)"
+        },
+        "create_standard_sign_in_page": {
+          "signature": "create_standard_sign_in_page(self, data)",
+          "api_name": "create_standard_sign_in_page",
+          "purpose": "Create standard sign‑in page configuration.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "data: dict payload",
+          "output_format": "requests.Response or dict"
+        },
+        "delete_standard_sign_in_page": {
+          "signature": "delete_standard_sign_in_page(self, sign_in_page)",
+          "api_name": "delete_standard_sign_in_page",
+          "purpose": "Delete sign‑in page.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "sign_in_page: string",
+          "output_format": "requests.Response with status_code (204 on success)"
+        },
+        "modify_standard_sign_in_page": {
+          "signature": "modify_standard_sign_in_page(self, sign_in_page, data)",
+          "api_name": "modify_standard_sign_in_page",
+          "purpose": "Modify existing standard sign‑in page.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "sign_in_page: string; data: dict payload",
+          "output_format": "requests.Response or dict"
+        }
+      }
+    },
+    "auth_servers.AuthServers": {
+      "module": "auth_servers",
+      "purpose": "REST API wrapper for ICS/PPS Authentication Servers configuration (AD/LDAP/RADIUS etc.).",
+      "depends_on": [
+        "PpsRestClient",
+        "requests",
+        "urllib.parse"
+      ],
+      "return_patterns": {
+        "rest_response": "requests.Response for get/create operations."
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, device_name, admin_username, admin_password, device_id)",
+          "purpose": "Initialize REST client context for auth server operations.",
+          "requires": [
+            "PpsRestClient"
+          ],
+          "input_format": "device_name: str; admin_username: str; admin_password: str; device_id: str",
+          "output_format": "AuthServers instance"
+        },
+        "get_auth_server": {
+          "signature": "get_auth_server(self, auth_server_name)",
+          "purpose": "Retrieve JSON configuration for specified authentication server.",
+          "requires": [
+            "PpsRestClient.execute_request",
+            "urllib.parse.quote"
+          ],
+          "input_format": "auth_server_name: string (may contain spaces)",
+          "output_format": "requests.Response (response.json() returns server config)",
+          "usage_examples": [
+            "auth_response = auth_servers_api.get_auth_server('AD_Server_D')"
+          ]
+        },
+        "create_auth_server": {
+          "signature": "create_auth_server(self, auth_server_payload)",
+          "purpose": "Create new authentication server entry.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "auth_server_payload: dict with 'auth-server-type', 'name', and nested config",
+          "output_format": "requests.Response (201 Created on success)"
+        }
+      }
+    },
+    "date_and_time.DateAndTime": {
+      "module": "date_and_time",
+      "purpose": "REST API wrapper for ICS/PPS Date & Time configuration (NTP, time zone).",
+      "depends_on": [
+        "PpsRestClient",
+        "requests"
+      ],
+      "return_patterns": {
+        "rest_response": "requests.Response for get/modify operations."
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, device_name, admin_username, admin_password, device_id)",
+          "purpose": "Initialize REST client context for date/time operations.",
+          "requires": [
+            "PpsRestClient"
+          ],
+          "input_format": "device_name: str; admin_username: str; admin_password: str; device_id: str",
+          "output_format": "DateAndTime instance"
+        },
+        "modify_ntp_settings": {
+          "signature": "modify_ntp_settings(self, ntp_config_json)",
+          "api_name": "modify_ntp_settings",
+          "purpose": "Modify NTP settings on ICS.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "ntp_config_json: dict payload",
+          "output_format": "requests.Response",
+          "usage_examples": [
+            "response = DateAndTime().modify_ntp_settings(ntp_configuration_json)"
+          ]
+        },
+        "get_ntp_settings": {
+          "signature": "get_ntp_settings(self)",
+          "api_name": "get_ntp_settings",
+          "purpose": "Retrieve current NTP settings from ICS.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "none",
+          "output_format": "requests.Response (response.json() returns NTP config)"
+        },
+        "get_time_zone": {
+          "signature": "get_time_zone(self)",
+          "api_name": "get_time_zone",
+          "purpose": "Get ICS time zone.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "none",
+          "output_format": "requests.Response (response.json() returns {'time-zone': 'kolkata'})"
+        },
+        "set_time_zone": {
+          "signature": "set_time_zone(self, time_zone)",
+          "api_name": "set_time_zone",
+          "purpose": "Set ICS time zone.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "time_zone: string",
+          "output_format": "requests.Response"
+        }
+      }
+    },
+    "endpoint_policy.EndpointPolicy": {
+      "module": "endpoint_policy",
+      "purpose": "REST API wrapper for ICS/PPS Infranet Enforcer policies (resource access, IPsec routing, auth table mapping, IP pools, connections).",
+      "depends_on": [
+        "PpsRestClient",
+        "requests"
+      ],
+      "return_patterns": {
+        "rest_response": "requests.Response for modify/delete; create returns response with 'result.info[0].message'."
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, device_name, admin_username, admin_password, device_id)",
+          "purpose": "Initialize REST client context for endpoint policy operations.",
+          "requires": [
+            "PpsRestClient"
+          ],
+          "input_format": "device_name: str; admin_username: str; admin_password: str; device_id: str",
+          "output_format": "EndpointPolicy instance"
+        },
+        "modify__infranet_enforcer_resource_access_policies": {
+          "signature": "modify__infranet_enforcer_resource_access_policies(self, resource_name, data)",
+          "api_name": "modify__infranet_enforcer_resource_access_policies",
+          "purpose": "Modify existing Infranet Enforcer resource access policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "resource_name: string; data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "modify_infranet_enforcer_ipsec_routing_policies": {
+          "signature": "modify_infranet_enforcer_ipsec_routing_policies(self, policy_name, data)",
+          "api_name": "modify_infranet_enforcer_ipsec_routing_policies",
+          "purpose": "Modify existing IPsec routing policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "policy_name: string; data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "modify_infranet_enforcer_auth_table_mapping_policies": {
+          "signature": "modify_infranet_enforcer_auth_table_mapping_policies(self, policy_name, data)",
+          "api_name": "modify_infranet_enforcer_auth_table_mapping_policies",
+          "purpose": "Modify existing auth table mapping policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "policy_name: string; data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "modify_infranet_enforcer_ip_address_pools_policies": {
+          "signature": "modify_infranet_enforcer_ip_address_pools_policies(self, policy_name, data)",
+          "api_name": "modify_infranet_enforcer_ip_address_pools_policies",
+          "purpose": "Modify existing IP address pool policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "policy_name: string; data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "modify_infranet_enforcer_connection_policies": {
+          "signature": "modify_infranet_enforcer_connection_policies(self, connection_name, data)",
+          "api_name": "modify_infranet_enforcer_connection_policies",
+          "purpose": "Modify existing Infranet Enforcer connection policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "connection_name: string; data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "create_infranet_enforcer_resource_access_policies": {
+          "signature": "create_infranet_enforcer_resource_access_policies(self, data)",
+          "api_name": "create_infranet_enforcer_resource_access_policies",
+          "purpose": "Create new resource access policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "data: dict payload",
+          "output_format": "requests.Response (response.json()['result']['info'][0]['message'])"
+        },
+        "create_infranet_enforcer_ipsec_routing_policies": {
+          "signature": "create_infranet_enforcer_ipsec_routing_policies(self, data)",
+          "api_name": "create_infranet_enforcer_ipsec_routing_policies",
+          "purpose": "Create new IPsec routing policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "create_infranet_enforcer_auth_table_mapping_policies": {
+          "signature": "create_infranet_enforcer_auth_table_mapping_policies(self, data)",
+          "api_name": "create_infranet_enforcer_auth_table_mapping_policies",
+          "purpose": "Create new auth table mapping policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "create_infranet_enforcer_ip_address_pools_policies": {
+          "signature": "create_infranet_enforcer_ip_address_pools_policies(self, data)",
+          "api_name": "create_infranet_enforcer_ip_address_pools_policies",
+          "purpose": "Create new IP address pool policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "create_infranet_enforcer_connection_policies": {
+          "signature": "create_infranet_enforcer_connection_policies(self, data)",
+          "api_name": "create_infranet_enforcer_connection_policies",
+          "purpose": "Create new Infranet Enforcer connection policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "delete_infranet_enforcer_resource_access_policies": {
+          "signature": "delete_infranet_enforcer_resource_access_policies(self, resource_name)",
+          "api_name": "delete_infranet_enforcer_resource_access_policies",
+          "purpose": "Delete resource access policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "resource_name: string",
+          "output_format": "requests.Response with status_code 204"
+        },
+        "delete_infranet_enforcer_ipsec_routing_policies": {
+          "signature": "delete_infranet_enforcer_ipsec_routing_policies(self, policy_name)",
+          "api_name": "delete_infranet_enforcer_ipsec_routing_policies",
+          "purpose": "Delete IPsec routing policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "policy_name: string",
+          "output_format": "requests.Response with status_code 204"
+        },
+        "delete_infranet_enforcer_auth_table_mapping_policies": {
+          "signature": "delete_infranet_enforcer_auth_table_mapping_policies(self, policy_name)",
+          "api_name": "delete_infranet_enforcer_auth_table_mapping_policies",
+          "purpose": "Delete auth table mapping policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "policy_name: string",
+          "output_format": "requests.Response with status_code 204"
+        },
+        "delete_infranet_enforcer_ip_address_pools_policies": {
+          "signature": "delete_infranet_enforcer_ip_address_pools_policies(self, policy_name)",
+          "api_name": "delete_infranet_enforcer_ip_address_pools_policies",
+          "purpose": "Delete IP address pool policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "policy_name: string",
+          "output_format": "requests.Response with status_code 204"
+        },
+        "delete_infranet_enforcer_connection_policies": {
+          "signature": "delete_infranet_enforcer_connection_policies(self, connection_name)",
+          "api_name": "delete_infranet_enforcer_connection_policies",
+          "purpose": "Delete Infranet Enforcer connection policy.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "connection_name: string",
+          "output_format": "requests.Response with status_code 204"
+        }
+      }
+    },
+    "PpsRestUtils.PpsRestClient": {
+      "module": "PpsRestUtils",
+      "purpose": "Low‑level REST client for PPS/ICS admin APIs, handling authentication tokens and HTTP execution.",
+      "depends_on": [
+        "requests",
+        "FWUtils",
+        "admin.RestApiSA",
+        "logging"
+      ],
+      "return_patterns": {
+        "execute_request": "requests.Response",
+        "is_token_valid": "bool",
+        "get_new_token": "string token or dict"
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, device_name, admin_username, admin_password, device_id)",
+          "purpose": "Initialize REST client with device and admin credentials.",
+          "requires": [
+            "FWUtils.get_config"
+          ],
+          "input_format": "device_name: str; admin_username: str; admin_password: str; device_id: str",
+          "output_format": "PpsRestClient instance"
+        },
+        "__login_pps_rest": {
+          "signature": "__login_pps_rest(self)",
+          "purpose": "Internal method to authenticate to PPS REST API and obtain token.",
+          "requires": [
+            "requests.post",
+            "HTTPBasicAuth"
+          ],
+          "input_format": "none (uses stored credentials)",
+          "output_format": "dict or string token; updates internal token state"
+        },
+        "execute_request": {
+          "signature": "execute_request(self, resource_uri, method_type, payload=None, params=None)",
+          "purpose": "Execute REST API request against PPS/ICS.",
+          "requires": [
+            "requests",
+            "is_token_valid",
+            "get_new_token"
+          ],
+          "input_format": "resource_uri: '/api/...'; method_type: 'GET'|'POST'|'PUT'|'DELETE'; payload: dict; params: dict",
+          "output_format": "requests.Response",
+          "usage_examples": [
+            "resp = pps_client.execute_request('/api/v1/config/auth/servers', 'GET')"
+          ]
+        },
+        "is_token_valid": {
+          "signature": "is_token_valid(self, token)",
+          "purpose": "Check if stored token is still valid (expiry, ping).",
+          "requires": [
+            "time"
+          ],
+          "input_format": "token: string",
+          "output_format": "bool"
+        },
+        "get_new_token": {
+          "signature": "get_new_token(self)",
+          "purpose": "Obtain new token from PPS REST API.",
+          "requires": [
+            "__login_pps_rest"
+          ],
+          "input_format": "none",
+          "output_format": "string token or dict with 'status'"
+        }
+      }
+    },
+    "users.Users": {
+      "module": "users",
+      "purpose": "REST API wrapper for ICS/PPS User Roles configuration (UI options, session options).",
+      "depends_on": [
+        "PpsRestClient",
+        "requests"
+      ],
+      "return_patterns": {
+        "rest_response": "requests.Response"
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, device_name, admin_username, admin_password, device_id)",
+          "purpose": "Initialize REST client context for user role operations.",
+          "requires": [
+            "PpsRestClient"
+          ],
+          "input_format": "device_name: str; admin_username: str; admin_password: str; device_id: str",
+          "output_format": "Users instance"
+        },
+        "modify_ui_options": {
+          "signature": "modify_ui_options(self, role, data)",
+          "api_name": "modify_ui_options",
+          "purpose": "Configure UI options for a user role.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "role: string; data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "modify_session_options": {
+          "signature": "modify_session_options(self, role, data)",
+          "api_name": "modify_session_options",
+          "purpose": "Configure session options for a user role.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "role: string; data: dict payload",
+          "output_format": "requests.Response"
+        }
+      }
+    },
+    "user_realm.UserRealm": {
+      "module": "user_realm",
+      "purpose": "REST API wrapper for ICS/PPS User Realms configuration (role mapping, realm properties, secondary auth).",
+      "depends_on": [
+        "PpsRestClient",
+        "requests"
+      ],
+      "return_patterns": {
+        "rest_response": "requests.Response"
+      },
+      "key_methods": {
+        "__init__": {
+          "signature": "__init__(self, device_name, admin_username, admin_password, device_id)",
+          "purpose": "Initialize REST client context for user realm operations.",
+          "requires": [
+            "PpsRestClient"
+          ],
+          "input_format": "device_name: str; admin_username: str; admin_password: str; device_id: str",
+          "output_format": "UserRealm instance"
+        },
+        "modify_role_mapping_rules": {
+          "signature": "modify_role_mapping_rules(self, realm_name, data)",
+          "api_name": "modify_role_mapping_rules",
+          "purpose": "Modify role mapping rules for a realm.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "realm_name: string; data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "get_role_mapping_rules": {
+          "signature": "get_role_mapping_rules(self, realm_name)",
+          "api_name": "get_role_mapping_rules",
+          "purpose": "Get role mapping rules for a realm.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "realm_name: string",
+          "output_format": "requests.Response (response.json() returns rules)"
+        },
+        "get_user_realm": {
+          "signature": "get_user_realm(self, realm_name)",
+          "api_name": "get_user_realm",
+          "purpose": "Get full user realm configuration.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "realm_name: string",
+          "output_format": "requests.Response (response.json() returns realm config)"
+        },
+        "modify_user_realm": {
+          "signature": "modify_user_realm(self, realm_name, data)",
+          "api_name": "modify_user_realm",
+          "purpose": "Modify full user realm configuration.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "realm_name: string; data: dict payload",
+          "output_format": "requests.Response"
+        },
+        "modify_secondary_auth_settings_for_user_realm": {
+          "signature": "modify_secondary_auth_settings_for_user_realm(self, realm_name, data)",
+          "api_name": "modify_user_realm",
+          "purpose": "Modify only secondary authentication settings for a user realm.",
+          "requires": [
+            "PpsRestClient.execute_request"
+          ],
+          "input_format": "realm_name: string; data: dict payload",
+          "output_format": "requests.Response"
+        }
+      }
+    }
+  },
+  "test_patterns": {
+    "rest_api_config": {
+      "description": "Configure ICS/PPS components (auth servers, realms, roles, endpoint policies, date/time, sign‑in pages) via REST API and verify via GET calls.",
+      "example_method_pattern": "TC_0xx_PPS_CONFIGURE_* (e.g., TC_001_PPS_CONFIGURE_WMI, TC_002_PPS_CONFIGURE_AUTH_SERVER)",
+      "required_classes": [
+        "PpsRestClient",
+        "FWUtils",
+        "Initialize",
+        "CommonUtils",
+        "auth_servers.AuthServers",
+        "user_realm.UserRealm",
+        "users.Users",
+        "endpoint_policy.EndpointPolicy",
+        "date_and_time.DateAndTime",
+        "authentication.Authentication"
+      ],
+      "required_methods": [
+        {
+          "class": "Initialize",
+          "method": "initialize"
+        },
+        {
+          "class": "PpsRestClient",
+          "method": "execute_request"
+        },
+        {
+          "class": "FWUtils",
+          "method": "get_config"
+        },
+        {
+          "class": "FWUtils",
+          "method": "stop_pytest_execution"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "get_screenshot"
+        },
+        {
+          "class": "auth_servers.AuthServers",
+          "method": "create_auth_server"
+        },
+        {
+          "class": "auth_servers.AuthServers",
+          "method": "get_auth_server"
+        },
+        {
+          "class": "user_realm.UserRealm",
+          "method": "modify_user_realm"
+        },
+        {
+          "class": "user_realm.UserRealm",
+          "method": "get_user_realm"
+        },
+        {
+          "class": "users.Users",
+          "method": "modify_ui_options"
+        },
+        {
+          "class": "users.Users",
+          "method": "modify_session_options"
+        },
+        {
+          "class": "endpoint_policy.EndpointPolicy",
+          "method": "create_infranet_enforcer_resource_access_policies"
+        },
+        {
+          "class": "endpoint_policy.EndpointPolicy",
+          "method": "modify_infranet_enforcer_resource_access_policies"
+        },
+        {
+          "class": "date_and_time.DateAndTime",
+          "method": "modify_ntp_settings"
+        },
+        {
+          "class": "date_and_time.DateAndTime",
+          "method": "get_ntp_settings"
+        },
+        {
+          "class": "authentication.Authentication",
+          "method": "create_sign_in_url"
+        },
+        {
+          "class": "authentication.Authentication",
+          "method": "get_sign_in_url"
+        }
+      ],
+      "flow": [
+        "INITIALIZE: call Initialize.initialize() to prepare environment and ensure PCS/ICS and pyRome are up.",
+        "Build REST client: create PpsRestClient(device_name, admin_username, admin_password, device_id).",
+        "Prepare payload: build JSON dict for specific config (auth server, realm, role, policy, etc.).",
+        "Execute config: call appropriate create/modify API wrapper (e.g., AuthServers.create_auth_server).",
+        "Verify: call corresponding GET API (e.g., AuthServers.get_auth_server) and assert fields.",
+        "On failure: capture screenshot via CommonUtils.get_screenshot and stop tests via FWUtils.stop_pytest_execution.",
+        "CLEANUP: revert configuration if needed using delete/modify APIs."
+      ],
+      "keywords": [
+        "REST",
+        "API",
+        "configuration",
+        "PPS",
+        "ICS",
+        "auth server",
+        "user realm",
+        "user role",
+        "endpoint policy",
+        "NTP",
+        "sign-in"
+      ]
+    },
+    "rest_api_verify": {
+      "description": "Read‑only verification of existing ICS/PPS configuration via REST APIs.",
+      "example_method_pattern": "TC_0xx_PPS_VERIFY_*",
+      "required_classes": [
+        "PpsRestClient",
+        "FWUtils",
+        "Initialize",
+        "auth_servers.AuthServers",
+        "user_realm.UserRealm",
+        "users.Users",
+        "endpoint_policy.EndpointPolicy",
+        "date_and_time.DateAndTime",
+        "authentication.Authentication"
+      ],
+      "required_methods": [
+        {
+          "class": "Initialize",
+          "method": "initialize"
+        },
+        {
+          "class": "auth_servers.AuthServers",
+          "method": "get_auth_server"
+        },
+        {
+          "class": "user_realm.UserRealm",
+          "method": "get_user_realm"
+        },
+        {
+          "class": "users.Users",
+          "method": "modify_ui_options"
+        },
+        {
+          "class": "endpoint_policy.EndpointPolicy",
+          "method": "create_infranet_enforcer_resource_access_policies"
+        },
+        {
+          "class": "date_and_time.DateAndTime",
+          "method": "get_ntp_settings"
+        },
+        {
+          "class": "authentication.Authentication",
+          "method": "get_sign_in_url"
+        }
+      ],
+      "flow": [
+        "INITIALIZE environment.",
+        "Instantiate PpsRestClient and specific wrapper class.",
+        "Call GET API (e.g., get_auth_server, get_user_realm).",
+        "Assert returned JSON matches expected values from config.xml or test data.",
+        "CLEANUP: usually none, as tests are read‑only."
+      ],
+      "keywords": [
+        "REST",
+        "API",
+        "verification",
+        "read-only",
+        "config validation"
+      ]
+    },
+    "desktop_client_flow": {
+      "description": "End‑to‑end PDC client flows using pyRome and PDC auto service (connect, authenticate, launch resources, disconnect).",
+      "example_method_pattern": "TC_0xx_PDC_* (e.g., TC_001_PDC_CONNECT_REALM_USERS)",
+      "required_classes": [
+        "Initialize",
+        "FWUtils",
+        "CommonUtils"
+      ],
+      "required_methods": [
+        {
+          "class": "Initialize",
+          "method": "initialize"
+        },
+        {
+          "class": "FWUtils",
+          "method": "request_desktop"
+        },
+        {
+          "class": "FWUtils",
+          "method": "pdcauto_service_request"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "get_screenshot"
+        },
+        {
+          "class": "Initialize",
+          "method": "download_pyrome_log"
+        }
+      ],
+      "flow": [
+        "INITIALIZE: ensure pyRome and Selenium servers are up on test host.",
+        "Use FWUtils.request_desktop to send commands to PDC client (connect, login, launch resource).",
+        "Validate client behavior via pyRome responses and possibly Selenium UI checks.",
+        "On failure, capture screenshot and download pyRome.log via Initialize.download_pyrome_log.",
+        "CLEANUP: disconnect client, kill pyRome/Selenium if needed, collect logs."
+      ],
+      "keywords": [
+        "PDC client",
+        "pyRome",
+        "desktop automation",
+        "Selenium",
+        "connection",
+        "authentication"
+      ]
+    },
+    "build_download_and_install": {
+      "description": "Download PDC client builds from Bamboo or build portal to test host and install them.",
+      "example_method_pattern": "TC_0xx_PDC_DOWNLOAD_* or TC_0xx_PDC_INSTALL_*",
+      "required_classes": [
+        "CommonUtils",
+        "FWUtils",
+        "Initialize",
+        "SshClient"
+      ],
+      "required_methods": [
+        {
+          "class": "CommonUtils",
+          "method": "download_build_from_bamboo"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "download_build"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "download_build_from_build_portal"
+        },
+        {
+          "class": "SshClient",
+          "method": "execute_command"
+        },
+        {
+          "class": "Initialize",
+          "method": "initialize"
+        }
+      ],
+      "flow": [
+        "INITIALIZE environment and ensure test host is reachable.",
+        "Use CommonUtils.download_build_from_bamboo or download_build_from_build_portal to fetch installer to test host.",
+        "Via SshClient.execute_command, run OS‑specific installer (msi/pkg/rpm/deb).",
+        "Verify installation (service running, binary present).",
+        "CLEANUP: uninstall build if needed, restore VM snapshot via Initialize.restore_vm_on_esxi/Fusion."
+      ],
+      "keywords": [
+        "Bamboo",
+        "build portal",
+        "download",
+        "install",
+        "PDC client"
+      ]
+    },
+    "vm_snapshot_management": {
+      "description": "Manage VM snapshots on ESXi or VMware Fusion for deterministic test environments.",
+      "example_method_pattern": "TC_0xx_VM_RESTORE_*",
+      "required_classes": [
+        "Initialize",
+        "vSphereUtils",
+        "FWUtils"
+      ],
+      "required_methods": [
+        {
+          "class": "Initialize",
+          "method": "restore_vm_on_esxi"
+        },
+        {
+          "class": "Initialize",
+          "method": "restore_vm_on_fusion"
+        },
+        {
+          "class": "Initialize",
+          "method": "wait_for_pcs_up"
+        }
+      ],
+      "flow": [
+        "INITIALIZE: optionally restore VM snapshot before tests.",
+        "Call Initialize.restore_vm_on_esxi or restore_vm_on_fusion with snapshot_info.",
+        "Wait for PCS/ICS or test host to come up using wait_for_pcs_up or is_remote_host_reachable.",
+        "Run tests.",
+        "CLEANUP: optionally revert to baseline snapshot."
+      ],
+      "keywords": [
+        "VMware",
+        "ESXi",
+        "Fusion",
+        "snapshot",
+        "environment reset"
+      ]
+    },
+    "log_collection_and_upload": {
+      "description": "Collect logs from test hosts and upload to Jenkins or file servers for analysis.",
+      "example_method_pattern": "TC_0xx_LOG_*",
+      "required_classes": [
+        "Initialize",
+        "SshClient",
+        "FtpClient",
+        "FWUtils"
+      ],
+      "required_methods": [
+        {
+          "class": "Initialize",
+          "method": "download_pyrome_log"
+        },
+        {
+          "class": "Initialize",
+          "method": "download_log_from_target_host"
+        },
+        {
+          "class": "Initialize",
+          "method": "upload_log_from_target_host_to_jenkins"
+        },
+        {
+          "class": "Initialize",
+          "method": "upload_test_host_dirs_to_file_server"
+        },
+        {
+          "class": "FWUtils",
+          "method": "append_to_report_data_param"
+        },
+        {
+          "class": "FWUtils",
+          "method": "write_report_data"
+        }
+      ],
+      "flow": [
+        "During or after test, call Initialize.download_pyrome_log to fetch pyRome.log.",
+        "Use Initialize.download_log_from_target_host to copy pisa/log directory to Jenkins.",
+        "Optionally use upload_log_from_target_host_to_jenkins to archive and upload logs.",
+        "For long‑term storage, use upload_test_host_dirs_to_file_server to push logs/crash dumps to file server via FTP/SSH.",
+        "Update Jenkins report via FWUtils.append_to_report_data_param and write_report_data."
+      ],
+      "keywords": [
+        "logs",
+        "pyRome.log",
+        "pisa/log",
+        "Jenkins",
+        "file server",
+        "artifacts"
+      ]
+    },
+    "network_and_ip_utility_tests": {
+      "description": "Unit‑style tests for IP/network utility functions (IPv4/IPv6 ranges, DNS, FQDN, random IP selection).",
+      "example_method_pattern": "TC_0xx_UTIL_IP_*",
+      "required_classes": [
+        "CommonUtils"
+      ],
+      "required_methods": [
+        {
+          "class": "CommonUtils",
+          "method": "generate_subnet_cidr"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "get_network"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "generate_ipv6_subnet_cidr"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "generate_ips_in_network"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "generate_ips_outside_network"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "get_fqdn_and_tld"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "get_ip_address"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "get_ip_address_from_hostname"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "pick_random_ip"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "pick_random_ipv6"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "get_extended_ip_range"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "get_shorthand_ip_range"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "get_limited_ip_range"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "is_ip_in_range"
+        }
+      ],
+      "flow": [
+        "No heavy INITIALIZE needed; instantiate CommonUtils directly.",
+        "Call utility method with sample inputs.",
+        "Assert 'status' == 1 and returned values match expected IPs/ranges.",
+        "CLEANUP: none."
+      ],
+      "keywords": [
+        "ipaddress",
+        "IPv4",
+        "IPv6",
+        "CIDR",
+        "DNS",
+        "FQDN",
+        "random IP"
+      ]
+    },
+    "certificate_management_tests": {
+      "description": "Generate and validate certificates (Root CA, Intermediate CA, device certs) for TLS/802.1X tests.",
+      "example_method_pattern": "TC_0xx_CERT_*",
+      "required_classes": [
+        "CommonUtils"
+      ],
+      "required_methods": [
+        {
+          "class": "CommonUtils",
+          "method": "generate_root_ca_certificate"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "generate_intermediate_ca_certificate"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "generate_device_certificate"
+        },
+        {
+          "class": "CommonUtils",
+          "method": "_pem_to_pfx"
+        }
+      ],
+      "flow": [
+        "Prepare cert_info dict with required fields.",
+        "Call generate_root_ca_certificate to create root CA.",
+        "Call generate_intermediate_ca_certificate using root CA paths.",
+        "Call generate_device_certificate using intermediate CA paths.",
+        "Optionally convert PEM to PFX using _pem_to_pfx.",
+        "Assert 'status' == 1 and files exist on disk.",
+        "CLEANUP: delete generated cert/key files."
+      ],
+      "keywords": [
+        "certificate",
+        "Root CA",
+        "Intermediate CA",
+        "device cert",
+        "PFX",
+        "PEM",
+        "TLS"
+      ]
+    },
+    "jenkins_and_reporting": {
+      "description": "Tests around Jenkins integration (IP detection, parameter usage, report data).",
+      "example_method_pattern": "TC_0xx_JENKINS_*",
+      "required_classes": [
+        "CommonUtils",
+        "FWUtils"
+      ],
+      "required_methods": [
+        {
+          "class": "CommonUtils",
+          "method": "get_jenkins_ip"
+        },
+        {
+          "class": "FWUtils",
+          "method": "get_jenkins_param_value"
+        },
+        {
+          "class": "FWUtils",
+          "method": "append_to_report_data_param"
+        },
+        {
+          "class": "FWUtils",
+          "method": "write_report_data"
+        }
+      ],
+      "flow": [
+        "Call CommonUtils.get_jenkins_ip and assert status and IP format.",
+        "Use FWUtils.get_jenkins_param_value to read parameters like BUILD_ID, PLAN_BRANCH_URL.",
+        "Append messages to report via append_to_report_data_param and flush via write_report_data.",
+        "CLEANUP: none."
+      ],
+      "keywords": [
+        "Jenkins",
+        "CI",
+        "reporting",
+        "parameters"
+      ]
+    }
+  },
+  "method_relationships": {
+    "Initialize.initialize": {
+      "calls": [
+        "_initialize_pdc_auto",
+        "wait_for_pdcauto_service_up",
+        "wait_for_pyRome_server_up",
+        "wait_for_selenium_server_up",
+        "wait_for_pcs_up"
+      ],
+      "depends_on": [
+        "FWUtils.get_config",
+        "SshClient.connect",
+        "CommonUtils.get_pisa_home"
+      ],
+      "input_output": {
+        "input": "none (uses config.xml and global FWUtils)",
+        "output": "dict { 'status': 0|1, 'msg': <optional> }"
+      },
+      "usage": [
+        "Called once per test module in INITIALIZE() to prepare environment."
+      ]
+    },
+    "FWUtils.rome_request": {
+      "calls": [
+        "requests.request"
+      ],
+      "depends_on": [
+        "pyRome server availability",
+        "network connectivity"
+      ],
+      "input_output": {
+        "input": "method, uri, input_dict, rome_server, timeout, json, reconnect_on_connection_error",
+        "output": "dict or Response with HTTP status and payload"
+      },
+      "usage": [
+        "Used by FWUtils.request_desktop and other pyRome‑based operations."
+      ]
+    },
+    "FWUtils.pdcauto_service_request": {
+      "calls": [
+        "requests.request"
+      ],
+      "depends_on": [
+        "PDC auto service running on target host"
+      ],
+      "input_output": {
+        "input": "method, uri, input_dict, service_host_ip, timeout, json",
+        "output": "dict { 'status': 0|1, 'msg': <optional>, ... }"
+      },
+      "usage": [
+        "Used by Initialize.wait_for_pdcauto_service_up and tests that send commands to PDC auto service."
+      ]
+    },
+    "CommonUtils.download_build_from_bamboo": {
+      "calls": [
+        "_bamboo_request",
+        "SshClient.upload_file",
+        "SshClient.execute_command"
+      ],
+      "depends_on": [
+        "Bamboo REST API",
+        "SSH connectivity to test host",
+        "config.xml BAMBOO section"
+      ],
+      "input_output": {
+        "input": "bamboo_download_info dict or None (then uses config.xml); server_ip",
+        "output": "dict { 'status': 0|1, 'msg': <optional>, 'fileName': str, 'saveLocation': str, 'buildKey': str }"
+      },
+      "usage": [
+        "Used in build download tests and in pyRome/desktop utils to ensure correct client version."
+      ]
+    },
+    "authentication.create_sign_in_url": {
+      "calls": [
+        "PpsRestClient.execute_request"
+      ],
+      "depends_on": [
+        "PPS REST API /api/v1/config/auth/signin/urls"
+      ],
+      "input_output": {
+        "input": "data dict with sign‑in URL configuration",
+        "output": "dict { 'status': 1|0, 'msg': <optional> } or Response"
+      },
+      "usage": [
+        "Used in tests that validate custom sign‑in URLs and notifications."
+      ]
+    },
+    "auth_servers.create_auth_server": {
+      "calls": [
+        "PpsRestClient.execute_request"
+      ],
+      "depends_on": [
+        "PPS REST API /api/v1/config/auth/servers"
+      ],
+      "input_output": {
+        "input": "auth_server_payload dict",
+        "output": "requests.Response (201 Created on success)"
+      },
+      "usage": [
+        "Used in tests that create AD/LDAP auth servers and then map them to realms."
+      ]
+    },
+    "user_realm.modify_role_mapping_rules": {
+      "calls": [
+        "PpsRestClient.execute_request"
+      ],
+      "depends_on": [
+        "Existing realm name",
+        "PPS REST API /api/v1/config/auth/realms/{realm_name}/role-mapping"
+      ],
+      "input_output": {
+        "input": "realm_name string; data dict",
+        "output": "requests.Response"
+      },
+      "usage": [
+        "Used in tests that verify role mapping based on username or attributes."
+      ]
+    },
+    "EndpointPolicy.create_infranet_enforcer_resource_access_policies": {
+      "calls": [
+        "PpsRestClient.execute_request"
+      ],
+      "depends_on": [
+        "Infranet Enforcer configured on ICS",
+        "PPS REST API /api/v1/config/endpoint/resource-access-policies"
+      ],
+      "input_output": {
+        "input": "data dict",
+        "output": "requests.Response with JSON result.info[0].message"
+      },
+      "usage": [
+        "Used in tests that validate SRX resource access enforcement."
+      ]
+    },
+    "Initialize.assign_ics_ipv6_address": {
+      "calls": [
+        "CommonUtils.generate_ipv6_subnet_cidr",
+        "CommonUtils.pick_random_ipv6",
+        "PpsRestClient.execute_request"
+      ],
+      "depends_on": [
+        "IPAM/Redis or static pool",
+        "ICS REST API for interface configuration"
+      ],
+      "input_output": {
+        "input": "device_id from config.xml",
+        "output": "dict { 'status': 0|1, 'msg': <optional>, 'assigned_ext_ipv6': str, 'assigned_int_ipv6': str }"
+      },
+      "usage": [
+        "Used in IPv6 connectivity tests to dynamically assign addresses to ICS interfaces."
+      ]
+    }
+  },
+  "mandatory_components": {
+    "imports": {
+      "core_framework": [
+        "import pytest",
+        "import allure",
+        "import logging",
+        "import sys",
+        "from FWUtils import FWUtils",
+        "from Initialize import Initialize",
+        "from CommonUtils import CommonUtils"
+      ],
+      "rest_api_tests": [
+        "from admin_pps.PpsRestUtils import PpsRestClient",
+        "from authentication import Authentication",
+        "from auth_servers import AuthServers",
+        "from user_realm import UserRealm",
+        "from users import Users",
+        "from endpoint_policy import EndpointPolicy",
+        "from date_and_time import DateAndTime"
+      ],
+      "ssh_and_file_ops": [
+        "from SshClient import SshClient",
+        "from FtpClient import FtpClient"
+      ],
+      "vm_and_vsphere": [
+        "from vSphere.vSphereUtils import vSphereUtils"
+      ],
+      "network_and_crypto_utils": [
+        "import ipaddress",
+        "import socket",
+        "import tldextract",
+        "from OpenSSL import crypto",
+        "from cryptography import x509",
+        "from cryptography.x509.oid import NameOID as noid",
+        "from cryptography.hazmat.primitives import hashes",
+        "from cryptography.hazmat.primitives.asymmetric import rsa",
+        "from cryptography.hazmat.backends import default_backend"
+      ],
+      "http_and_serialization": [
+        "import requests",
+        "from requests import Timeout, ConnectTimeout, ReadTimeout",
+        "from requests.auth import HTTPBasicAuth",
+        "from urllib3.exceptions import NewConnectionError",
+        "from urllib.parse import urlparse",
+        "import json",
+        "import xmltodict"
+      ],
+      "jenkins_and_misc": [
+        "import os",
+        "from pathlib import Path",
+        "import time",
+        "import random",
+        "import base64",
+        "import subprocess",
+        "import collections",
+        "import copy",
+        "from datetime import datetime",
+        "import redis",
+        "import smtplib",
+        "from email.mime.text import MIMEText",
+        "from email.mime.multipart import MIMEMultipart",
+        "import pymsteams",
+        "from ftplib import FTP",
+        "from scp import SCPClient, SCPException",
+        "import paramiko",
+        "import ssl",
+        "import re",
+        "import warnings"
+      ]
+    },
+    "global_objects": [
+      "objFwUtils = FWUtils()",
+      "log = objFwUtils.get_logger(__name__, 1)",
+      "objInitialize = Initialize()",
+      "objCommonUtils = CommonUtils()",
+      "obj_ssh_utils = SshClient()",
+      "objVsphereUtils = vSphereUtils()",
+      "objFtpClient = FtpClient()",
+      "pps_client = PpsRestClient(device_name, admin_username, admin_password, device_id)"
+    ],
+    "function_structure": {
+      "initialize_function": {
+        "name_pattern": "INITIALIZE",
+        "typical_body": [
+          "global objFwUtils, objInitialize, objCommonUtils",
+          "objFwUtils = FWUtils()",
+          "objInitialize = Initialize()",
+          "objCommonUtils = CommonUtils()",
+          "rc = objInitialize.initialize()",
+          "if rc.get('status') != 0: objFwUtils.stop_pytest_execution(rc.get('msg', 'Initialization failed'))"
+        ]
+      },
+      "cleanup_function": {
+        "name_pattern": "CLEANUP",
+        "typical_body": [
+          "Use Initialize.download_pyrome_log and Initialize.download_log_from_target_host to collect logs.",
+          "Optionally call Initialize._kill_pyRome_server and _kill_selenium_server.",
+          "Optionally restore VM snapshot via Initialize.restore_vm_on_esxi/Fusion.",
+          "Close SSH/FTP sessions via SshClient.disconnect and FtpClient.disconnect."
+        ]
+      },
+      "test_function": {
+        "name_pattern": "def TC_<ID>_<COMPONENT>_<DESCRIPTION>():",
+        "typical_body": [
+          "Use global objects (objFwUtils, objInitialize, objCommonUtils, pps_client).",
+          "Prepare payloads and call appropriate REST or desktop APIs.",
+          "Assert on responses (status_code, JSON fields, 'status' == 0/1).",
+          "On failure, capture screenshot and logs, then raise assertion or call stop_pytest_execution."
+        ]
+      }
+    }
+  },
+  "common_dependencies": {
+    "rest_tests": [
+      "PpsRestClient",
+      "FWUtils",
+      "Initialize",
+      "CommonUtils",
+      "Authentication",
+      "AuthServers",
+      "UserRealm",
+      "Users",
+      "EndpointPolicy",
+      "DateAndTime"
+    ],
+    "desktop_client_tests": [
+      "Initialize",
+      "FWUtils",
+      "CommonUtils",
+      "SshClient"
+    ],
+    "vm_and_environment_tests": [
+      "Initialize",
+      "vSphereUtils",
+      "FWUtils"
+    ],
+    "log_and_artifact_tests": [
+      "Initialize",
+      "FWUtils",
+      "SshClient",
+      "FtpClient",
+      "CommonUtils"
+    ],
+    "all_tests_minimum": [
+      "FWUtils",
+      "Initialize",
+      "CommonUtils"
+    ]
+  }
+}
