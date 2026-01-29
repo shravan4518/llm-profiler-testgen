@@ -1,0 +1,287 @@
+{
+  "feature_id": "advanced_profiler_configuration",
+  "feature_name": "Advanced Profiler Configuration",
+  "ui_surfaces": [
+    {
+      "screen_id": "advanced_profiler_config",
+      "screen_name": "Advance Configuration",
+      "navigation_path": "Profiler -> Profiler Configuration -> Advance Configuration",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 14"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "wmi_credentials",
+      "name": "Configure WMI credentials",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Specify the domain administrator or user with administrator credentials to fetch accurate endpoint information from remote desktops running Microsoft Windows.",
+      "location": "WMI Configuration",
+      "page_reference": "Page 15"
+    },
+    {
+      "input_id": "use_ad_credentials",
+      "name": "Use Active Directory server credentials",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Use existing Active Directory server credentials.",
+      "location": "WMI Configuration",
+      "page_reference": "Page 15"
+    },
+    {
+      "input_id": "wmi_deep_scan",
+      "name": "Allow deep scan",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Control the level of information to fetch from the Endpoint remotely through WMI. Deep Scan includes information on ports, process, and security product details such as product version, signature version, signature date attributes.",
+      "location": "WMI Configuration",
+      "page_reference": "Page 15"
+    },
+    {
+      "input_id": "wmi_test_credentials",
+      "name": "Test WMI credentials",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Enter the Endpoint IP or hostname to test the credentials.",
+      "location": "WMI Configuration",
+      "page_reference": "Page 15"
+    },
+    {
+      "input_id": "ssh_auth_method",
+      "name": "Authentication Method",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "Password, Public key",
+      "default_value": "Password",
+      "unit": null,
+      "validation": null,
+      "required": true,
+      "visible_when": null,
+      "help_text": "Select Password to authenticate using administrator credentials or Public key to authenticate using RSA credentials.",
+      "location": "SSH Configuration",
+      "page_reference": "Page 15"
+    },
+    {
+      "input_id": "ssh_test_credentials",
+      "name": "Test SSH credentials",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Enter the Endpoint IP or hostname to test the credentials.",
+      "location": "SSH Configuration",
+      "page_reference": "Page 15"
+    },
+    {
+      "input_id": "snmp_community_list",
+      "name": "Community List",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Comma-separated values",
+      "required": false,
+      "visible_when": null,
+      "help_text": "Enter the possible community list names, separated by commas, to collect device attributes for the endpoints monitored through SNMP.",
+      "location": "SNMP (Host) Configuration",
+      "page_reference": "Page 16"
+    },
+    {
+      "input_id": "snmp_poll_all",
+      "name": "Profile all discovered devices using SNMP (Host)",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Optionally, select the option to profile all the discovered devices using SNMP (Host).",
+      "location": "SNMP (Host) Configuration",
+      "page_reference": "Page 16"
+    },
+    {
+      "input_id": "device_attribute_poll_interval",
+      "name": "Polling Interval",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1440",
+      "default_value": "720",
+      "unit": "minutes",
+      "validation": "Must be a positive integer",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Set the Polling interval in minutes. By default, the poll interval is set to 720 minutes.",
+      "location": "Device Attribute Server Configuration",
+      "page_reference": "Page 17"
+    },
+    {
+      "input_id": "available_servers",
+      "name": "Available Servers",
+      "control_type": "multiselect",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Add or remove the servers from or to the list of Available Servers and Selected Servers.",
+      "location": "Device Attribute Server Configuration",
+      "page_reference": "Page 17"
+    },
+    {
+      "input_id": "subnets_list",
+      "name": "Subnets",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Comma-separated IP ranges",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Enter one or more subnets, select to include or exclude the listed collectors like SSH, WMI, SNMP (HOST), and NMAP.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 18"
+    },
+    {
+      "input_id": "on_demand_scan",
+      "name": "Start On-Demand Scan",
+      "control_type": "button",
+      "data_type": null,
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Trigger a scan instantly on the selected subnets for selected collectors.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 18"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "save_changes",
+      "button_text": "Save Changes",
+      "type": "submit",
+      "enabled_when": "All required fields are filled",
+      "description": "Save the advanced profiler configuration settings.",
+      "page_reference": "Page 14"
+    },
+    {
+      "action_id": "reset_settings",
+      "button_text": "Reset",
+      "type": "reset",
+      "enabled_when": "Always enabled",
+      "description": "Clear the settings and revert to default settings.",
+      "page_reference": "Page 14"
+    },
+    {
+      "action_id": "delete_profiler",
+      "button_text": "Delete Profiler",
+      "type": "delete",
+      "enabled_when": "Always enabled",
+      "description": "Delete the profiler configuration.",
+      "page_reference": "Page 14"
+    }
+  ],
+  "constraints": [
+    "WMI profiling is recommended for Windows devices only.",
+    "If the number of discovered devices exceeds 1000, it is recommended to add subnets manually to scan only specific devices.",
+    "SNMP (Host) profiling is applicable for devices monitored through SNMP.",
+    "Polling intervals must be configured appropriately to avoid excessive network traffic."
+  ],
+  "errors": [
+    {
+      "error_id": "WMI_CONN_FAIL",
+      "message": "WMI connection failed",
+      "trigger": "Invalid credentials or unreachable endpoint",
+      "page_reference": "Page 15"
+    },
+    {
+      "error_id": "SSH_CONN_FAIL",
+      "message": "SSH connection failed",
+      "trigger": "Invalid credentials or unreachable endpoint",
+      "page_reference": "Page 15"
+    },
+    {
+      "error_id": "SNMP_COMM_FAIL",
+      "message": "Failed to fetch device attributes through SNMP",
+      "trigger": "Invalid community list or SNMP configuration",
+      "page_reference": "Page 16"
+    }
+  ],
+  "states": [
+    "unconfigured",
+    "configured",
+    "scanning",
+    "error"
+  ],
+  "state_transitions": [
+    {
+      "from": "unconfigured",
+      "to": "configured",
+      "trigger": "Save Changes action"
+    },
+    {
+      "from": "configured",
+      "to": "scanning",
+      "trigger": "Start On-Demand Scan action"
+    },
+    {
+      "from": "scanning",
+      "to": "error",
+      "trigger": "Connection or configuration failure"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_advanced_profiler",
+      "name": "Configure Advanced Profiler",
+      "steps": [
+        "Navigate to Profiler -> Profiler Configuration -> Advance Configuration",
+        "Configure WMI, SSH, SNMP, and other settings",
+        "Save changes"
+      ],
+      "prerequisites": [
+        "Ensure devices are discoverable through configured collectors",
+        "Set up appropriate credentials for WMI, SSH, and SNMP"
+      ],
+      "page_reference": "Page 14"
+    }
+  ]
+}

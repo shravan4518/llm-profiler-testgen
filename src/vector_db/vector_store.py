@@ -382,6 +382,83 @@ class VectorStore:
             ]
         }
 
+    def delete_document(self, doc_id: str) -> bool:
+        """
+        Delete a document and all its chunks from the vector store.
+
+        Args:
+            doc_id: Document ID to delete
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if doc_id not in self.doc_registry:
+                logger.warning(f"Document {doc_id} not found in registry")
+                return False
+
+            doc_info = self.doc_registry[doc_id]
+            chunk_ids_to_delete = doc_info.chunk_ids
+
+            logger.info(f"Deleting document {doc_id} ({doc_info.filename}) with {len(chunk_ids_to_delete)} chunks")
+
+            # Find vector IDs to delete
+            vector_ids_to_delete = set()
+            for chunk_id in chunk_ids_to_delete:
+                # Find chunk in metadata
+                for vector_id, meta in self.chunk_metadata.items():
+                    if meta.chunk_id == chunk_id:
+                        vector_ids_to_delete.add(vector_id)
+                        break
+
+            # Remove chunks from metadata
+            self.chunk_metadata = {
+                vid: meta for vid, meta in self.chunk_metadata.items()
+                if vid not in vector_ids_to_delete
+            }
+
+            # Remove document from registry
+            del self.doc_registry[doc_id]
+
+            # Rebuild FAISS index without deleted vectors
+            if len(self.chunk_metadata) > 0:
+                # Get embeddings for remaining chunks
+                remaining_vectors = []
+                new_metadata = {}
+
+                for new_id, (old_id, meta) in enumerate(sorted(self.chunk_metadata.items())):
+                    # Get embedding from old index
+                    embedding = self.index.reconstruct(int(old_id))
+                    remaining_vectors.append(embedding)
+
+                    # Update vector ID in metadata
+                    meta.embedding_vector_id = new_id
+                    new_metadata[new_id] = meta
+
+                # Create new index with remaining vectors
+                embeddings = np.array(remaining_vectors).astype('float32')
+                new_index = faiss.IndexFlatL2(self.dimension)
+                new_index.add(embeddings)
+
+                self.index = new_index
+                self.chunk_metadata = new_metadata
+            else:
+                # No chunks left, create empty index
+                self.index = faiss.IndexFlatL2(self.dimension)
+                self.chunk_metadata = {}
+
+            # Save changes
+            self._save_index()
+            self._save_metadata()
+            self._save_registry()
+
+            logger.info(f"Successfully deleted document {doc_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error deleting document {doc_id}: {e}")
+            return False
+
     def clear_all(self):
         """Clear all data from the vector store"""
         logger.warning("Clearing all data from vector store")

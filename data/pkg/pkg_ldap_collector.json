@@ -1,0 +1,72 @@
+{
+  "feature_id": "ldap_collector",
+  "feature_name": "LDAP Collector",
+  "page_locations": [
+    3,
+    15
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "LDAP Server Configuration",
+      "navigation_path": "Authentication Servers > Configure LDAP Server",
+      "page_reference": "Page 15"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "LDAP Server Hostname",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Enter the hostname of the LDAP server.",
+      "location": "LDAP Server Configuration",
+      "page_reference": "Page 15"
+    },
+    {
+      "name": "LDAP Server User Filter",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Specify the user filter for LDAP queries.",
+      "location": "LDAP Server Configuration",
+      "page_reference": "Page 15"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Fetch Attributes",
+      "description": "Fetches attributes from the configured LDAP server based on device attributes.",
+      "trigger": "When the LDAP server is configured and a query is initiated.",
+      "page_reference": "Page 15"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "LDAP Server must be configured with a valid hostname or user filter.",
+      "page_reference": "Page 15"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "LDAP_CONFIG_ERROR",
+      "description": "Occurs when the LDAP server configuration is invalid or incomplete.",
+      "resolution": "Ensure the hostname and user filter are correctly configured.",
+      "page_reference": "Page 15"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_ldap_collector",
+      "steps": [
+        "Navigate to Authentication Servers.",
+        "Select Configure LDAP Server.",
+        "Enter the LDAP Server Hostname.",
+        "Specify the User Filter.",
+        "Save the configuration."
+      ],
+      "visual_representation": "Not provided in the documentation.",
+      "page_reference": "Page 15"
+    }
+  ],
+  "image_insights": []
+}

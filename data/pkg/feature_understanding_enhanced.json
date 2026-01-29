@@ -1,0 +1,294 @@
+{
+  "features": [
+    {
+      "feature_name": "Device Discovery and Registration (DDR)",
+      "alternative_names": [
+        "DDR",
+        "Device Discovery",
+        "Discovery and Registration"
+      ],
+      "page_locations": [
+        3,
+        5,
+        6,
+        12,
+        18,
+        24,
+        30,
+        45
+      ],
+      "feature_type": "workflow | configuration_screen | report"
+    },
+    {
+      "feature_name": "Profile Groups",
+      "alternative_names": [
+        "Profiler Groups",
+        "Grouping Profiles"
+      ],
+      "page_locations": [
+        3,
+        12,
+        30,
+        32,
+        33
+      ],
+      "feature_type": "configuration_screen | workflow"
+    },
+    {
+      "feature_name": "WMI Configuration",
+      "alternative_names": [
+        "WMI Collector",
+        "WMI Profiling",
+        "WMI Settings"
+      ],
+      "page_locations": [
+        3,
+        8,
+        14
+      ],
+      "feature_type": "configuration_screen | collector"
+    },
+    {
+      "feature_name": "SNMP Collector",
+      "alternative_names": [
+        "SNMP Host Collector",
+        "SNMP Configuration"
+      ],
+      "page_locations": [
+        3,
+        7,
+        8,
+        16
+      ],
+      "feature_type": "collector | configuration_screen"
+    },
+    {
+      "feature_name": "SSH Collector",
+      "alternative_names": [
+        "SSH Configuration",
+        "SSH Profiling"
+      ],
+      "page_locations": [
+        3,
+        7,
+        8,
+        15
+      ],
+      "feature_type": "collector | configuration_screen"
+    },
+    {
+      "feature_name": "LDAP Collector",
+      "alternative_names": [
+        "LDAP Configuration",
+        "LDAP Profiling"
+      ],
+      "page_locations": [
+        3,
+        9,
+        15
+      ],
+      "feature_type": "collector | configuration_screen"
+    },
+    {
+      "feature_name": "TCP Collector",
+      "alternative_names": [
+        "TCP Profiling"
+      ],
+      "page_locations": [
+        3,
+        7
+      ],
+      "feature_type": "collector"
+    },
+    {
+      "feature_name": "SMB Collector",
+      "alternative_names": [
+        "SMB Profiling"
+      ],
+      "page_locations": [
+        3,
+        7
+      ],
+      "feature_type": "collector"
+    },
+    {
+      "feature_name": "Nmap Collector",
+      "alternative_names": [
+        "Nmap Profiling"
+      ],
+      "page_locations": [
+        3,
+        8
+      ],
+      "feature_type": "collector"
+    },
+    {
+      "feature_name": "MDM Collector",
+      "alternative_names": [
+        "Mobile Device Management Collector"
+      ],
+      "page_locations": [
+        3,
+        8
+      ],
+      "feature_type": "collector"
+    },
+    {
+      "feature_name": "Device Attribute Server",
+      "alternative_names": [
+        "Device Attribute Server Collector",
+        "Attribute Server"
+      ],
+      "page_locations": [
+        3,
+        8,
+        17
+      ],
+      "feature_type": "collector | configuration_screen"
+    },
+    {
+      "feature_name": "Passive Collectors",
+      "alternative_names": [
+        "Passive Profiling"
+      ],
+      "page_locations": [
+        6,
+        7
+      ],
+      "feature_type": "collector"
+    },
+    {
+      "feature_name": "Active Collectors",
+      "alternative_names": [
+        "Active Profiling"
+      ],
+      "page_locations": [
+        8
+      ],
+      "feature_type": "collector"
+    },
+    {
+      "feature_name": "Profiler Reports",
+      "alternative_names": [
+        "Reports",
+        "Profiler Report Scheduling"
+      ],
+      "page_locations": [
+        3,
+        20,
+        22,
+        24,
+        26
+      ],
+      "feature_type": "report"
+    },
+    {
+      "feature_name": "Dashboard",
+      "alternative_names": [
+        "Profiler Dashboard"
+      ],
+      "page_locations": [
+        20
+      ],
+      "feature_type": "report"
+    },
+    {
+      "feature_name": "Time-Bound Approval",
+      "alternative_names": [
+        "Approval Precedence"
+      ],
+      "page_locations": [
+        3,
+        32
+      ],
+      "feature_type": "workflow"
+    },
+    {
+      "feature_name": "Agentless Host Checker",
+      "alternative_names": [
+        "Host Checker"
+      ],
+      "page_locations": [
+        3,
+        37
+      ],
+      "feature_type": "workflow"
+    },
+    {
+      "feature_name": "Import/Export Profiler Database",
+      "alternative_names": [
+        "Database Import/Export",
+        "Profiler Data Export"
+      ],
+      "page_locations": [
+        3,
+        46
+      ],
+      "feature_type": "workflow"
+    },
+    {
+      "feature_name": "Troubleshooting",
+      "alternative_names": [
+        "Diagnostic Logs",
+        "Profiler Logs"
+      ],
+      "page_locations": [
+        3,
+        48,
+        49
+      ],
+      "feature_type": "workflow"
+    },
+    {
+      "feature_name": "Access Control",
+      "alternative_names": [
+        "Device Access Control"
+      ],
+      "page_locations": [
+        29
+      ],
+      "feature_type": "workflow"
+    },
+    {
+      "feature_name": "Spoof Detection",
+      "alternative_names": [
+        "Device Spoof Detection"
+      ],
+      "page_locations": [
+        29
+      ],
+      "feature_type": "workflow"
+    },
+    {
+      "feature_name": "Device Sponsoring",
+      "alternative_names": [
+        "Sponsoring Devices"
+      ],
+      "page_locations": [
+        29
+      ],
+      "feature_type": "workflow"
+    },
+    {
+      "feature_name": "Role Mapping",
+      "alternative_names": [
+        "Role Mapping Rules"
+      ],
+      "page_locations": [
+        3,
+        33
+      ],
+      "feature_type": "workflow"
+    },
+    {
+      "feature_name": "Subnet Configuration",
+      "alternative_names": [
+        "Subnet Settings"
+      ],
+      "page_locations": [
+        18
+      ],
+      "feature_type": "configuration_screen"
+    }
+  ]
+}

@@ -334,6 +334,23 @@ Be comprehensive and precise. This knowledge base will be used to intelligently 
             parts.append(framework_data['example'])
             parts.append("\n")
 
+        # Add Robot Framework examples (for learning patterns)
+        if framework_data.get('robot_examples'):
+            parts.append("=== ROBOT FRAMEWORK EXAMPLES (For Learning Patterns) ===")
+            parts.append("IMPORTANT: These are EXAMPLES to learn patterns from, NOT templates to copy!")
+            parts.append("Study the structure, syntax, and conventions - then create unique implementations.\n")
+
+            for example in framework_data['robot_examples']:
+                if example.get('robot_content'):
+                    parts.append(f"\n--- Example Robot File: {example['robot_file']} ---")
+                    parts.append(example['robot_content'])
+
+                if example.get('data_content'):
+                    parts.append(f"\n--- Example Data File: {example['data_file']} ---")
+                    parts.append(example['data_content'])
+
+            parts.append("\n")
+
         # Add class information
         if framework_data.get('classes'):
             parts.append("=== FRAMEWORK CLASSES ===")

@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Domain Knowledge Building - Profiler Agentic Automation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-brain"></i> Domain Knowledge Building</h1>
+        <p>Build hierarchical concept graphs from documentation to improve test case quality</p>
+    </div>
+
+    <!-- Current Status Card -->
+    <div class="status-card" id="domain-status-card" style="margin-bottom: 2rem;">
+        <div class="card-header">
+            <i class="fas fa-info-circle"></i>
+            <h3>Current Status</h3>
+        </div>
+        <div id="domain-status-content">
+            <p style="text-align: center; color: var(--text-secondary);">
+                <i class="fas fa-spinner fa-spin"></i> Loading status...
+            </p>
+        </div>
+    </div>
+
+    <!-- Build Knowledge Card -->
+    <div class="action-card">
+        <div class="card-header">
+            <i class="fas fa-hammer"></i>
+            <h3>Build Domain Knowledge</h3>
+        </div>
+
+        <form id="domain-build-form" style="margin-top: 1rem;">
+            <div class="form-group">
+                <label for="doc-path">Document Path:</label>
+                <input
+                    type="text"
+                    id="doc-path"
+                    name="doc_path"
+                    class="form-control"
+                    value="C:\Users\SaiShravan.V\OneDrive - Ivanti\Desktop\POC\data\docs\ps-pps-9.1r10.0-profiler-administration-guide.pdf"
+                    placeholder="Enter path to PDF documentation"
+                    required
+                    style="width: 100%;"
+                >
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                    Path to the PDF documentation file (e.g., admin guide)
+                </small>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input
+                        type="checkbox"
+                        id="force-rebuild"
+                        name="force_rebuild"
+                    >
+                    <span>Force rebuild (ignore existing knowledge)</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+                <i class="fas fa-cogs"></i> Build Domain Knowledge
+            </button>
+        </form>
+
+        <div id="build-progress" style="display: none; margin-top: 1.5rem;">
+            <div style="background: #f0f9ff; border-left: 4px solid #0284c7; padding: 1rem; border-radius: 4px;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-spinner fa-spin" style="color: #0284c7; font-size: 1.5rem;"></i>
+                    <div>
+                        <strong style="color: #0c4a6e;">Building Domain Knowledge...</strong>
+                        <p style="margin: 0.25rem 0 0 0; color: #075985; font-size: 0.9rem;">
+                            This may take 1-3 minutes depending on document size. The LLM is analyzing the documentation structure and extracting hierarchical concepts.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="build-result" style="display: none; margin-top: 1.5rem;"></div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="info-section" style="margin-top: 2rem; padding: 1.5rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <h3 style="margin-top: 0;"><i class="fas fa-question-circle"></i> How Domain Knowledge Works</h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+            <div>
+                <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                    <i class="fas fa-book-open"></i> 1. Document Analysis
+                </h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    LLM analyzes the PDF to identify main features, sub-features, parameters, and their relationships.
+                </p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                    <i class="fas fa-project-diagram"></i> 2. Concept Graph
+                </h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    Builds a hierarchical graph preserving parent-child relationships that normal chunking destroys.
+                </p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                    <i class="fas fa-magic"></i> 3. Smart Generation
+                </h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    When generating tests, enriches context with related concepts to produce more accurate test cases.
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; padding: 1rem; background: white; border-radius: 6px; border-left: 4px solid #f59e0b;">
+            <strong style="color: #92400e;"><i class="fas fa-lightbulb"></i> Key Benefit:</strong>
+            <p style="margin: 0.5rem 0 0 0; color: #78350f;">
+                Solves the "generic test case" problem by understanding that "Advanced Configuration" → "Parameter Validation" → "Boundary Testing" are related concepts, not isolated chunks.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDomainStatus();
+
+    // Handle form submission
+    const form = document.getElementById('domain-build-form');
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const docPath = document.getElementById('doc-path').value.trim();
+        const forceRebuild = document.getElementById('force-rebuild').checked;
+
+        if (!docPath) {
+            showToast('Please enter a document path', 'error');
+            return;
+        }
+
+        // Show progress
+        document.getElementById('build-progress').style.display = 'block';
+        document.getElementById('build-result').style.display = 'none';
+        form.querySelector('button[type="submit"]').disabled = true;
+
+        try {
+            const response = await fetch('/api/domain/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    doc_path: docPath,
+                    force_rebuild: forceRebuild
+                })
+            });
+
+            const result = await response.json();
+
+            // Hide progress
+            document.getElementById('build-progress').style.display = 'none';
+            form.querySelector('button[type="submit"]').disabled = false;
+
+            // Show result
+            const resultDiv = document.getElementById('build-result');
+            resultDiv.style.display = 'block';
+
+            if (result.success) {
+                const stats = result.statistics || {};
+                resultDiv.innerHTML = `
+                    <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 1rem; border-radius: 4px;">
+                        <h4 style="color: #065f46; margin-top: 0;">
+                            <i class="fas fa-check-circle"></i> Domain Knowledge Built Successfully!
+                        </h4>
+                        <div style="color: #047857;">
+                            <p><strong>Statistics:</strong></p>
+                            <ul style="margin: 0.5rem 0;">
+                                <li>Total Concepts: ${stats.total_concepts || 'N/A'}</li>
+                                <li>Total Sub-concepts: ${stats.total_sub_concepts || 'N/A'}</li>
+                                <li>Total Relationships: ${stats.total_relationships || 'N/A'}</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                showToast('Domain knowledge built successfully!', 'success');
+
+                // Reload status
+                setTimeout(loadDomainStatus, 1000);
+            } else {
+                resultDiv.innerHTML = `
+                    <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 1rem; border-radius: 4px;">
+                        <h4 style="color: #991b1b; margin-top: 0;">
+                            <i class="fas fa-exclamation-circle"></i> Build Failed
+                        </h4>
+                        <p style="color: #b91c1c; margin: 0;">${result.error || 'Unknown error'}</p>
+                    </div>
+                `;
+                showToast('Failed to build domain knowledge', 'error');
+            }
+        } catch (error) {
+            console.error('Error building domain knowledge:', error);
+            document.getElementById('build-progress').style.display = 'none';
+            form.querySelector('button[type="submit"]').disabled = false;
+
+            const resultDiv = document.getElementById('build-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 1rem; border-radius: 4px;">
+                    <h4 style="color: #991b1b; margin-top: 0;">
+                        <i class="fas fa-exclamation-circle"></i> Error
+                    </h4>
+                    <p style="color: #b91c1c; margin: 0;">${error.message}</p>
+                </div>
+            `;
+            showToast('Error building domain knowledge', 'error');
+        }
+    });
+});
+
+async function loadDomainStatus() {
+    try {
+        const response = await fetch('/api/domain/status?t=' + new Date().getTime());
+        const result = await response.json();
+
+        const statusContent = document.getElementById('domain-status-content');
+
+        if (result.success) {
+            const stats = result.statistics || {};
+
+            if (result.status === 'empty') {
+                statusContent.innerHTML = `
+                    <div style="text-align: center; padding: 1rem;">
+                        <i class="fas fa-database" style="font-size: 3rem; color: var(--text-secondary); opacity: 0.5;"></i>
+                        <p style="margin: 1rem 0 0 0; color: var(--text-secondary);">
+                            No domain knowledge built yet. Use the form below to build domain knowledge from your documentation.
+                        </p>
+                    </div>
+                `;
+            } else {
+                const conceptNames = stats.concept_names || [];
+                const conceptPreview = conceptNames.slice(0, 5).join(', ') + (conceptNames.length > 5 ? '...' : '');
+
+                statusContent.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">
+                                ${stats.total_concepts || 0}
+                            </div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                                Main Concepts
+                            </div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--secondary-color);">
+                                ${stats.total_sub_concepts || 0}
+                            </div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                                Sub-concepts
+                            </div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #10b981;">
+                                ${stats.total_relationships || 0}
+                            </div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                                Relationships
+                            </div>
+                        </div>
+                    </div>
+                    ${conceptNames.length > 0 ? `
+                        <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 4px;">
+                            <strong style="color: var(--dark-bg);">Identified Concepts:</strong>
+                            <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">
+                                ${conceptPreview}
+                            </p>
+                        </div>
+                    ` : ''}
+                `;
+            }
+        } else {
+            statusContent.innerHTML = `
+                <div style="text-align: center; padding: 1rem; color: var(--error-color);">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p style="margin: 0.5rem 0 0 0;">Error loading domain status</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading domain status:', error);
+        document.getElementById('domain-status-content').innerHTML = `
+            <div style="text-align: center; padding: 1rem; color: var(--error-color);">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p style="margin: 0.5rem 0 0 0;">Failed to load status</p>
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{
+  "feature_id": "snmp_collector",
+  "feature_name": "SNMP Collector",
+  "page_locations": [
+    3,
+    7,
+    8,
+    16
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Network Infrastructure Device Configuration",
+      "navigation_path": "PPS Administrator User > Network Infrastructure Device",
+      "page_reference": "Page 16"
+    },
+    {
+      "screen_name": "Profiler Authentication Server Configuration",
+      "navigation_path": "PPS Administrator User > Profiler Authentication Server",
+      "page_reference": "Page 16"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "DHCP Fingerprinting",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Enable DHCP fingerprinting by configuring switches to forward DHCP packets to PPS.",
+      "location": "Before You Begin",
+      "page_reference": "Page 16"
+    },
+    {
+      "name": "SNMP/SSH Profiling",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Enable SNMP/SSH-based profiling by configuring switches in the Network Infrastructure Device page.",
+      "location": "Before You Begin",
+      "page_reference": "Page 16"
+    },
+    {
+      "name": "Device Fingerprints Package",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "Version 45 and above",
+      "default_value": "Latest available version",
+      "help_text": "Download the latest device fingerprints package from the support portal.",
+      "location": "Before You Begin",
+      "page_reference": "Page 16"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Enable DHCP Fingerprinting",
+      "description": "Configures switches to forward DHCP packets to PPS for profiling.",
+      "page_reference": "Page 16"
+    },
+    {
+      "action_name": "Enable SNMP/SSH Profiling",
+      "description": "Configures switches for SNMP/SSH-based profiling in the Network Infrastructure Device page.",
+      "page_reference": "Page 16"
+    },
+    {
+      "action_name": "Download Device Fingerprints",
+      "description": "Ensures the latest device fingerprints package is downloaded and applied.",
+      "page_reference": "Page 16"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_name": "Minimum Fingerprints Database Version",
+      "description": "The minimum supported fingerprints database version for 9.1R9 is 45.",
+      "page_reference": "Page 16"
+    },
+    {
+      "constraint_name": "New User Interface Requirement",
+      "description": "Configuration steps are applicable only to the new User Interface and cannot be accessed through the old UI.",
+      "page_reference": "Page 16"
+    }
+  ],
+  "errors": [
+    {
+      "error_name": "Unsupported Fingerprints Version",
+      "description": "The fingerprints database version is below the minimum required version (45).",
+      "page_reference": "Page 16"
+    },
+    {
+      "error_name": "Old UI Access",
+      "description": "Configuration steps cannot be performed using the old User Interface.",
+      "page_reference": "Page 16"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_snmp_collector",
+      "steps": [
+        "Step 1: Navigate to PPS Administrator User > Network Infrastructure Device.",
+        "Step 2: Enable SNMP/SSH-based profiling by configuring switches.",
+        "Step 3: Download the latest device fingerprints package from the support portal.",
+        "Step 4: Ensure the fingerprints database version is 45 or above."
+      ],
+      "visual_representation": "Not provided in documentation.",
+      "page_reference": "Page 16"
+    }
+  ],
+  "image_insights": []
+}

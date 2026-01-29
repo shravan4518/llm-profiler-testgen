@@ -1,0 +1,88 @@
+{
+  "feature_id": "wmi_configuration",
+  "feature_name": "WMI Configuration",
+  "page_locations": [
+    3,
+    8,
+    14
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler Configuration",
+      "navigation_path": "Settings > Profiler > Active Collectors > WMI Collector",
+      "page_reference": "Page 14"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Enable WMI Collector",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Enable or disable the WMI Collector for Windows endpoint profiling.",
+      "location": "Active Collectors",
+      "page_reference": "Page 14"
+    },
+    {
+      "name": "WMI Scan Interval",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1440",
+      "default_value": "60",
+      "help_text": "Set the interval (in minutes) for running WMI scans.",
+      "location": "Active Collectors",
+      "page_reference": "Page 14"
+    },
+    {
+      "name": "WMI Credentials",
+      "control_type": "textbox",
+      "data_type": "string",
+      "help_text": "Provide the credentials required for WMI scans.",
+      "location": "Active Collectors",
+      "page_reference": "Page 14"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Run WMI Scan",
+      "description": "Initiates a manual WMI scan to collect detailed information about Windows endpoints.",
+      "location": "Active Collectors",
+      "page_reference": "Page 14"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "WMI Collector is only applicable for Windows endpoints.",
+      "page_reference": "Page 14"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "WMI001",
+      "description": "Invalid WMI credentials provided.",
+      "resolution": "Ensure the correct username and password are entered for WMI scans.",
+      "page_reference": "Page 14"
+    },
+    {
+      "error_code": "WMI002",
+      "description": "WMI scan interval out of range.",
+      "resolution": "Set the interval between 1 and 1440 minutes.",
+      "page_reference": "Page 14"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_wmi_collector",
+      "steps": [
+        "Navigate to Settings > Profiler > Active Collectors.",
+        "Enable the WMI Collector checkbox.",
+        "Set the WMI Scan Interval.",
+        "Provide WMI Credentials.",
+        "Save the configuration."
+      ],
+      "visual_representation": null,
+      "page_reference": "Page 14"
+    }
+  ],
+  "image_insights": []
+}

@@ -1,0 +1,115 @@
+{
+  "feature_id": "nmap_collector",
+  "feature_name": "Nmap Collector",
+  "page_locations": [
+    3,
+    8
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler Configuration",
+      "navigation_path": "Settings > Collectors > Nmap Collector",
+      "page_reference": "Page 3"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Nmap Scan Interval",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1440",
+      "default_value": "60",
+      "help_text": "Specify the interval (in minutes) for Nmap scans.",
+      "location": "Collector Settings",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Target IP Range",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid IP range format (e.g., 192.168.1.0/24)",
+      "default_value": "None",
+      "help_text": "Enter the IP range to be scanned by Nmap.",
+      "location": "Collector Settings",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Enable Nmap Collector",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Enable or disable the Nmap Collector.",
+      "location": "Collector Settings",
+      "page_reference": "Page 3"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Start Scan",
+      "description": "Initiates an immediate Nmap scan for the configured IP range.",
+      "location": "Collector Settings",
+      "page_reference": "Page 3"
+    },
+    {
+      "action_name": "Stop Scan",
+      "description": "Stops any ongoing Nmap scan.",
+      "location": "Collector Settings",
+      "page_reference": "Page 3"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_name": "Valid IP Range",
+      "description": "The Target IP Range must be in a valid CIDR format (e.g., 192.168.1.0/24).",
+      "page_reference": "Page 3"
+    },
+    {
+      "constraint_name": "Scan Interval Limit",
+      "description": "The Nmap Scan Interval must be between 1 and 1440 minutes.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "INVALID_IP_RANGE",
+      "description": "The entered IP range is not valid. Please use a valid CIDR format.",
+      "page_reference": "Page 3"
+    },
+    {
+      "error_code": "SCAN_INTERVAL_OUT_OF_RANGE",
+      "description": "The scan interval must be between 1 and 1440 minutes.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_nmap_collector",
+      "steps": [
+        "Navigate to Settings > Collectors > Nmap Collector.",
+        "Enable the Nmap Collector using the checkbox.",
+        "Specify the Target IP Range in CIDR format.",
+        "Set the Nmap Scan Interval (in minutes).",
+        "Click Save to apply the configuration."
+      ],
+      "visual_representation": "Not available in documentation.",
+      "page_reference": "Page 3"
+    },
+    {
+      "workflow_id": "run_nmap_scan",
+      "steps": [
+        "Navigate to Settings > Collectors > Nmap Collector.",
+        "Click Start Scan to initiate an immediate scan.",
+        "Monitor scan progress in the Profiler UI."
+      ],
+      "visual_representation": "Not available in documentation.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 3,
+      "type": "ui_screenshot",
+      "insights": "The screenshot shows the Nmap Collector configuration screen with fields for enabling the collector, specifying IP range, and setting scan intervals."
+    }
+  ]
+}

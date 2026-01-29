@@ -1,0 +1,159 @@
+{
+  "feature_id": "agentless_host_checker",
+  "feature_name": "Agentless Host Checker",
+  "page_locations": [
+    3,
+    37
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profile Groups Configuration",
+      "navigation_path": "Profiler > Profile Groups",
+      "page_reference": "Page 37"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Group Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Not specified",
+      "default_value": "Not specified",
+      "help_text": "Name of the profile group.",
+      "location": "Profile Groups Configuration",
+      "page_reference": "Page 37"
+    },
+    {
+      "name": "Rule",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Not specified",
+      "default_value": "Not specified",
+      "help_text": "Define rules for the profile group.",
+      "location": "Profile Groups Configuration",
+      "page_reference": "Page 37"
+    },
+    {
+      "name": "Category",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "Predefined categories",
+      "default_value": "Not specified",
+      "help_text": "Select a category for the profile group.",
+      "location": "Profile Groups Configuration",
+      "page_reference": "Page 37"
+    },
+    {
+      "name": "Approval Type",
+      "control_type": "radio_buttons",
+      "data_type": "string",
+      "range": "Auto-Approval, Manual-Approval, Time-Bound-Approval",
+      "default_value": "Not specified",
+      "help_text": "Choose the approval type for devices in the group.",
+      "location": "Profile Groups Configuration",
+      "page_reference": "Page 37"
+    },
+    {
+      "name": "Send Email Notifications",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": "true/false",
+      "default_value": "false",
+      "help_text": "Enable email notifications for new devices added to the group.",
+      "location": "Profile Groups Configuration",
+      "page_reference": "Page 37"
+    },
+    {
+      "name": "Custom Email",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid email addresses separated by semicolon",
+      "default_value": "Not specified",
+      "help_text": "Enter custom email addresses for notifications.",
+      "location": "Profile Groups Configuration",
+      "page_reference": "Page 37"
+    },
+    {
+      "name": "Auth Table Timeout",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "Minimum: 1 second, Default: 60 seconds",
+      "default_value": "60",
+      "help_text": "Timeout value in seconds for Firewall Provisioning.",
+      "location": "Profile Groups Configuration",
+      "page_reference": "Page 37"
+    },
+    {
+      "name": "Purge Devices Older Than",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "Predefined intervals",
+      "default_value": "Not specified",
+      "help_text": "Select the interval to automatically purge older devices.",
+      "location": "Profile Groups Configuration",
+      "page_reference": "Page 37"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Save Profile Group",
+      "description": "Saves the configuration for the profile group.",
+      "trigger": "Click Save button",
+      "page_reference": "Page 37"
+    },
+    {
+      "action_name": "Delete Profile Group",
+      "description": "Deletes the selected profile group.",
+      "trigger": "Click Delete this group button",
+      "page_reference": "Page 37"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "Updating profile groups for existing devices may take time if a rule covers more devices.",
+      "page_reference": "Page 37"
+    },
+    {
+      "constraint": "Navigating away from the page cancels the update for existing devices.",
+      "page_reference": "Page 37"
+    }
+  ],
+  "errors": [
+    {
+      "error_message": "Invalid email format in Custom Email field.",
+      "trigger": "Entering an incorrectly formatted email address.",
+      "page_reference": "Page 37"
+    },
+    {
+      "error_message": "Auth Table Timeout must be a positive integer.",
+      "trigger": "Entering a non-integer or negative value in the Auth Table Timeout field.",
+      "page_reference": "Page 37"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_profile_group",
+      "steps": [
+        "Navigate to Profiler > Profile Groups.",
+        "Enter Group Name.",
+        "Define rules in the Rule field.",
+        "Select a Category from the dropdown.",
+        "Choose an Approval Type (Auto-Approval, Manual-Approval, or Time-Bound-Approval).",
+        "Enable Send Email Notifications if required.",
+        "Enter Custom Email addresses if applicable.",
+        "Set the Auth Table Timeout value.",
+        "Select Purge Devices Older Than interval.",
+        "Click Save to save the profile group."
+      ],
+      "visual_representation": "Not available",
+      "page_reference": "Page 37"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 37,
+      "type": "ui_screenshot",
+      "insights": "The configuration screen allows users to define profile groups with fields for group name, rules, category, approval type, email notifications, timeout settings, and purge options. It includes buttons for saving and deleting groups."
+    }
+  ]
+}

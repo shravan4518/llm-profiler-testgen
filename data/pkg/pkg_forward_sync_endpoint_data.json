@@ -1,0 +1,151 @@
+{
+  "feature_id": "forward_and_sync_endpoint_data",
+  "feature_name": "Forward and Sync Endpoint Data",
+  "ui_surfaces": [
+    {
+      "screen_id": "forward_sync_screen",
+      "screen_name": "Forward and Sync Endpoint Data",
+      "navigation_path": "Profiler -> Profiler Configuration -> Forward and Sync Endpoint Data",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 18"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "profiler_fqdn_ip",
+      "name": "FQDN or IP Address",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Valid FQDN or IP address format",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Enter the FQDN or IP address of the profiler and/or the backup profiler to sync data.",
+      "location": "Forward and Sync Endpoint Data",
+      "page_reference": "Page 18"
+    },
+    {
+      "input_id": "api_key",
+      "name": "API Key",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Valid API key format",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Enter the API key or click 'Get API Key' to retrieve it.",
+      "location": "Forward and Sync Endpoint Data",
+      "page_reference": "Page 18"
+    },
+    {
+      "input_id": "get_api_key",
+      "name": "Get API Key",
+      "control_type": "button",
+      "data_type": null,
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Click to retrieve the API key by entering administrator credentials.",
+      "location": "Forward and Sync Endpoint Data",
+      "page_reference": "Page 18"
+    },
+    {
+      "input_id": "validate_server_certificate",
+      "name": "Validate Server Certificate",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": false,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Optionally select to validate the server certificate when retrieving the API key.",
+      "location": "Forward and Sync Endpoint Data",
+      "page_reference": "Page 18"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "save_changes",
+      "button_text": "Save Changes",
+      "type": "submit",
+      "enabled_when": "All required fields are filled and valid",
+      "description": "Saves the configuration settings for forwarding and syncing endpoint data.",
+      "page_reference": "Page 19"
+    }
+  ],
+  "constraints": [
+    "FQDN or IP address must be valid.",
+    "API key must be valid.",
+    "Server certificate validation is optional but recommended."
+  ],
+  "errors": [
+    {
+      "error_id": "ERR_INVALID_FQDN_IP",
+      "message": "Invalid FQDN or IP address format.",
+      "trigger": "When the entered FQDN or IP address is not in a valid format.",
+      "page_reference": "Page 18"
+    },
+    {
+      "error_id": "ERR_INVALID_API_KEY",
+      "message": "Invalid API key.",
+      "trigger": "When the entered API key is not valid.",
+      "page_reference": "Page 18"
+    },
+    {
+      "error_id": "ERR_SERVER_CERTIFICATE_VALIDATION_FAILED",
+      "message": "Server certificate validation failed.",
+      "trigger": "When the server certificate validation option is selected and the validation fails.",
+      "page_reference": "Page 18"
+    }
+  ],
+  "states": [
+    "unsynced",
+    "syncing",
+    "synced"
+  ],
+  "state_transitions": [
+    {
+      "from": "unsynced",
+      "to": "syncing",
+      "trigger": "User clicks 'Save Changes' with valid inputs."
+    },
+    {
+      "from": "syncing",
+      "to": "synced",
+      "trigger": "Data synchronization completes successfully."
+    },
+    {
+      "from": "syncing",
+      "to": "unsynced",
+      "trigger": "Data synchronization fails."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "forward_sync_workflow",
+      "name": "Forward and Sync Endpoint Data Workflow",
+      "steps": [
+        "Navigate to Profiler -> Profiler Configuration -> Forward and Sync Endpoint Data.",
+        "Enter the FQDN or IP address of the profiler.",
+        "Enter the API key or retrieve it using 'Get API Key'.",
+        "Optionally validate the server certificate.",
+        "Click 'Save Changes' to save the configuration."
+      ],
+      "prerequisites": [
+        "Ensure the profiler is configured and accessible.",
+        "Have administrator credentials ready to retrieve the API key."
+      ],
+      "page_reference": "Page 18"
+    }
+  ]
+}

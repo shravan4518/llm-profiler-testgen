@@ -1,0 +1,102 @@
+{
+  "feature_id": "passive_collectors",
+  "feature_name": "Passive Collectors",
+  "page_locations": [
+    6,
+    7
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler Logs",
+      "navigation_path": "Diagnostics > Profiler Logs",
+      "page_reference": "Page 6"
+    },
+    {
+      "screen_name": "Diagnostic Logs",
+      "navigation_path": "Diagnostics > Diagnostic Logs",
+      "page_reference": "Page 6"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Import Profile Modifications",
+      "control_type": "button",
+      "data_type": "binary",
+      "range": null,
+      "default_value": null,
+      "help_text": "Allows importing profile modifications database in binary format.",
+      "location": "Import/Export Section",
+      "page_reference": "Page 6"
+    },
+    {
+      "name": "Export Profile Modifications",
+      "control_type": "button",
+      "data_type": "binary",
+      "range": null,
+      "default_value": null,
+      "help_text": "Allows exporting profile modifications database in binary format.",
+      "location": "Import/Export Section",
+      "page_reference": "Page 6"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Run Tests",
+      "description": "Execute tests to validate profiler functionality.",
+      "page_reference": "Page 6"
+    },
+    {
+      "action_name": "View Diagnostic Logs",
+      "description": "Access diagnostic logs for troubleshooting.",
+      "page_reference": "Page 6"
+    },
+    {
+      "action_name": "View Profiler Logs",
+      "description": "Access profiler logs for detailed insights.",
+      "page_reference": "Page 6"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_name": "Binary Format Restriction",
+      "description": "Profile modifications database must be in binary format for import/export.",
+      "page_reference": "Page 6"
+    }
+  ],
+  "errors": [
+    {
+      "error_name": "Import Failure",
+      "description": "Occurs when the binary format is invalid or corrupted.",
+      "page_reference": "Page 6"
+    },
+    {
+      "error_name": "Export Failure",
+      "description": "Occurs when the system fails to generate the binary file.",
+      "page_reference": "Page 6"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "import_export_profile_modifications",
+      "steps": [
+        "Navigate to Import/Export Section",
+        "Select Import or Export option",
+        "Provide binary file (for import) or save location (for export)",
+        "Execute action"
+      ],
+      "visual_representation": null,
+      "page_reference": "Page 6"
+    },
+    {
+      "workflow_id": "view_logs",
+      "steps": [
+        "Navigate to Diagnostics",
+        "Select Diagnostic Logs or Profiler Logs",
+        "View or download logs"
+      ],
+      "visual_representation": null,
+      "page_reference": "Page 6"
+    }
+  ],
+  "image_insights": []
+}

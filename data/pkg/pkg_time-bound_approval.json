@@ -1,0 +1,94 @@
+{
+  "feature_id": "time_bound_approval",
+  "feature_name": "Time-Bound Approval",
+  "page_locations": [
+    3,
+    32
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Device Discovery Report Table",
+      "navigation_path": "Reports > Device Discovery Report",
+      "page_reference": "Page 32"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Start Date",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid date format (e.g., YYYY-MM-DD)",
+      "default_value": "None",
+      "help_text": "Specify the start date for time-bound approval.",
+      "location": "Time-Bound Approve Selected Devices",
+      "page_reference": "Page 32"
+    },
+    {
+      "name": "End Date",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid date format (e.g., YYYY-MM-DD)",
+      "default_value": "None",
+      "help_text": "Specify the end date for time-bound approval.",
+      "location": "Time-Bound Approve Selected Devices",
+      "page_reference": "Page 32"
+    },
+    {
+      "name": "Time Zone",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "List of supported time zones",
+      "default_value": "None",
+      "help_text": "Select the time zone for the specified time period.",
+      "location": "Time-Bound Approve Selected Devices",
+      "page_reference": "Page 32"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Time-Bound Approve Selected Devices",
+      "description": "Allows users to approve devices for a specified time period by providing start date, end date, and time zone.",
+      "location": "Device Discovery Report Table",
+      "page_reference": "Page 32"
+    },
+    {
+      "action_name": "Approve/Unapprove Selected Devices",
+      "description": "Manually approve or unapprove selected devices.",
+      "location": "Device Discovery Report Table",
+      "page_reference": "Page 32"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "If an endpoint is configured for time-bound settings in DDR, it takes precedence over profile group time-bound settings.",
+      "page_reference": "Page 32"
+    }
+  ],
+  "errors": [
+    {
+      "error_message": "Invalid date format",
+      "description": "Occurs when the start or end date is not in the valid format (e.g., YYYY-MM-DD).",
+      "page_reference": "Page 32"
+    },
+    {
+      "error_message": "End date earlier than start date",
+      "description": "Occurs when the end date is set earlier than the start date.",
+      "page_reference": "Page 32"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "time_bound_approval_workflow",
+      "steps": [
+        "Navigate to Reports > Device Discovery Report.",
+        "Select the devices to approve.",
+        "Click on 'Time-Bound Approve Selected Devices'.",
+        "Enter the start date, end date, and select the time zone.",
+        "Confirm the approval."
+      ],
+      "visual_representation": "Not provided in documentation.",
+      "page_reference": "Page 32"
+    }
+  ],
+  "image_insights": []
+}

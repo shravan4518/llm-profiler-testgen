@@ -1,0 +1,215 @@
+{
+  "feature_id": "troubleshooting",
+  "feature_name": "Troubleshooting",
+  "page_locations": [
+    3,
+    48,
+    49
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "OS Checks Rule Configuration",
+      "navigation_path": "Host Checker Policy > OS Checks",
+      "page_reference": "Page 48"
+    },
+    {
+      "screen_name": "Custom Rule: Ports Configuration",
+      "navigation_path": "Host Checker Policy > Custom Rules > Ports",
+      "page_reference": "Page 49"
+    },
+    {
+      "screen_name": "Custom Rule: Process Configuration",
+      "navigation_path": "Host Checker Policy > Custom Rules > Process",
+      "page_reference": "Page 49"
+    },
+    {
+      "screen_name": "Custom Rule: NetBIOS Configuration",
+      "navigation_path": "Host Checker Policy > Custom Rules > NetBIOS",
+      "page_reference": "Page 49"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Rule Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": null,
+      "help_text": "Enter the name of the rule.",
+      "location": "OS Checks Rule Configuration",
+      "page_reference": "Page 48"
+    },
+    {
+      "name": "Criteria",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": null,
+      "help_text": "Select criteria for OS checks.",
+      "location": "OS Checks Rule Configuration",
+      "page_reference": "Page 48"
+    },
+    {
+      "name": "Rule Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": null,
+      "help_text": "Enter the name of the rule.",
+      "location": "Custom Rule: Ports Configuration",
+      "page_reference": "Page 49"
+    },
+    {
+      "name": "Port List",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": null,
+      "help_text": "Enter port numbers to allow or deny.",
+      "location": "Custom Rule: Ports Configuration",
+      "page_reference": "Page 49"
+    },
+    {
+      "name": "Rule Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": null,
+      "help_text": "Enter the name of the rule.",
+      "location": "Custom Rule: Process Configuration",
+      "page_reference": "Page 49"
+    },
+    {
+      "name": "Process Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": null,
+      "help_text": "Enter process names to allow or deny.",
+      "location": "Custom Rule: Process Configuration",
+      "page_reference": "Page 49"
+    },
+    {
+      "name": "Rule Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": null,
+      "help_text": "Enter the name of the rule.",
+      "location": "Custom Rule: NetBIOS Configuration",
+      "page_reference": "Page 49"
+    },
+    {
+      "name": "NetBIOS Names",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": null,
+      "help_text": "Enter NetBIOS names to allow or deny.",
+      "location": "Custom Rule: NetBIOS Configuration",
+      "page_reference": "Page 49"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Save Changes",
+      "description": "Saves the current configuration.",
+      "location": "All rule configuration screens",
+      "page_reference": "Pages 48, 49"
+    },
+    {
+      "action_name": "Cancel",
+      "description": "Cancels the current configuration changes.",
+      "location": "All rule configuration screens",
+      "page_reference": "Pages 48, 49"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_name": "Port Range Validation",
+      "description": "Ports must be within the valid range (0-65535).",
+      "location": "Custom Rule: Ports Configuration",
+      "page_reference": "Page 49"
+    },
+    {
+      "constraint_name": "Unique Rule Names",
+      "description": "Rule names must be unique within the Host Checker Policy.",
+      "location": "All rule configuration screens",
+      "page_reference": "Pages 48, 49"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "ERR_INVALID_PORT",
+      "description": "Entered port is outside the valid range.",
+      "location": "Custom Rule: Ports Configuration",
+      "page_reference": "Page 49"
+    },
+    {
+      "error_code": "ERR_DUPLICATE_RULE_NAME",
+      "description": "Rule name already exists.",
+      "location": "All rule configuration screens",
+      "page_reference": "Pages 48, 49"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_os_checks",
+      "steps": [
+        "Navigate to Host Checker Policy.",
+        "Select OS Checks.",
+        "Enter Rule Name and select criteria.",
+        "Click Save Changes."
+      ],
+      "visual_representation": null,
+      "page_reference": "Page 48"
+    },
+    {
+      "workflow_id": "configure_custom_ports_rule",
+      "steps": [
+        "Navigate to Host Checker Policy.",
+        "Select Custom Rules > Ports.",
+        "Enter Rule Name and Port List.",
+        "Click Save Changes."
+      ],
+      "visual_representation": null,
+      "page_reference": "Page 49"
+    },
+    {
+      "workflow_id": "configure_custom_process_rule",
+      "steps": [
+        "Navigate to Host Checker Policy.",
+        "Select Custom Rules > Process.",
+        "Enter Rule Name and Process Name.",
+        "Click Save Changes."
+      ],
+      "visual_representation": null,
+      "page_reference": "Page 49"
+    },
+    {
+      "workflow_id": "configure_custom_netbios_rule",
+      "steps": [
+        "Navigate to Host Checker Policy.",
+        "Select Custom Rules > NetBIOS.",
+        "Enter Rule Name and NetBIOS Names.",
+        "Click Save Changes."
+      ],
+      "visual_representation": null,
+      "page_reference": "Page 49"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 48,
+      "type": "ui_screenshot",
+      "insights": "The OS Checks Rule Configuration screen allows users to configure OS checks for a predefined rule in the Host Checker Policy. It includes fields for Rule Name, Criteria checkboxes, and dropdown menus for Minimum Service Pack/Version."
+    },
+    {
+      "page": 49,
+      "type": "ui_screenshot",
+      "insights": "The Custom Rule: Ports Configuration screen allows users to add a custom rule for ports. It includes fields for Rule Name, Port List, and radio buttons for Required or Deny options."
+    },
+    {
+      "page": 49,
+      "type": "ui_screenshot",
+      "insights": "The Custom Rule: Process Configuration screen allows users to add a custom rule for processes. It includes fields for Rule Name and Process Name."
+    },
+    {
+      "page": 49,
+      "type": "ui_screenshot",
+      "insights": "The Custom Rule: NetBIOS Configuration screen allows users to add a custom rule for NetBIOS names. It includes fields for Rule Name and NetBIOS Names."
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "feature_id": "device_attribute_server",
+  "feature_name": "Device Attribute Server",
+  "page_locations": [
+    3,
+    8,
+    17
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler Basic Configuration",
+      "navigation_path": "Profiler > Profiler Configuration > Basic Configuration",
+      "page_reference": "Page 17"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "help_text": "Enter a name for the Profiler.",
+      "location": "Profiler Basic Configuration",
+      "page_reference": "Page 17"
+    },
+    {
+      "name": "Fingerprint Database file",
+      "control_type": "file_upload",
+      "data_type": "file",
+      "range": null,
+      "default_value": null,
+      "help_text": "Upload the device fingerprints package.",
+      "location": "Profiler Basic Configuration",
+      "page_reference": "Page 17"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Upload Fingerprint Database",
+      "description": "Allows the user to upload a fingerprint database file for device profiling.",
+      "trigger": "Clicking the 'Browse' button and selecting a file.",
+      "page_reference": "Page 17"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_name": "Valid Fingerprint File",
+      "description": "The uploaded file must be a valid fingerprint database package.",
+      "page_reference": "Page 17"
+    }
+  ],
+  "errors": [
+    {
+      "error_name": "Invalid Fingerprint File",
+      "description": "An error occurs if the uploaded file is not a valid fingerprint database package.",
+      "page_reference": "Page 17"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_profiler",
+      "steps": [
+        "Navigate to Profiler > Profiler Configuration > Basic Configuration.",
+        "Enter a name for the Profiler in the 'Name' field.",
+        "Click 'Browse' and upload the device fingerprints package."
+      ],
+      "visual_representation": null,
+      "page_reference": "Page 17"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 17,
+      "type": "ui_screenshot",
+      "insights": "The configuration screen includes fields for entering a Profiler name and uploading a fingerprint database file. UI elements include tabs, text fields, buttons, and a file upload field."
+    }
+  ]
+}

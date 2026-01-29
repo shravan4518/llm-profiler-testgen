@@ -1,0 +1,85 @@
+{
+  "feature_id": "active_collectors",
+  "feature_name": "Active Collectors",
+  "page_locations": [
+    8
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Customer Support Center (CSC)",
+      "navigation_path": "Support > Customer Support Center",
+      "page_reference": "Page 8"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Search for known bugs",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "help_text": "Enter keywords to search for known bugs in the system.",
+      "location": "Self-Help Online Tools and Resources",
+      "page_reference": "Page 8"
+    },
+    {
+      "name": "Download latest software",
+      "control_type": "button",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "help_text": "Click to download the latest versions of software and review release notes.",
+      "location": "Self-Help Online Tools and Resources",
+      "page_reference": "Page 8"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "File a support ticket",
+      "description": "Submit a ticket to the Pulse Secure Global Support Center (PSGSC) for technical assistance.",
+      "page_reference": "Page 8"
+    },
+    {
+      "action_name": "Access product documentation",
+      "description": "Navigate to the technical publications portal to find product documentation.",
+      "page_reference": "Page 8"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_name": "Required parameters",
+      "description": "Certain commands require specific parameters enclosed in curly brackets separated by vertical bars.",
+      "page_reference": "Page 8"
+    },
+    {
+      "constraint_name": "Non-printing characters",
+      "description": "Passwords and other sensitive inputs are enclosed in angle brackets.",
+      "page_reference": "Page 8"
+    }
+  ],
+  "errors": [
+    {
+      "error_name": "Traffic interruption warning",
+      "description": "An Attention statement alerts users when traffic might be interrupted or the device might reboot.",
+      "page_reference": "Page 8"
+    },
+    {
+      "error_name": "Potential hazard warning",
+      "description": "A Caution statement alerts users to situations that can be potentially hazardous or cause damage to hardware, firmware, software, or data.",
+      "page_reference": "Page 8"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "self_help_portal_navigation",
+      "steps": [
+        "Step 1: Navigate to https://support.pulsesecure.net",
+        "Step 2: Select the desired feature (e.g., Search for known bugs, Download software).",
+        "Step 3: Follow on-screen instructions to complete the action."
+      ],
+      "visual_representation": null,
+      "page_reference": "Page 8"
+    }
+  ],
+  "image_insights": []
+}

@@ -1,0 +1,46 @@
+INFO - ================================================================================
+INFO - Starting Profiler Agentic Automation Web Application
+INFO - ================================================================================
+INFO - Loading existing FAISS index from C:\Users\SaiShravan.V\OneDrive - Ivanti\Desktop\POC\data\faiss_index\faiss_index.bin
+INFO - Loaded index with 253 vectors
+INFO - Loaded 253 chunk metadata entries
+INFO - Loaded registry with 9 documents
+INFO - Loading embedding model: all-MiniLM-L6-v2
+INFO - Loading existing FAISS index from C:\Users\SaiShravan.V\OneDrive - Ivanti\Desktop\POC\data\faiss_index\faiss_index.bin
+INFO - Loaded index with 253 vectors
+INFO - Loaded 253 chunk metadata entries
+INFO - Loaded registry with 9 documents
+INFO - Loading embedding model: all-MiniLM-L6-v2
+INFO - FrameworkExpert initialized
+INFO - Loaded domain knowledge from disk
+INFO - Loaded domain knowledge: 4 top-level concepts
+INFO - Domain Expert initialized
+INFO - ================================================================================
+INFO - Initializing Simplified AI Test Case Generator
+INFO - ================================================================================
+INFO - Loading RAG components...
+INFO - Loading existing FAISS index from C:\Users\SaiShravan.V\OneDrive - Ivanti\Desktop\POC\data\faiss_index\faiss_index.bin
+INFO - Loaded index with 253 vectors
+INFO - Loaded 253 chunk metadata entries
+INFO - Loaded registry with 9 documents
+INFO - Loading embedding model: all-MiniLM-L6-v2
+INFO - Enhanced Retrieval initialized
+INFO - Loading Azure OpenAI...
+INFO - Azure OpenAI initialized: gpt-5.1
+INFO - Loading utilities...
+INFO - Prompt Preprocessor initialized
+INFO - Output directory: C:\Users\SaiShravan.V\OneDrive - Ivanti\Desktop\POC\data\test_cases
+INFO - Domain Expert integration enabled
+INFO - ================================================================================
+INFO - Test Case Generator initialized successfully
+INFO - ================================================================================
+INFO - ScriptGenerator initialized with Codex deployment: gpt-5.1
+INFO - Flask app components initialized successfully
+INFO - Flask app starting on http://127.0.0.1:5000
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.49.118.27:5000
+Press CTRL+C to quit

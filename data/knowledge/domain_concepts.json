@@ -1,0 +1,3686 @@
+{
+  "concept_graph": {
+    "Deployment and License Requirements": {
+      "name": "Deployment and License Requirements",
+      "type": "feature",
+      "description": "Details the licensing and deployment prerequisites for the Profiler.",
+      "sub_concepts": [
+        {
+          "name": "License SKUs",
+          "type": "configuration",
+          "description": "Device count-based licenses available for the Profiler.",
+          "parameters": [
+            {
+              "name": "license_sku",
+              "type": "string",
+              "constraints": [
+                "Must match available SKUs on Pulse Secure license portal"
+              ],
+              "examples": [
+                "PS-PROFILER-LG-SKU"
+              ]
+            }
+          ],
+          "validation_rules": [
+            "Ensure valid SKU is entered"
+          ],
+          "failure_modes": [
+            "Invalid SKU",
+            "License not activated"
+          ]
+        },
+        {
+          "name": "Deployment Steps",
+          "type": "workflow",
+          "description": "High-level steps to deploy the Profiler.",
+          "prerequisites": [
+            "Refer to Profiler Deployment Guide"
+          ],
+          "steps": [
+            "Set up licensing",
+            "Configure network infrastructure",
+            "Enable profiling features"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "License validation",
+        "Workflow completeness",
+        "Error handling for invalid licenses"
+      ],
+      "relationships": [
+        {
+          "related_to": "Basic Profiler Configuration",
+          "type": "prerequisite"
+        }
+      ],
+      "prerequisites": [
+        "Access to Pulse Secure license portal"
+      ],
+      "search_terms": [
+        "license requirements",
+        "deployment steps",
+        "profiler setup"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate license SKU with valid license key",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Valid license key is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the valid license key",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted",
+            "License status is updated to 'Active'"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with expired license key",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Expired license key is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the expired license key",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'License expired' is displayed"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with invalid license key format",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Invalid license key format is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the invalid license key format",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'Invalid license key format' is displayed"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow with all required steps completed",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "All deployment prerequisites are met",
+            "Profiler application is ready for deployment"
+          ],
+          "test_steps": [
+            "Follow the deployment guide step-by-step",
+            "Complete all required configurations",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment is successful",
+            "Profiler application starts without errors"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow with missing configuration step",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Deployment prerequisites are partially met",
+            "One configuration step is skipped"
+          ],
+          "test_steps": [
+            "Follow the deployment guide but skip one configuration step",
+            "Attempt to start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment fails",
+            "Error message 'Missing configuration step' is displayed"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU under high load conditions",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler application is installed",
+            "Valid license key is available"
+          ],
+          "test_steps": [
+            "Simulate high load on the license validation server",
+            "Submit the valid license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted within acceptable response time",
+            "No server crashes or timeouts occur"
+          ]
+        },
+        {
+          "scenario": "Verify integration between license validation and deployment workflow",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Valid license key is activated",
+            "Deployment prerequisites are met"
+          ],
+          "test_steps": [
+            "Activate the license key",
+            "Proceed with deployment steps",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "License validation and deployment workflows integrate seamlessly",
+            "Profiler application starts without errors"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with boundary value license key length",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "License key with maximum allowed length is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the license key with maximum allowed length",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted",
+            "License status is updated to 'Active'"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with license key exceeding maximum length",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "License key exceeding maximum allowed length is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the license key exceeding maximum allowed length",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'License key exceeds maximum length' is displayed"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow under low system resources",
+          "test_type": "edge",
+          "priority": "medium",
+          "preconditions": [
+            "System resources are intentionally limited",
+            "Profiler application is ready for deployment"
+          ],
+          "test_steps": [
+            "Follow the deployment guide step-by-step",
+            "Complete all required configurations",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment completes successfully",
+            "Profiler application starts but with warnings about resource usage"
+          ]
+        }
+      ]
+    },
+    "Discovering Endpoint Devices": {
+      "name": "Discovering Endpoint Devices",
+      "type": "feature",
+      "description": "Mechanisms to discover and classify endpoint devices using active and passive collectors.",
+      "sub_concepts": [
+        {
+          "name": "Passive Collectors",
+          "type": "feature",
+          "description": "Collectors triggered by network or timer events.",
+          "sub_concepts": [
+            {
+              "name": "User Agent Collector",
+              "type": "configuration",
+              "description": "Uses HTTP User Agent data to classify devices.",
+              "parameters": [
+                {
+                  "name": "user_agent_data",
+                  "type": "string",
+                  "constraints": [
+                    "Must be captured from network traffic"
+                  ],
+                  "examples": [
+                    "iOS device",
+                    "Android 5.1"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Incorrect classification",
+                "Missing user agent data"
+              ]
+            },
+            {
+              "name": "DHCP Collector",
+              "type": "configuration",
+              "description": "Uses DHCP fingerprinting for endpoint classification.",
+              "parameters": [
+                {
+                  "name": "dhcp_forwarding",
+                  "type": "boolean",
+                  "default": true,
+                  "constraints": [
+                    "Switches must forward DHCP packets to PPS appliance"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "DHCP packets not forwarded",
+                "Incorrect fingerprinting"
+              ]
+            },
+            {
+              "name": "Network Infrastructure Device Collector",
+              "type": "configuration",
+              "description": "Fetches ARP/CAM tables from network devices using SNMP or SSH.",
+              "parameters": [
+                {
+                  "name": "poll_interval",
+                  "type": "integer",
+                  "default": 60,
+                  "unit": "minutes",
+                  "constraints": [
+                    "Must be greater than 0"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Polling failure",
+                "Unsupported SNMP/SSH configuration"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Active Collectors",
+          "type": "feature",
+          "description": "Collectors initiated by the Profiler for granular profiling.",
+          "sub_concepts": [
+            {
+              "name": "MDM Collector",
+              "type": "configuration",
+              "description": "Integrates with Mobile Device Management platforms to retrieve endpoint details.",
+              "parameters": [
+                {
+                  "name": "mdm_server",
+                  "type": "string",
+                  "constraints": [
+                    "Must be a valid MDM server"
+                  ],
+                  "examples": [
+                    "AirWatch",
+                    "MobileIron"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Connection failure",
+                "Incomplete data retrieval"
+              ]
+            },
+            {
+              "name": "WMI Collector",
+              "type": "configuration",
+              "description": "Uses WMI to collect detailed information about Windows endpoints.",
+              "parameters": [
+                {
+                  "name": "wmi_credentials",
+                  "type": "string",
+                  "constraints": [
+                    "Must be valid domain administrator credentials"
+                  ]
+                },
+                {
+                  "name": "deep_scan",
+                  "type": "boolean",
+                  "default": false,
+                  "constraints": [
+                    "Enabling deep scan increases resource usage"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Invalid credentials",
+                "Scan timeout"
+              ]
+            }
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "Collector accuracy",
+        "Edge case handling (e.g., static IPs)",
+        "Performance impact of active collectors"
+      ],
+      "relationships": [
+        {
+          "related_to": "Profiler Configuration",
+          "type": "extends"
+        }
+      ],
+      "prerequisites": [
+        "Network infrastructure configured for profiling"
+      ],
+      "search_terms": [
+        "endpoint discovery",
+        "passive collectors",
+        "active collectors"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Discover endpoint devices using passive collectors under normal network conditions",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "Network traffic is flowing normally"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Monitor network traffic for endpoint device discovery",
+            "Verify discovered devices are classified correctly"
+          ],
+          "expected_results": [
+            "Passive collector identifies all endpoint devices in the network",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Discover endpoint devices using active collectors with valid configuration",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "Network is accessible"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Initiate active scans to discover endpoint devices",
+            "Verify discovered devices are classified correctly"
+          ],
+          "expected_results": [
+            "Active collector identifies all endpoint devices in the network",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Handle static IPs during endpoint discovery using passive collectors",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "Static IPs are present in the network"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Monitor network traffic for endpoint device discovery",
+            "Verify devices with static IPs are discovered and classified"
+          ],
+          "expected_results": [
+            "Passive collector successfully identifies devices with static IPs",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Handle static IPs during endpoint discovery using active collectors",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "Static IPs are present in the network"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Initiate active scans to discover endpoint devices",
+            "Verify devices with static IPs are discovered and classified"
+          ],
+          "expected_results": [
+            "Active collector successfully identifies devices with static IPs",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Simulate network outage during passive collector operation",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "Network traffic is flowing normally"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Simulate a network outage",
+            "Monitor collector behavior during and after the outage"
+          ],
+          "expected_results": [
+            "Passive collector gracefully handles the network outage",
+            "No incorrect classifications or crashes occur",
+            "Collector resumes normal operation once the network is restored"
+          ]
+        },
+        {
+          "scenario": "Simulate network outage during active collector operation",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "Network is accessible"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Simulate a network outage",
+            "Monitor collector behavior during and after the outage"
+          ],
+          "expected_results": [
+            "Active collector gracefully handles the network outage",
+            "No incorrect classifications or crashes occur",
+            "Collector resumes normal operation once the network is restored"
+          ]
+        },
+        {
+          "scenario": "Test integration between passive and active collectors for endpoint discovery",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Passive and active collectors are configured and enabled",
+            "Network traffic is flowing normally"
+          ],
+          "test_steps": [
+            "Start both passive and active collector services",
+            "Monitor endpoint discovery and classification",
+            "Verify results from both collectors are consistent and complementary"
+          ],
+          "expected_results": [
+            "Passive and active collectors work together seamlessly",
+            "Endpoint devices are discovered and classified accurately",
+            "No duplicate or conflicting classifications occur"
+          ]
+        },
+        {
+          "scenario": "Measure performance impact of active collectors under high network load",
+          "test_type": "performance",
+          "priority": "high",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "High network load is simulated"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Simulate high network load",
+            "Monitor system performance and collector behavior"
+          ],
+          "expected_results": [
+            "Active collector maintains accurate endpoint discovery and classification",
+            "System performance remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Measure performance impact of passive collectors under high network load",
+          "test_type": "performance",
+          "priority": "high",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "High network load is simulated"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Simulate high network load",
+            "Monitor system performance and collector behavior"
+          ],
+          "expected_results": [
+            "Passive collector maintains accurate endpoint discovery and classification",
+            "System performance remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Validate error handling for invalid active collector configuration",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Active collector is configured with invalid parameters"
+          ],
+          "test_steps": [
+            "Attempt to start the active collector service",
+            "Monitor system logs and error messages"
+          ],
+          "expected_results": [
+            "Active collector fails to start with appropriate error messages",
+            "No unexpected behavior or crashes occur"
+          ]
+        }
+      ]
+    },
+    "Profiler Configuration": {
+      "name": "Profiler Configuration",
+      "type": "feature",
+      "description": "Settings and options to configure the Profiler for device discovery and management.",
+      "sub_concepts": [
+        {
+          "name": "Basic Profiler Configuration",
+          "type": "configuration",
+          "description": "Initial setup for the Profiler.",
+          "parameters": [
+            {
+              "name": "profiler_name",
+              "type": "string",
+              "constraints": [
+                "Must be unique"
+              ],
+              "examples": [
+                "Local Profiler"
+              ]
+            },
+            {
+              "name": "snmp_poll_interval",
+              "type": "integer",
+              "default": 60,
+              "unit": "minutes",
+              "constraints": [
+                "Must be greater than 0"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Invalid name",
+            "Polling interval misconfiguration"
+          ]
+        },
+        {
+          "name": "Advanced Profiler Configuration",
+          "type": "configuration",
+          "description": "Advanced settings for granular profiling.",
+          "parameters": [
+            {
+              "name": "wmi_deep_scan",
+              "type": "boolean",
+              "default": false,
+              "constraints": [
+                "Increases resource usage if enabled"
+              ]
+            },
+            {
+              "name": "ssh_authentication_method",
+              "type": "string",
+              "constraints": [
+                "Must be 'password' or 'public_key'"
+              ],
+              "examples": [
+                "password",
+                "public_key"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Invalid authentication method",
+            "Resource overload"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "Configuration validation",
+        "Error handling for invalid inputs",
+        "Performance under advanced settings"
+      ],
+      "relationships": [
+        {
+          "related_to": "Discovering Endpoint Devices",
+          "type": "prerequisite"
+        }
+      ],
+      "prerequisites": [
+        "Deployment and licensing completed"
+      ],
+      "search_terms": [
+        "profiler setup",
+        "basic configuration",
+        "advanced settings"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate basic configuration with valid parameters",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter valid basic configuration parameters (e.g., device discovery interval, network range)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates as expected with the configured parameters"
+          ]
+        },
+        {
+          "scenario": "Validate advanced configuration with valid parameters",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Advanced Profiler Configuration page",
+            "Enter valid advanced configuration parameters (e.g., custom device filters, advanced network settings)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates as expected with the advanced settings"
+          ]
+        },
+        {
+          "scenario": "Validate configuration with boundary values",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter boundary values for configuration parameters (e.g., minimum and maximum values for discovery interval, smallest and largest network range)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates correctly within the boundary values"
+          ]
+        },
+        {
+          "scenario": "Handle invalid inputs for basic configuration",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter invalid values for basic configuration parameters (e.g., negative discovery interval, malformed network range)",
+            "Attempt to save the configuration"
+          ],
+          "expected_results": [
+            "Error messages are displayed for invalid inputs",
+            "Configuration is not saved"
+          ]
+        },
+        {
+          "scenario": "Handle invalid inputs for advanced configuration",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Advanced Profiler Configuration page",
+            "Enter invalid values for advanced configuration parameters (e.g., unsupported device filters, invalid network settings)",
+            "Attempt to save the configuration"
+          ],
+          "expected_results": [
+            "Error messages are displayed for invalid inputs",
+            "Configuration is not saved"
+          ]
+        },
+        {
+          "scenario": "Integration test with device discovery module",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "Device discovery module is operational"
+          ],
+          "test_steps": [
+            "Configure the Profiler with valid parameters for device discovery",
+            "Trigger device discovery",
+            "Verify that discovered devices match the configured parameters"
+          ],
+          "expected_results": [
+            "Devices are discovered as per the configured parameters",
+            "No unexpected devices are discovered"
+          ]
+        },
+        {
+          "scenario": "Performance test under advanced configuration settings",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Configure the Profiler with complex advanced settings (e.g., multiple custom filters, large network ranges)",
+            "Trigger device discovery and management processes",
+            "Measure the time taken and resource utilization"
+          ],
+          "expected_results": [
+            "Profiler performs within acceptable time limits",
+            "Resource utilization remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Edge case test with maximum number of devices in discovery",
+          "test_type": "edge",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Configure the Profiler to discover the maximum number of devices supported",
+            "Trigger device discovery",
+            "Verify the system behavior and discovered devices"
+          ],
+          "expected_results": [
+            "Profiler successfully discovers the maximum number of devices",
+            "System remains stable and responsive"
+          ]
+        }
+      ]
+    },
+    "Profiler Reports": {
+      "name": "Profiler Reports",
+      "type": "feature",
+      "description": "Reporting and dashboard features for device profiling.",
+      "sub_concepts": [
+        {
+          "name": "Dashboard",
+          "type": "feature",
+          "description": "Displays an overview of device profiling status.",
+          "parameters": [
+            {
+              "name": "refresh_interval",
+              "type": "integer",
+              "default": 5,
+              "unit": "minutes",
+              "constraints": [
+                "Must be between 1-60"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Incorrect data display",
+            "Refresh failure"
+          ]
+        },
+        {
+          "name": "Report Scheduling",
+          "type": "configuration",
+          "description": "Schedules email notifications for profiling reports.",
+          "parameters": [
+            {
+              "name": "email_addresses",
+              "type": "list",
+              "constraints": [
+                "Must be valid email addresses"
+              ]
+            },
+            {
+              "name": "report_interval",
+              "type": "string",
+              "constraints": [
+                "Must be 'daily', 'weekly', or 'monthly'"
+              ],
+              "examples": [
+                "daily",
+                "weekly",
+                "monthly"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Email delivery failure",
+            "Incorrect scheduling"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "Report accuracy",
+        "Email notification reliability",
+        "Dashboard refresh performance"
+      ],
+      "relationships": [
+        {
+          "related_to": "Profiler Configuration",
+          "type": "extends"
+        }
+      ],
+      "prerequisites": [
+        "Profiler configured and operational"
+      ],
+      "search_terms": [
+        "profiler reports",
+        "dashboard",
+        "report scheduling"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate dashboard displays accurate profiling data",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Device profiling data exists in the system",
+            "User has access to the dashboard"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Verify the displayed profiling data matches the database records"
+          ],
+          "expected_results": [
+            "Dashboard displays accurate profiling data as per the database records"
+          ]
+        },
+        {
+          "scenario": "Verify report scheduling with boundary date values",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "User has access to the report scheduling feature"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Schedule a report with the earliest possible date",
+            "Schedule a report with the latest possible date"
+          ],
+          "expected_results": [
+            "Report is successfully scheduled with the earliest possible date",
+            "Report is successfully scheduled with the latest possible date"
+          ]
+        },
+        {
+          "scenario": "Handle invalid email address for report notifications",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "User has access to the report scheduling feature"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Enter an invalid email address for notifications",
+            "Attempt to schedule the report"
+          ],
+          "expected_results": [
+            "System displays an error message indicating the email address is invalid"
+          ]
+        },
+        {
+          "scenario": "Verify integration between dashboard and report scheduling",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Device profiling data exists in the system",
+            "User has access to both dashboard and report scheduling features"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Schedule a report based on the displayed profiling data",
+            "Verify the scheduled report reflects the same data as the dashboard"
+          ],
+          "expected_results": [
+            "Scheduled report matches the profiling data displayed on the dashboard"
+          ]
+        },
+        {
+          "scenario": "Test dashboard refresh performance under high data load",
+          "test_type": "performance",
+          "priority": "high",
+          "preconditions": [
+            "System contains a large volume of profiling data",
+            "User has access to the dashboard"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Trigger a manual refresh of the dashboard",
+            "Measure the time taken for the refresh to complete"
+          ],
+          "expected_results": [
+            "Dashboard refresh completes within the acceptable performance threshold"
+          ]
+        },
+        {
+          "scenario": "Validate report scheduling with missing required fields",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "User has access to the report scheduling feature"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Attempt to schedule a report without filling in required fields"
+          ],
+          "expected_results": [
+            "System prevents scheduling and displays error messages for missing required fields"
+          ]
+        },
+        {
+          "scenario": "Verify email notification reliability for scheduled reports",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "User has scheduled a report with a valid email address"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Schedule a report with a valid email address",
+            "Wait for the report to be generated and email notification to be sent"
+          ],
+          "expected_results": [
+            "Email notification is sent successfully to the provided email address"
+          ]
+        },
+        {
+          "scenario": "Test dashboard refresh performance with minimal data load",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "System contains minimal profiling data",
+            "User has access to the dashboard"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Trigger a manual refresh of the dashboard",
+            "Measure the time taken for the refresh to complete"
+          ],
+          "expected_results": [
+            "Dashboard refresh completes quickly under minimal data load"
+          ]
+        },
+        {
+          "scenario": "Handle scheduling reports with unsupported file formats",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "User has access to the report scheduling feature"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Attempt to schedule a report with an unsupported file format"
+          ],
+          "expected_results": [
+            "System displays an error message indicating the file format is unsupported"
+          ]
+        },
+        {
+          "scenario": "Verify dashboard data consistency after multiple refreshes",
+          "test_type": "edge",
+          "priority": "high",
+          "preconditions": [
+            "Device profiling data exists in the system",
+            "User has access to the dashboard"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Trigger multiple manual refreshes of the dashboard",
+            "Verify the data remains consistent across all refreshes"
+          ],
+          "expected_results": [
+            "Dashboard data remains consistent after multiple refreshes"
+          ]
+        }
+      ]
+    }
+  },
+  "concept_index": {
+    "deployment and license requirements": {
+      "name": "Deployment and License Requirements",
+      "type": "feature",
+      "description": "Details the licensing and deployment prerequisites for the Profiler.",
+      "sub_concepts": [
+        {
+          "name": "License SKUs",
+          "type": "configuration",
+          "description": "Device count-based licenses available for the Profiler.",
+          "parameters": [
+            {
+              "name": "license_sku",
+              "type": "string",
+              "constraints": [
+                "Must match available SKUs on Pulse Secure license portal"
+              ],
+              "examples": [
+                "PS-PROFILER-LG-SKU"
+              ]
+            }
+          ],
+          "validation_rules": [
+            "Ensure valid SKU is entered"
+          ],
+          "failure_modes": [
+            "Invalid SKU",
+            "License not activated"
+          ]
+        },
+        {
+          "name": "Deployment Steps",
+          "type": "workflow",
+          "description": "High-level steps to deploy the Profiler.",
+          "prerequisites": [
+            "Refer to Profiler Deployment Guide"
+          ],
+          "steps": [
+            "Set up licensing",
+            "Configure network infrastructure",
+            "Enable profiling features"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "License validation",
+        "Workflow completeness",
+        "Error handling for invalid licenses"
+      ],
+      "relationships": [
+        {
+          "related_to": "Basic Profiler Configuration",
+          "type": "prerequisite"
+        }
+      ],
+      "prerequisites": [
+        "Access to Pulse Secure license portal"
+      ],
+      "search_terms": [
+        "license requirements",
+        "deployment steps",
+        "profiler setup"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate license SKU with valid license key",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Valid license key is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the valid license key",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted",
+            "License status is updated to 'Active'"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with expired license key",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Expired license key is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the expired license key",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'License expired' is displayed"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with invalid license key format",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Invalid license key format is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the invalid license key format",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'Invalid license key format' is displayed"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow with all required steps completed",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "All deployment prerequisites are met",
+            "Profiler application is ready for deployment"
+          ],
+          "test_steps": [
+            "Follow the deployment guide step-by-step",
+            "Complete all required configurations",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment is successful",
+            "Profiler application starts without errors"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow with missing configuration step",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Deployment prerequisites are partially met",
+            "One configuration step is skipped"
+          ],
+          "test_steps": [
+            "Follow the deployment guide but skip one configuration step",
+            "Attempt to start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment fails",
+            "Error message 'Missing configuration step' is displayed"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU under high load conditions",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler application is installed",
+            "Valid license key is available"
+          ],
+          "test_steps": [
+            "Simulate high load on the license validation server",
+            "Submit the valid license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted within acceptable response time",
+            "No server crashes or timeouts occur"
+          ]
+        },
+        {
+          "scenario": "Verify integration between license validation and deployment workflow",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Valid license key is activated",
+            "Deployment prerequisites are met"
+          ],
+          "test_steps": [
+            "Activate the license key",
+            "Proceed with deployment steps",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "License validation and deployment workflows integrate seamlessly",
+            "Profiler application starts without errors"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with boundary value license key length",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "License key with maximum allowed length is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the license key with maximum allowed length",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted",
+            "License status is updated to 'Active'"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with license key exceeding maximum length",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "License key exceeding maximum allowed length is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the license key exceeding maximum allowed length",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'License key exceeds maximum length' is displayed"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow under low system resources",
+          "test_type": "edge",
+          "priority": "medium",
+          "preconditions": [
+            "System resources are intentionally limited",
+            "Profiler application is ready for deployment"
+          ],
+          "test_steps": [
+            "Follow the deployment guide step-by-step",
+            "Complete all required configurations",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment completes successfully",
+            "Profiler application starts but with warnings about resource usage"
+          ]
+        }
+      ]
+    },
+    "license skus": {
+      "name": "License SKUs",
+      "type": "configuration",
+      "description": "Device count-based licenses available for the Profiler.",
+      "parameters": [
+        {
+          "name": "license_sku",
+          "type": "string",
+          "constraints": [
+            "Must match available SKUs on Pulse Secure license portal"
+          ],
+          "examples": [
+            "PS-PROFILER-LG-SKU"
+          ]
+        }
+      ],
+      "validation_rules": [
+        "Ensure valid SKU is entered"
+      ],
+      "failure_modes": [
+        "Invalid SKU",
+        "License not activated"
+      ],
+      "parent_concept": "Deployment and License Requirements"
+    },
+    "deployment steps": {
+      "name": "Deployment Steps",
+      "type": "workflow",
+      "description": "High-level steps to deploy the Profiler.",
+      "prerequisites": [
+        "Refer to Profiler Deployment Guide"
+      ],
+      "steps": [
+        "Set up licensing",
+        "Configure network infrastructure",
+        "Enable profiling features"
+      ],
+      "parent_concept": "Deployment and License Requirements"
+    },
+    "license requirements": {
+      "name": "Deployment and License Requirements",
+      "type": "feature",
+      "description": "Details the licensing and deployment prerequisites for the Profiler.",
+      "sub_concepts": [
+        {
+          "name": "License SKUs",
+          "type": "configuration",
+          "description": "Device count-based licenses available for the Profiler.",
+          "parameters": [
+            {
+              "name": "license_sku",
+              "type": "string",
+              "constraints": [
+                "Must match available SKUs on Pulse Secure license portal"
+              ],
+              "examples": [
+                "PS-PROFILER-LG-SKU"
+              ]
+            }
+          ],
+          "validation_rules": [
+            "Ensure valid SKU is entered"
+          ],
+          "failure_modes": [
+            "Invalid SKU",
+            "License not activated"
+          ]
+        },
+        {
+          "name": "Deployment Steps",
+          "type": "workflow",
+          "description": "High-level steps to deploy the Profiler.",
+          "prerequisites": [
+            "Refer to Profiler Deployment Guide"
+          ],
+          "steps": [
+            "Set up licensing",
+            "Configure network infrastructure",
+            "Enable profiling features"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "License validation",
+        "Workflow completeness",
+        "Error handling for invalid licenses"
+      ],
+      "relationships": [
+        {
+          "related_to": "Basic Profiler Configuration",
+          "type": "prerequisite"
+        }
+      ],
+      "prerequisites": [
+        "Access to Pulse Secure license portal"
+      ],
+      "search_terms": [
+        "license requirements",
+        "deployment steps",
+        "profiler setup"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate license SKU with valid license key",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Valid license key is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the valid license key",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted",
+            "License status is updated to 'Active'"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with expired license key",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Expired license key is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the expired license key",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'License expired' is displayed"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with invalid license key format",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Invalid license key format is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the invalid license key format",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'Invalid license key format' is displayed"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow with all required steps completed",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "All deployment prerequisites are met",
+            "Profiler application is ready for deployment"
+          ],
+          "test_steps": [
+            "Follow the deployment guide step-by-step",
+            "Complete all required configurations",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment is successful",
+            "Profiler application starts without errors"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow with missing configuration step",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Deployment prerequisites are partially met",
+            "One configuration step is skipped"
+          ],
+          "test_steps": [
+            "Follow the deployment guide but skip one configuration step",
+            "Attempt to start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment fails",
+            "Error message 'Missing configuration step' is displayed"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU under high load conditions",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler application is installed",
+            "Valid license key is available"
+          ],
+          "test_steps": [
+            "Simulate high load on the license validation server",
+            "Submit the valid license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted within acceptable response time",
+            "No server crashes or timeouts occur"
+          ]
+        },
+        {
+          "scenario": "Verify integration between license validation and deployment workflow",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Valid license key is activated",
+            "Deployment prerequisites are met"
+          ],
+          "test_steps": [
+            "Activate the license key",
+            "Proceed with deployment steps",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "License validation and deployment workflows integrate seamlessly",
+            "Profiler application starts without errors"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with boundary value license key length",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "License key with maximum allowed length is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the license key with maximum allowed length",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted",
+            "License status is updated to 'Active'"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with license key exceeding maximum length",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "License key exceeding maximum allowed length is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the license key exceeding maximum allowed length",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'License key exceeds maximum length' is displayed"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow under low system resources",
+          "test_type": "edge",
+          "priority": "medium",
+          "preconditions": [
+            "System resources are intentionally limited",
+            "Profiler application is ready for deployment"
+          ],
+          "test_steps": [
+            "Follow the deployment guide step-by-step",
+            "Complete all required configurations",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment completes successfully",
+            "Profiler application starts but with warnings about resource usage"
+          ]
+        }
+      ]
+    },
+    "profiler setup": {
+      "name": "Deployment and License Requirements",
+      "type": "feature",
+      "description": "Details the licensing and deployment prerequisites for the Profiler.",
+      "sub_concepts": [
+        {
+          "name": "License SKUs",
+          "type": "configuration",
+          "description": "Device count-based licenses available for the Profiler.",
+          "parameters": [
+            {
+              "name": "license_sku",
+              "type": "string",
+              "constraints": [
+                "Must match available SKUs on Pulse Secure license portal"
+              ],
+              "examples": [
+                "PS-PROFILER-LG-SKU"
+              ]
+            }
+          ],
+          "validation_rules": [
+            "Ensure valid SKU is entered"
+          ],
+          "failure_modes": [
+            "Invalid SKU",
+            "License not activated"
+          ]
+        },
+        {
+          "name": "Deployment Steps",
+          "type": "workflow",
+          "description": "High-level steps to deploy the Profiler.",
+          "prerequisites": [
+            "Refer to Profiler Deployment Guide"
+          ],
+          "steps": [
+            "Set up licensing",
+            "Configure network infrastructure",
+            "Enable profiling features"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "License validation",
+        "Workflow completeness",
+        "Error handling for invalid licenses"
+      ],
+      "relationships": [
+        {
+          "related_to": "Basic Profiler Configuration",
+          "type": "prerequisite"
+        }
+      ],
+      "prerequisites": [
+        "Access to Pulse Secure license portal"
+      ],
+      "search_terms": [
+        "license requirements",
+        "deployment steps",
+        "profiler setup"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate license SKU with valid license key",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Valid license key is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the valid license key",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted",
+            "License status is updated to 'Active'"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with expired license key",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Expired license key is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the expired license key",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'License expired' is displayed"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with invalid license key format",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Invalid license key format is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the invalid license key format",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'Invalid license key format' is displayed"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow with all required steps completed",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "All deployment prerequisites are met",
+            "Profiler application is ready for deployment"
+          ],
+          "test_steps": [
+            "Follow the deployment guide step-by-step",
+            "Complete all required configurations",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment is successful",
+            "Profiler application starts without errors"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow with missing configuration step",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Deployment prerequisites are partially met",
+            "One configuration step is skipped"
+          ],
+          "test_steps": [
+            "Follow the deployment guide but skip one configuration step",
+            "Attempt to start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment fails",
+            "Error message 'Missing configuration step' is displayed"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU under high load conditions",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler application is installed",
+            "Valid license key is available"
+          ],
+          "test_steps": [
+            "Simulate high load on the license validation server",
+            "Submit the valid license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted within acceptable response time",
+            "No server crashes or timeouts occur"
+          ]
+        },
+        {
+          "scenario": "Verify integration between license validation and deployment workflow",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Valid license key is activated",
+            "Deployment prerequisites are met"
+          ],
+          "test_steps": [
+            "Activate the license key",
+            "Proceed with deployment steps",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "License validation and deployment workflows integrate seamlessly",
+            "Profiler application starts without errors"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with boundary value license key length",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "License key with maximum allowed length is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the license key with maximum allowed length",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is accepted",
+            "License status is updated to 'Active'"
+          ]
+        },
+        {
+          "scenario": "Validate license SKU with license key exceeding maximum length",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "License key exceeding maximum allowed length is available",
+            "Profiler application is installed"
+          ],
+          "test_steps": [
+            "Navigate to the license activation page",
+            "Enter the license key exceeding maximum allowed length",
+            "Submit the license key for validation"
+          ],
+          "expected_results": [
+            "License key is rejected",
+            "Error message 'License key exceeds maximum length' is displayed"
+          ]
+        },
+        {
+          "scenario": "Verify deployment workflow under low system resources",
+          "test_type": "edge",
+          "priority": "medium",
+          "preconditions": [
+            "System resources are intentionally limited",
+            "Profiler application is ready for deployment"
+          ],
+          "test_steps": [
+            "Follow the deployment guide step-by-step",
+            "Complete all required configurations",
+            "Start the Profiler application"
+          ],
+          "expected_results": [
+            "Deployment completes successfully",
+            "Profiler application starts but with warnings about resource usage"
+          ]
+        }
+      ]
+    },
+    "discovering endpoint devices": {
+      "name": "Discovering Endpoint Devices",
+      "type": "feature",
+      "description": "Mechanisms to discover and classify endpoint devices using active and passive collectors.",
+      "sub_concepts": [
+        {
+          "name": "Passive Collectors",
+          "type": "feature",
+          "description": "Collectors triggered by network or timer events.",
+          "sub_concepts": [
+            {
+              "name": "User Agent Collector",
+              "type": "configuration",
+              "description": "Uses HTTP User Agent data to classify devices.",
+              "parameters": [
+                {
+                  "name": "user_agent_data",
+                  "type": "string",
+                  "constraints": [
+                    "Must be captured from network traffic"
+                  ],
+                  "examples": [
+                    "iOS device",
+                    "Android 5.1"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Incorrect classification",
+                "Missing user agent data"
+              ]
+            },
+            {
+              "name": "DHCP Collector",
+              "type": "configuration",
+              "description": "Uses DHCP fingerprinting for endpoint classification.",
+              "parameters": [
+                {
+                  "name": "dhcp_forwarding",
+                  "type": "boolean",
+                  "default": true,
+                  "constraints": [
+                    "Switches must forward DHCP packets to PPS appliance"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "DHCP packets not forwarded",
+                "Incorrect fingerprinting"
+              ]
+            },
+            {
+              "name": "Network Infrastructure Device Collector",
+              "type": "configuration",
+              "description": "Fetches ARP/CAM tables from network devices using SNMP or SSH.",
+              "parameters": [
+                {
+                  "name": "poll_interval",
+                  "type": "integer",
+                  "default": 60,
+                  "unit": "minutes",
+                  "constraints": [
+                    "Must be greater than 0"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Polling failure",
+                "Unsupported SNMP/SSH configuration"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Active Collectors",
+          "type": "feature",
+          "description": "Collectors initiated by the Profiler for granular profiling.",
+          "sub_concepts": [
+            {
+              "name": "MDM Collector",
+              "type": "configuration",
+              "description": "Integrates with Mobile Device Management platforms to retrieve endpoint details.",
+              "parameters": [
+                {
+                  "name": "mdm_server",
+                  "type": "string",
+                  "constraints": [
+                    "Must be a valid MDM server"
+                  ],
+                  "examples": [
+                    "AirWatch",
+                    "MobileIron"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Connection failure",
+                "Incomplete data retrieval"
+              ]
+            },
+            {
+              "name": "WMI Collector",
+              "type": "configuration",
+              "description": "Uses WMI to collect detailed information about Windows endpoints.",
+              "parameters": [
+                {
+                  "name": "wmi_credentials",
+                  "type": "string",
+                  "constraints": [
+                    "Must be valid domain administrator credentials"
+                  ]
+                },
+                {
+                  "name": "deep_scan",
+                  "type": "boolean",
+                  "default": false,
+                  "constraints": [
+                    "Enabling deep scan increases resource usage"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Invalid credentials",
+                "Scan timeout"
+              ]
+            }
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "Collector accuracy",
+        "Edge case handling (e.g., static IPs)",
+        "Performance impact of active collectors"
+      ],
+      "relationships": [
+        {
+          "related_to": "Profiler Configuration",
+          "type": "extends"
+        }
+      ],
+      "prerequisites": [
+        "Network infrastructure configured for profiling"
+      ],
+      "search_terms": [
+        "endpoint discovery",
+        "passive collectors",
+        "active collectors"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Discover endpoint devices using passive collectors under normal network conditions",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "Network traffic is flowing normally"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Monitor network traffic for endpoint device discovery",
+            "Verify discovered devices are classified correctly"
+          ],
+          "expected_results": [
+            "Passive collector identifies all endpoint devices in the network",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Discover endpoint devices using active collectors with valid configuration",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "Network is accessible"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Initiate active scans to discover endpoint devices",
+            "Verify discovered devices are classified correctly"
+          ],
+          "expected_results": [
+            "Active collector identifies all endpoint devices in the network",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Handle static IPs during endpoint discovery using passive collectors",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "Static IPs are present in the network"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Monitor network traffic for endpoint device discovery",
+            "Verify devices with static IPs are discovered and classified"
+          ],
+          "expected_results": [
+            "Passive collector successfully identifies devices with static IPs",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Handle static IPs during endpoint discovery using active collectors",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "Static IPs are present in the network"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Initiate active scans to discover endpoint devices",
+            "Verify devices with static IPs are discovered and classified"
+          ],
+          "expected_results": [
+            "Active collector successfully identifies devices with static IPs",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Simulate network outage during passive collector operation",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "Network traffic is flowing normally"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Simulate a network outage",
+            "Monitor collector behavior during and after the outage"
+          ],
+          "expected_results": [
+            "Passive collector gracefully handles the network outage",
+            "No incorrect classifications or crashes occur",
+            "Collector resumes normal operation once the network is restored"
+          ]
+        },
+        {
+          "scenario": "Simulate network outage during active collector operation",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "Network is accessible"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Simulate a network outage",
+            "Monitor collector behavior during and after the outage"
+          ],
+          "expected_results": [
+            "Active collector gracefully handles the network outage",
+            "No incorrect classifications or crashes occur",
+            "Collector resumes normal operation once the network is restored"
+          ]
+        },
+        {
+          "scenario": "Test integration between passive and active collectors for endpoint discovery",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Passive and active collectors are configured and enabled",
+            "Network traffic is flowing normally"
+          ],
+          "test_steps": [
+            "Start both passive and active collector services",
+            "Monitor endpoint discovery and classification",
+            "Verify results from both collectors are consistent and complementary"
+          ],
+          "expected_results": [
+            "Passive and active collectors work together seamlessly",
+            "Endpoint devices are discovered and classified accurately",
+            "No duplicate or conflicting classifications occur"
+          ]
+        },
+        {
+          "scenario": "Measure performance impact of active collectors under high network load",
+          "test_type": "performance",
+          "priority": "high",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "High network load is simulated"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Simulate high network load",
+            "Monitor system performance and collector behavior"
+          ],
+          "expected_results": [
+            "Active collector maintains accurate endpoint discovery and classification",
+            "System performance remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Measure performance impact of passive collectors under high network load",
+          "test_type": "performance",
+          "priority": "high",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "High network load is simulated"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Simulate high network load",
+            "Monitor system performance and collector behavior"
+          ],
+          "expected_results": [
+            "Passive collector maintains accurate endpoint discovery and classification",
+            "System performance remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Validate error handling for invalid active collector configuration",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Active collector is configured with invalid parameters"
+          ],
+          "test_steps": [
+            "Attempt to start the active collector service",
+            "Monitor system logs and error messages"
+          ],
+          "expected_results": [
+            "Active collector fails to start with appropriate error messages",
+            "No unexpected behavior or crashes occur"
+          ]
+        }
+      ]
+    },
+    "passive collectors": {
+      "name": "Passive Collectors",
+      "type": "feature",
+      "description": "Collectors triggered by network or timer events.",
+      "sub_concepts": [
+        {
+          "name": "User Agent Collector",
+          "type": "configuration",
+          "description": "Uses HTTP User Agent data to classify devices.",
+          "parameters": [
+            {
+              "name": "user_agent_data",
+              "type": "string",
+              "constraints": [
+                "Must be captured from network traffic"
+              ],
+              "examples": [
+                "iOS device",
+                "Android 5.1"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Incorrect classification",
+            "Missing user agent data"
+          ]
+        },
+        {
+          "name": "DHCP Collector",
+          "type": "configuration",
+          "description": "Uses DHCP fingerprinting for endpoint classification.",
+          "parameters": [
+            {
+              "name": "dhcp_forwarding",
+              "type": "boolean",
+              "default": true,
+              "constraints": [
+                "Switches must forward DHCP packets to PPS appliance"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "DHCP packets not forwarded",
+            "Incorrect fingerprinting"
+          ]
+        },
+        {
+          "name": "Network Infrastructure Device Collector",
+          "type": "configuration",
+          "description": "Fetches ARP/CAM tables from network devices using SNMP or SSH.",
+          "parameters": [
+            {
+              "name": "poll_interval",
+              "type": "integer",
+              "default": 60,
+              "unit": "minutes",
+              "constraints": [
+                "Must be greater than 0"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Polling failure",
+            "Unsupported SNMP/SSH configuration"
+          ]
+        }
+      ],
+      "parent_concept": "Discovering Endpoint Devices"
+    },
+    "active collectors": {
+      "name": "Active Collectors",
+      "type": "feature",
+      "description": "Collectors initiated by the Profiler for granular profiling.",
+      "sub_concepts": [
+        {
+          "name": "MDM Collector",
+          "type": "configuration",
+          "description": "Integrates with Mobile Device Management platforms to retrieve endpoint details.",
+          "parameters": [
+            {
+              "name": "mdm_server",
+              "type": "string",
+              "constraints": [
+                "Must be a valid MDM server"
+              ],
+              "examples": [
+                "AirWatch",
+                "MobileIron"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Connection failure",
+            "Incomplete data retrieval"
+          ]
+        },
+        {
+          "name": "WMI Collector",
+          "type": "configuration",
+          "description": "Uses WMI to collect detailed information about Windows endpoints.",
+          "parameters": [
+            {
+              "name": "wmi_credentials",
+              "type": "string",
+              "constraints": [
+                "Must be valid domain administrator credentials"
+              ]
+            },
+            {
+              "name": "deep_scan",
+              "type": "boolean",
+              "default": false,
+              "constraints": [
+                "Enabling deep scan increases resource usage"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Invalid credentials",
+            "Scan timeout"
+          ]
+        }
+      ],
+      "parent_concept": "Discovering Endpoint Devices"
+    },
+    "endpoint discovery": {
+      "name": "Discovering Endpoint Devices",
+      "type": "feature",
+      "description": "Mechanisms to discover and classify endpoint devices using active and passive collectors.",
+      "sub_concepts": [
+        {
+          "name": "Passive Collectors",
+          "type": "feature",
+          "description": "Collectors triggered by network or timer events.",
+          "sub_concepts": [
+            {
+              "name": "User Agent Collector",
+              "type": "configuration",
+              "description": "Uses HTTP User Agent data to classify devices.",
+              "parameters": [
+                {
+                  "name": "user_agent_data",
+                  "type": "string",
+                  "constraints": [
+                    "Must be captured from network traffic"
+                  ],
+                  "examples": [
+                    "iOS device",
+                    "Android 5.1"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Incorrect classification",
+                "Missing user agent data"
+              ]
+            },
+            {
+              "name": "DHCP Collector",
+              "type": "configuration",
+              "description": "Uses DHCP fingerprinting for endpoint classification.",
+              "parameters": [
+                {
+                  "name": "dhcp_forwarding",
+                  "type": "boolean",
+                  "default": true,
+                  "constraints": [
+                    "Switches must forward DHCP packets to PPS appliance"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "DHCP packets not forwarded",
+                "Incorrect fingerprinting"
+              ]
+            },
+            {
+              "name": "Network Infrastructure Device Collector",
+              "type": "configuration",
+              "description": "Fetches ARP/CAM tables from network devices using SNMP or SSH.",
+              "parameters": [
+                {
+                  "name": "poll_interval",
+                  "type": "integer",
+                  "default": 60,
+                  "unit": "minutes",
+                  "constraints": [
+                    "Must be greater than 0"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Polling failure",
+                "Unsupported SNMP/SSH configuration"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Active Collectors",
+          "type": "feature",
+          "description": "Collectors initiated by the Profiler for granular profiling.",
+          "sub_concepts": [
+            {
+              "name": "MDM Collector",
+              "type": "configuration",
+              "description": "Integrates with Mobile Device Management platforms to retrieve endpoint details.",
+              "parameters": [
+                {
+                  "name": "mdm_server",
+                  "type": "string",
+                  "constraints": [
+                    "Must be a valid MDM server"
+                  ],
+                  "examples": [
+                    "AirWatch",
+                    "MobileIron"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Connection failure",
+                "Incomplete data retrieval"
+              ]
+            },
+            {
+              "name": "WMI Collector",
+              "type": "configuration",
+              "description": "Uses WMI to collect detailed information about Windows endpoints.",
+              "parameters": [
+                {
+                  "name": "wmi_credentials",
+                  "type": "string",
+                  "constraints": [
+                    "Must be valid domain administrator credentials"
+                  ]
+                },
+                {
+                  "name": "deep_scan",
+                  "type": "boolean",
+                  "default": false,
+                  "constraints": [
+                    "Enabling deep scan increases resource usage"
+                  ]
+                }
+              ],
+              "failure_modes": [
+                "Invalid credentials",
+                "Scan timeout"
+              ]
+            }
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "Collector accuracy",
+        "Edge case handling (e.g., static IPs)",
+        "Performance impact of active collectors"
+      ],
+      "relationships": [
+        {
+          "related_to": "Profiler Configuration",
+          "type": "extends"
+        }
+      ],
+      "prerequisites": [
+        "Network infrastructure configured for profiling"
+      ],
+      "search_terms": [
+        "endpoint discovery",
+        "passive collectors",
+        "active collectors"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Discover endpoint devices using passive collectors under normal network conditions",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "Network traffic is flowing normally"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Monitor network traffic for endpoint device discovery",
+            "Verify discovered devices are classified correctly"
+          ],
+          "expected_results": [
+            "Passive collector identifies all endpoint devices in the network",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Discover endpoint devices using active collectors with valid configuration",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "Network is accessible"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Initiate active scans to discover endpoint devices",
+            "Verify discovered devices are classified correctly"
+          ],
+          "expected_results": [
+            "Active collector identifies all endpoint devices in the network",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Handle static IPs during endpoint discovery using passive collectors",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "Static IPs are present in the network"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Monitor network traffic for endpoint device discovery",
+            "Verify devices with static IPs are discovered and classified"
+          ],
+          "expected_results": [
+            "Passive collector successfully identifies devices with static IPs",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Handle static IPs during endpoint discovery using active collectors",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "Static IPs are present in the network"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Initiate active scans to discover endpoint devices",
+            "Verify devices with static IPs are discovered and classified"
+          ],
+          "expected_results": [
+            "Active collector successfully identifies devices with static IPs",
+            "Devices are classified accurately based on predefined rules"
+          ]
+        },
+        {
+          "scenario": "Simulate network outage during passive collector operation",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "Network traffic is flowing normally"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Simulate a network outage",
+            "Monitor collector behavior during and after the outage"
+          ],
+          "expected_results": [
+            "Passive collector gracefully handles the network outage",
+            "No incorrect classifications or crashes occur",
+            "Collector resumes normal operation once the network is restored"
+          ]
+        },
+        {
+          "scenario": "Simulate network outage during active collector operation",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "Network is accessible"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Simulate a network outage",
+            "Monitor collector behavior during and after the outage"
+          ],
+          "expected_results": [
+            "Active collector gracefully handles the network outage",
+            "No incorrect classifications or crashes occur",
+            "Collector resumes normal operation once the network is restored"
+          ]
+        },
+        {
+          "scenario": "Test integration between passive and active collectors for endpoint discovery",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Passive and active collectors are configured and enabled",
+            "Network traffic is flowing normally"
+          ],
+          "test_steps": [
+            "Start both passive and active collector services",
+            "Monitor endpoint discovery and classification",
+            "Verify results from both collectors are consistent and complementary"
+          ],
+          "expected_results": [
+            "Passive and active collectors work together seamlessly",
+            "Endpoint devices are discovered and classified accurately",
+            "No duplicate or conflicting classifications occur"
+          ]
+        },
+        {
+          "scenario": "Measure performance impact of active collectors under high network load",
+          "test_type": "performance",
+          "priority": "high",
+          "preconditions": [
+            "Active collector is configured with valid parameters",
+            "High network load is simulated"
+          ],
+          "test_steps": [
+            "Start the active collector service",
+            "Simulate high network load",
+            "Monitor system performance and collector behavior"
+          ],
+          "expected_results": [
+            "Active collector maintains accurate endpoint discovery and classification",
+            "System performance remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Measure performance impact of passive collectors under high network load",
+          "test_type": "performance",
+          "priority": "high",
+          "preconditions": [
+            "Passive collector is configured and enabled",
+            "High network load is simulated"
+          ],
+          "test_steps": [
+            "Start the passive collector service",
+            "Simulate high network load",
+            "Monitor system performance and collector behavior"
+          ],
+          "expected_results": [
+            "Passive collector maintains accurate endpoint discovery and classification",
+            "System performance remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Validate error handling for invalid active collector configuration",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "Active collector is configured with invalid parameters"
+          ],
+          "test_steps": [
+            "Attempt to start the active collector service",
+            "Monitor system logs and error messages"
+          ],
+          "expected_results": [
+            "Active collector fails to start with appropriate error messages",
+            "No unexpected behavior or crashes occur"
+          ]
+        }
+      ]
+    },
+    "profiler configuration": {
+      "name": "Profiler Configuration",
+      "type": "feature",
+      "description": "Settings and options to configure the Profiler for device discovery and management.",
+      "sub_concepts": [
+        {
+          "name": "Basic Profiler Configuration",
+          "type": "configuration",
+          "description": "Initial setup for the Profiler.",
+          "parameters": [
+            {
+              "name": "profiler_name",
+              "type": "string",
+              "constraints": [
+                "Must be unique"
+              ],
+              "examples": [
+                "Local Profiler"
+              ]
+            },
+            {
+              "name": "snmp_poll_interval",
+              "type": "integer",
+              "default": 60,
+              "unit": "minutes",
+              "constraints": [
+                "Must be greater than 0"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Invalid name",
+            "Polling interval misconfiguration"
+          ]
+        },
+        {
+          "name": "Advanced Profiler Configuration",
+          "type": "configuration",
+          "description": "Advanced settings for granular profiling.",
+          "parameters": [
+            {
+              "name": "wmi_deep_scan",
+              "type": "boolean",
+              "default": false,
+              "constraints": [
+                "Increases resource usage if enabled"
+              ]
+            },
+            {
+              "name": "ssh_authentication_method",
+              "type": "string",
+              "constraints": [
+                "Must be 'password' or 'public_key'"
+              ],
+              "examples": [
+                "password",
+                "public_key"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Invalid authentication method",
+            "Resource overload"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "Configuration validation",
+        "Error handling for invalid inputs",
+        "Performance under advanced settings"
+      ],
+      "relationships": [
+        {
+          "related_to": "Discovering Endpoint Devices",
+          "type": "prerequisite"
+        }
+      ],
+      "prerequisites": [
+        "Deployment and licensing completed"
+      ],
+      "search_terms": [
+        "profiler setup",
+        "basic configuration",
+        "advanced settings"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate basic configuration with valid parameters",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter valid basic configuration parameters (e.g., device discovery interval, network range)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates as expected with the configured parameters"
+          ]
+        },
+        {
+          "scenario": "Validate advanced configuration with valid parameters",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Advanced Profiler Configuration page",
+            "Enter valid advanced configuration parameters (e.g., custom device filters, advanced network settings)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates as expected with the advanced settings"
+          ]
+        },
+        {
+          "scenario": "Validate configuration with boundary values",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter boundary values for configuration parameters (e.g., minimum and maximum values for discovery interval, smallest and largest network range)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates correctly within the boundary values"
+          ]
+        },
+        {
+          "scenario": "Handle invalid inputs for basic configuration",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter invalid values for basic configuration parameters (e.g., negative discovery interval, malformed network range)",
+            "Attempt to save the configuration"
+          ],
+          "expected_results": [
+            "Error messages are displayed for invalid inputs",
+            "Configuration is not saved"
+          ]
+        },
+        {
+          "scenario": "Handle invalid inputs for advanced configuration",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Advanced Profiler Configuration page",
+            "Enter invalid values for advanced configuration parameters (e.g., unsupported device filters, invalid network settings)",
+            "Attempt to save the configuration"
+          ],
+          "expected_results": [
+            "Error messages are displayed for invalid inputs",
+            "Configuration is not saved"
+          ]
+        },
+        {
+          "scenario": "Integration test with device discovery module",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "Device discovery module is operational"
+          ],
+          "test_steps": [
+            "Configure the Profiler with valid parameters for device discovery",
+            "Trigger device discovery",
+            "Verify that discovered devices match the configured parameters"
+          ],
+          "expected_results": [
+            "Devices are discovered as per the configured parameters",
+            "No unexpected devices are discovered"
+          ]
+        },
+        {
+          "scenario": "Performance test under advanced configuration settings",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Configure the Profiler with complex advanced settings (e.g., multiple custom filters, large network ranges)",
+            "Trigger device discovery and management processes",
+            "Measure the time taken and resource utilization"
+          ],
+          "expected_results": [
+            "Profiler performs within acceptable time limits",
+            "Resource utilization remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Edge case test with maximum number of devices in discovery",
+          "test_type": "edge",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Configure the Profiler to discover the maximum number of devices supported",
+            "Trigger device discovery",
+            "Verify the system behavior and discovered devices"
+          ],
+          "expected_results": [
+            "Profiler successfully discovers the maximum number of devices",
+            "System remains stable and responsive"
+          ]
+        }
+      ]
+    },
+    "basic profiler configuration": {
+      "name": "Basic Profiler Configuration",
+      "type": "configuration",
+      "description": "Initial setup for the Profiler.",
+      "parameters": [
+        {
+          "name": "profiler_name",
+          "type": "string",
+          "constraints": [
+            "Must be unique"
+          ],
+          "examples": [
+            "Local Profiler"
+          ]
+        },
+        {
+          "name": "snmp_poll_interval",
+          "type": "integer",
+          "default": 60,
+          "unit": "minutes",
+          "constraints": [
+            "Must be greater than 0"
+          ]
+        }
+      ],
+      "failure_modes": [
+        "Invalid name",
+        "Polling interval misconfiguration"
+      ],
+      "parent_concept": "Profiler Configuration"
+    },
+    "advanced profiler configuration": {
+      "name": "Advanced Profiler Configuration",
+      "type": "configuration",
+      "description": "Advanced settings for granular profiling.",
+      "parameters": [
+        {
+          "name": "wmi_deep_scan",
+          "type": "boolean",
+          "default": false,
+          "constraints": [
+            "Increases resource usage if enabled"
+          ]
+        },
+        {
+          "name": "ssh_authentication_method",
+          "type": "string",
+          "constraints": [
+            "Must be 'password' or 'public_key'"
+          ],
+          "examples": [
+            "password",
+            "public_key"
+          ]
+        }
+      ],
+      "failure_modes": [
+        "Invalid authentication method",
+        "Resource overload"
+      ],
+      "parent_concept": "Profiler Configuration"
+    },
+    "basic configuration": {
+      "name": "Profiler Configuration",
+      "type": "feature",
+      "description": "Settings and options to configure the Profiler for device discovery and management.",
+      "sub_concepts": [
+        {
+          "name": "Basic Profiler Configuration",
+          "type": "configuration",
+          "description": "Initial setup for the Profiler.",
+          "parameters": [
+            {
+              "name": "profiler_name",
+              "type": "string",
+              "constraints": [
+                "Must be unique"
+              ],
+              "examples": [
+                "Local Profiler"
+              ]
+            },
+            {
+              "name": "snmp_poll_interval",
+              "type": "integer",
+              "default": 60,
+              "unit": "minutes",
+              "constraints": [
+                "Must be greater than 0"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Invalid name",
+            "Polling interval misconfiguration"
+          ]
+        },
+        {
+          "name": "Advanced Profiler Configuration",
+          "type": "configuration",
+          "description": "Advanced settings for granular profiling.",
+          "parameters": [
+            {
+              "name": "wmi_deep_scan",
+              "type": "boolean",
+              "default": false,
+              "constraints": [
+                "Increases resource usage if enabled"
+              ]
+            },
+            {
+              "name": "ssh_authentication_method",
+              "type": "string",
+              "constraints": [
+                "Must be 'password' or 'public_key'"
+              ],
+              "examples": [
+                "password",
+                "public_key"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Invalid authentication method",
+            "Resource overload"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "Configuration validation",
+        "Error handling for invalid inputs",
+        "Performance under advanced settings"
+      ],
+      "relationships": [
+        {
+          "related_to": "Discovering Endpoint Devices",
+          "type": "prerequisite"
+        }
+      ],
+      "prerequisites": [
+        "Deployment and licensing completed"
+      ],
+      "search_terms": [
+        "profiler setup",
+        "basic configuration",
+        "advanced settings"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate basic configuration with valid parameters",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter valid basic configuration parameters (e.g., device discovery interval, network range)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates as expected with the configured parameters"
+          ]
+        },
+        {
+          "scenario": "Validate advanced configuration with valid parameters",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Advanced Profiler Configuration page",
+            "Enter valid advanced configuration parameters (e.g., custom device filters, advanced network settings)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates as expected with the advanced settings"
+          ]
+        },
+        {
+          "scenario": "Validate configuration with boundary values",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter boundary values for configuration parameters (e.g., minimum and maximum values for discovery interval, smallest and largest network range)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates correctly within the boundary values"
+          ]
+        },
+        {
+          "scenario": "Handle invalid inputs for basic configuration",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter invalid values for basic configuration parameters (e.g., negative discovery interval, malformed network range)",
+            "Attempt to save the configuration"
+          ],
+          "expected_results": [
+            "Error messages are displayed for invalid inputs",
+            "Configuration is not saved"
+          ]
+        },
+        {
+          "scenario": "Handle invalid inputs for advanced configuration",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Advanced Profiler Configuration page",
+            "Enter invalid values for advanced configuration parameters (e.g., unsupported device filters, invalid network settings)",
+            "Attempt to save the configuration"
+          ],
+          "expected_results": [
+            "Error messages are displayed for invalid inputs",
+            "Configuration is not saved"
+          ]
+        },
+        {
+          "scenario": "Integration test with device discovery module",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "Device discovery module is operational"
+          ],
+          "test_steps": [
+            "Configure the Profiler with valid parameters for device discovery",
+            "Trigger device discovery",
+            "Verify that discovered devices match the configured parameters"
+          ],
+          "expected_results": [
+            "Devices are discovered as per the configured parameters",
+            "No unexpected devices are discovered"
+          ]
+        },
+        {
+          "scenario": "Performance test under advanced configuration settings",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Configure the Profiler with complex advanced settings (e.g., multiple custom filters, large network ranges)",
+            "Trigger device discovery and management processes",
+            "Measure the time taken and resource utilization"
+          ],
+          "expected_results": [
+            "Profiler performs within acceptable time limits",
+            "Resource utilization remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Edge case test with maximum number of devices in discovery",
+          "test_type": "edge",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Configure the Profiler to discover the maximum number of devices supported",
+            "Trigger device discovery",
+            "Verify the system behavior and discovered devices"
+          ],
+          "expected_results": [
+            "Profiler successfully discovers the maximum number of devices",
+            "System remains stable and responsive"
+          ]
+        }
+      ]
+    },
+    "advanced settings": {
+      "name": "Profiler Configuration",
+      "type": "feature",
+      "description": "Settings and options to configure the Profiler for device discovery and management.",
+      "sub_concepts": [
+        {
+          "name": "Basic Profiler Configuration",
+          "type": "configuration",
+          "description": "Initial setup for the Profiler.",
+          "parameters": [
+            {
+              "name": "profiler_name",
+              "type": "string",
+              "constraints": [
+                "Must be unique"
+              ],
+              "examples": [
+                "Local Profiler"
+              ]
+            },
+            {
+              "name": "snmp_poll_interval",
+              "type": "integer",
+              "default": 60,
+              "unit": "minutes",
+              "constraints": [
+                "Must be greater than 0"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Invalid name",
+            "Polling interval misconfiguration"
+          ]
+        },
+        {
+          "name": "Advanced Profiler Configuration",
+          "type": "configuration",
+          "description": "Advanced settings for granular profiling.",
+          "parameters": [
+            {
+              "name": "wmi_deep_scan",
+              "type": "boolean",
+              "default": false,
+              "constraints": [
+                "Increases resource usage if enabled"
+              ]
+            },
+            {
+              "name": "ssh_authentication_method",
+              "type": "string",
+              "constraints": [
+                "Must be 'password' or 'public_key'"
+              ],
+              "examples": [
+                "password",
+                "public_key"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Invalid authentication method",
+            "Resource overload"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "Configuration validation",
+        "Error handling for invalid inputs",
+        "Performance under advanced settings"
+      ],
+      "relationships": [
+        {
+          "related_to": "Discovering Endpoint Devices",
+          "type": "prerequisite"
+        }
+      ],
+      "prerequisites": [
+        "Deployment and licensing completed"
+      ],
+      "search_terms": [
+        "profiler setup",
+        "basic configuration",
+        "advanced settings"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate basic configuration with valid parameters",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter valid basic configuration parameters (e.g., device discovery interval, network range)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates as expected with the configured parameters"
+          ]
+        },
+        {
+          "scenario": "Validate advanced configuration with valid parameters",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Advanced Profiler Configuration page",
+            "Enter valid advanced configuration parameters (e.g., custom device filters, advanced network settings)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates as expected with the advanced settings"
+          ]
+        },
+        {
+          "scenario": "Validate configuration with boundary values",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter boundary values for configuration parameters (e.g., minimum and maximum values for discovery interval, smallest and largest network range)",
+            "Save the configuration"
+          ],
+          "expected_results": [
+            "Configuration is saved successfully",
+            "Profiler operates correctly within the boundary values"
+          ]
+        },
+        {
+          "scenario": "Handle invalid inputs for basic configuration",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Profiler Configuration page",
+            "Enter invalid values for basic configuration parameters (e.g., negative discovery interval, malformed network range)",
+            "Attempt to save the configuration"
+          ],
+          "expected_results": [
+            "Error messages are displayed for invalid inputs",
+            "Configuration is not saved"
+          ]
+        },
+        {
+          "scenario": "Handle invalid inputs for advanced configuration",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Navigate to the Advanced Profiler Configuration page",
+            "Enter invalid values for advanced configuration parameters (e.g., unsupported device filters, invalid network settings)",
+            "Attempt to save the configuration"
+          ],
+          "expected_results": [
+            "Error messages are displayed for invalid inputs",
+            "Configuration is not saved"
+          ]
+        },
+        {
+          "scenario": "Integration test with device discovery module",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "Device discovery module is operational"
+          ],
+          "test_steps": [
+            "Configure the Profiler with valid parameters for device discovery",
+            "Trigger device discovery",
+            "Verify that discovered devices match the configured parameters"
+          ],
+          "expected_results": [
+            "Devices are discovered as per the configured parameters",
+            "No unexpected devices are discovered"
+          ]
+        },
+        {
+          "scenario": "Performance test under advanced configuration settings",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Configure the Profiler with complex advanced settings (e.g., multiple custom filters, large network ranges)",
+            "Trigger device discovery and management processes",
+            "Measure the time taken and resource utilization"
+          ],
+          "expected_results": [
+            "Profiler performs within acceptable time limits",
+            "Resource utilization remains within acceptable thresholds"
+          ]
+        },
+        {
+          "scenario": "Edge case test with maximum number of devices in discovery",
+          "test_type": "edge",
+          "priority": "medium",
+          "preconditions": [
+            "Profiler is installed and accessible",
+            "User has necessary permissions to configure the Profiler"
+          ],
+          "test_steps": [
+            "Configure the Profiler to discover the maximum number of devices supported",
+            "Trigger device discovery",
+            "Verify the system behavior and discovered devices"
+          ],
+          "expected_results": [
+            "Profiler successfully discovers the maximum number of devices",
+            "System remains stable and responsive"
+          ]
+        }
+      ]
+    },
+    "profiler reports": {
+      "name": "Profiler Reports",
+      "type": "feature",
+      "description": "Reporting and dashboard features for device profiling.",
+      "sub_concepts": [
+        {
+          "name": "Dashboard",
+          "type": "feature",
+          "description": "Displays an overview of device profiling status.",
+          "parameters": [
+            {
+              "name": "refresh_interval",
+              "type": "integer",
+              "default": 5,
+              "unit": "minutes",
+              "constraints": [
+                "Must be between 1-60"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Incorrect data display",
+            "Refresh failure"
+          ]
+        },
+        {
+          "name": "Report Scheduling",
+          "type": "configuration",
+          "description": "Schedules email notifications for profiling reports.",
+          "parameters": [
+            {
+              "name": "email_addresses",
+              "type": "list",
+              "constraints": [
+                "Must be valid email addresses"
+              ]
+            },
+            {
+              "name": "report_interval",
+              "type": "string",
+              "constraints": [
+                "Must be 'daily', 'weekly', or 'monthly'"
+              ],
+              "examples": [
+                "daily",
+                "weekly",
+                "monthly"
+              ]
+            }
+          ],
+          "failure_modes": [
+            "Email delivery failure",
+            "Incorrect scheduling"
+          ]
+        }
+      ],
+      "test_dimensions": [
+        "Report accuracy",
+        "Email notification reliability",
+        "Dashboard refresh performance"
+      ],
+      "relationships": [
+        {
+          "related_to": "Profiler Configuration",
+          "type": "extends"
+        }
+      ],
+      "prerequisites": [
+        "Profiler configured and operational"
+      ],
+      "search_terms": [
+        "profiler reports",
+        "dashboard",
+        "report scheduling"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Validate dashboard displays accurate profiling data",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "Device profiling data exists in the system",
+            "User has access to the dashboard"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Verify the displayed profiling data matches the database records"
+          ],
+          "expected_results": [
+            "Dashboard displays accurate profiling data as per the database records"
+          ]
+        },
+        {
+          "scenario": "Verify report scheduling with boundary date values",
+          "test_type": "boundary",
+          "priority": "medium",
+          "preconditions": [
+            "User has access to the report scheduling feature"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Schedule a report with the earliest possible date",
+            "Schedule a report with the latest possible date"
+          ],
+          "expected_results": [
+            "Report is successfully scheduled with the earliest possible date",
+            "Report is successfully scheduled with the latest possible date"
+          ]
+        },
+        {
+          "scenario": "Handle invalid email address for report notifications",
+          "test_type": "negative",
+          "priority": "high",
+          "preconditions": [
+            "User has access to the report scheduling feature"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Enter an invalid email address for notifications",
+            "Attempt to schedule the report"
+          ],
+          "expected_results": [
+            "System displays an error message indicating the email address is invalid"
+          ]
+        },
+        {
+          "scenario": "Verify integration between dashboard and report scheduling",
+          "test_type": "integration",
+          "priority": "high",
+          "preconditions": [
+            "Device profiling data exists in the system",
+            "User has access to both dashboard and report scheduling features"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Schedule a report based on the displayed profiling data",
+            "Verify the scheduled report reflects the same data as the dashboard"
+          ],
+          "expected_results": [
+            "Scheduled report matches the profiling data displayed on the dashboard"
+          ]
+        },
+        {
+          "scenario": "Test dashboard refresh performance under high data load",
+          "test_type": "performance",
+          "priority": "high",
+          "preconditions": [
+            "System contains a large volume of profiling data",
+            "User has access to the dashboard"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Trigger a manual refresh of the dashboard",
+            "Measure the time taken for the refresh to complete"
+          ],
+          "expected_results": [
+            "Dashboard refresh completes within the acceptable performance threshold"
+          ]
+        },
+        {
+          "scenario": "Validate report scheduling with missing required fields",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "User has access to the report scheduling feature"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Attempt to schedule a report without filling in required fields"
+          ],
+          "expected_results": [
+            "System prevents scheduling and displays error messages for missing required fields"
+          ]
+        },
+        {
+          "scenario": "Verify email notification reliability for scheduled reports",
+          "test_type": "positive",
+          "priority": "high",
+          "preconditions": [
+            "User has scheduled a report with a valid email address"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Schedule a report with a valid email address",
+            "Wait for the report to be generated and email notification to be sent"
+          ],
+          "expected_results": [
+            "Email notification is sent successfully to the provided email address"
+          ]
+        },
+        {
+          "scenario": "Test dashboard refresh performance with minimal data load",
+          "test_type": "performance",
+          "priority": "medium",
+          "preconditions": [
+            "System contains minimal profiling data",
+            "User has access to the dashboard"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Trigger a manual refresh of the dashboard",
+            "Measure the time taken for the refresh to complete"
+          ],
+          "expected_results": [
+            "Dashboard refresh completes quickly under minimal data load"
+          ]
+        },
+        {
+          "scenario": "Handle scheduling reports with unsupported file formats",
+          "test_type": "negative",
+          "priority": "medium",
+          "preconditions": [
+            "User has access to the report scheduling feature"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Report Scheduling section",
+            "Attempt to schedule a report with an unsupported file format"
+          ],
+          "expected_results": [
+            "System displays an error message indicating the file format is unsupported"
+          ]
+        },
+        {
+          "scenario": "Verify dashboard data consistency after multiple refreshes",
+          "test_type": "edge",
+          "priority": "high",
+          "preconditions": [
+            "Device profiling data exists in the system",
+            "User has access to the dashboard"
+          ],
+          "test_steps": [
+            "Log in to the application",
+            "Navigate to the Profiler Dashboard",
+            "Trigger multiple manual refreshes of the dashboard",
+            "Verify the data remains consistent across all refreshes"
+          ],
+          "expected_results": [
+            "Dashboard data remains consistent after multiple refreshes"
+          ]
+        }
+      ]
+    },
+    "dashboard": {
+      "name": "Dashboard",
+      "type": "feature",
+      "description": "Displays an overview of device profiling status.",
+      "parameters": [
+        {
+          "name": "refresh_interval",
+          "type": "integer",
+          "default": 5,
+          "unit": "minutes",
+          "constraints": [
+            "Must be between 1-60"
+          ]
+        }
+      ],
+      "failure_modes": [
+        "Incorrect data display",
+        "Refresh failure"
+      ],
+      "parent_concept": "Profiler Reports"
+    },
+    "report scheduling": {
+      "name": "Report Scheduling",
+      "type": "configuration",
+      "description": "Schedules email notifications for profiling reports.",
+      "parameters": [
+        {
+          "name": "email_addresses",
+          "type": "list",
+          "constraints": [
+            "Must be valid email addresses"
+          ]
+        },
+        {
+          "name": "report_interval",
+          "type": "string",
+          "constraints": [
+            "Must be 'daily', 'weekly', or 'monthly'"
+          ],
+          "examples": [
+            "daily",
+            "weekly",
+            "monthly"
+          ]
+        }
+      ],
+      "failure_modes": [
+        "Email delivery failure",
+        "Incorrect scheduling"
+      ],
+      "parent_concept": "Profiler Reports"
+    }
+  },
+  "metadata": {
+    "total_concepts": 4,
+    "total_indexed_terms": 17
+  }
+}

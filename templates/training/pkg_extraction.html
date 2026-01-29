@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}PKG Extraction - Profiler Agentic Automation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-project-diagram"></i> PKG Extraction</h1>
+        <p>Extract Product Knowledge Graph with exact field names, ranges, constraints, and workflows</p>
+    </div>
+
+    <div class="info-box" style="background: #ecfdf5; border-left: 4px solid #10b981;">
+        <div style="display: flex; align-items: start; gap: 1rem;">
+            <i class="fas fa-info-circle" style="color: #10b981; font-size: 1.5rem; margin-top: 0.2rem;"></i>
+            <div>
+                <h3 style="color: #10b981; margin: 0 0 0.5rem 0;">What is PKG Extraction?</h3>
+                <p style="margin: 0 0 0.5rem 0;">
+                    PKG (Product Knowledge Graph) extracts <strong>structured product knowledge</strong> from documentation:
+                </p>
+                <ul style="margin: 0; padding-left: 1.5rem;">
+                    <li><strong>Feature Discovery:</strong> Identifies all features across the entire document (even scattered across pages)</li>
+                    <li><strong>Exact Field Names:</strong> Extracts precise input control names, types, ranges, defaults</li>
+                    <li><strong>Constraints & Rules:</strong> Captures business rules, prerequisites, dependencies</li>
+                    <li><strong>Image Analysis:</strong> Uses GPT-4o Vision to extract UI elements from screenshots</li>
+                    <li><strong>Workflows:</strong> Maps step-by-step procedures from documentation</li>
+                </ul>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #059669;">
+                    <strong>Priority in Test Generation:</strong> PKG = Primary Source → Domain Expert = Secondary → RAG = Tertiary
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="extraction-section">
+        <h2>Select Document for PKG Extraction</h2>
+
+        {% if documents %}
+        <div class="document-selection">
+            <label for="document-select">Document:</label>
+            <select id="document-select" class="form-control">
+                <option value="">Select a document...</option>
+                {% for doc in documents %}
+                <option value="{{ doc.doc_id }}"
+                        data-name="{{ doc.name }}"
+                        data-pages="{{ doc.pages }}"
+                        data-path="{{ doc.path }}">
+                    {{ doc.name }} ({{ doc.pages }} pages)
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="extraction-config" id="extraction-config" style="display: none;">
+            <h3>Extraction Configuration</h3>
+
+            <div class="form-group">
+                <label for="document-name">Document Name (for organization):</label>
+                <input type="text" id="document-name" class="form-control"
+                       placeholder="e.g., admin_guide, api_guide, user_guide">
+                <small>This creates data/pkg/<strong>document_name</strong>/feature_understanding.json</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start-page">Start Page:</label>
+                    <input type="number" id="start-page" class="form-control" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="end-page">End Page:</label>
+                    <input type="number" id="end-page" class="form-control" placeholder="Auto (all pages)">
+                </div>
+            </div>
+
+            <button id="extract-btn" class="btn btn-primary" style="background: #10b981; border-color: #10b981;">
+                <i class="fas fa-sitemap"></i> Extract PKG
+            </button>
+        </div>
+        {% else %}
+        <div class="info-box" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+            <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+            <p>No documents available. Please <a href="{{ url_for('ingest_docs_page') }}">upload documents</a> first.</p>
+        </div>
+        {% endif %}
+
+        <div id="extraction-progress" style="display: none;">
+            <h3>Extraction Progress</h3>
+            <div class="progress-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p id="progress-message">Extracting PKG...</p>
+            </div>
+        </div>
+
+        <div id="extraction-results" style="display: none;">
+            <h3>Extraction Results</h3>
+            <div class="results-summary" id="results-summary"></div>
+
+            <h4>Extracted Features</h4>
+            <div id="features-list" class="features-grid"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.extraction-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.document-selection {
+    margin-bottom: 2rem;
+}
+
+.document-selection label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.extraction-config {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 6px;
+    margin-top: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-group small {
+    display: block;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.progress-spinner {
+    text-align: center;
+    padding: 2rem;
+}
+
+.progress-spinner i {
+    font-size: 3rem;
+    color: #10b981;
+}
+
+.progress-spinner p {
+    margin-top: 1rem;
+    color: #6b7280;
+}
+
+.results-summary {
+    background: #ecfdf5;
+    border: 1px solid #10b981;
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.feature-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.feature-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: #10b981;
+    font-size: 1rem;
+}
+
+.feature-card .feature-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.feature-card .feature-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+</style>
+
+<script>
+document.getElementById('document-select').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const config = document.getElementById('extraction-config');
+
+    if (this.value) {
+        config.style.display = 'block';
+
+        // Set document name from filename (remove extension)
+        const fileName = selected.getAttribute('data-name');
+        const docName = fileName.replace(/\.[^/.]+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        document.getElementById('document-name').value = docName;
+
+        // Set end page
+        const totalPages = selected.getAttribute('data-pages');
+        if (totalPages && totalPages !== 'N/A') {
+            document.getElementById('end-page').value = totalPages;
+        }
+    } else {
+        config.style.display = 'none';
+    }
+});
+
+document.getElementById('extract-btn').addEventListener('click', async function() {
+    const docId = document.getElementById('document-select').value;
+    const documentName = document.getElementById('document-name').value;
+    const startPage = parseInt(document.getElementById('start-page').value);
+    const endPage = document.getElementById('end-page').value ? parseInt(document.getElementById('end-page').value) : null;
+
+    if (!docId) {
+        alert('Please select a document');
+        return;
+    }
+
+    if (!documentName) {
+        alert('Please enter a document name');
+        return;
+    }
+
+    // Show progress
+    document.getElementById('extraction-config').style.display = 'none';
+    document.getElementById('extraction-progress').style.display = 'block';
+    document.getElementById('extraction-results').style.display = 'none';
+
+    try {
+        const response = await fetch('/api/extract-pkg', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                doc_id: docId,
+                document_name: documentName,
+                start_page: startPage,
+                end_page: endPage
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Show results
+            document.getElementById('extraction-progress').style.display = 'none';
+            document.getElementById('extraction-results').style.display = 'block';
+
+            // Summary
+            document.getElementById('results-summary').innerHTML = `
+                <h4 style="margin: 0 0 1rem 0; color: #10b981;">✓ PKG Extraction Successful</h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <div>
+                        <strong>${result.features_count}</strong>
+                        <p style="margin: 0; color: #6b7280;">Features Identified</p>
+                    </div>
+                    <div>
+                        <strong>${result.images_analyzed}</strong>
+                        <p style="margin: 0; color: #6b7280;">Images Analyzed</p>
+                    </div>
+                    <div>
+                        <strong>${result.pkg_files.length}</strong>
+                        <p style="margin: 0; color: #6b7280;">PKG Files Created</p>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; font-size: 0.9rem;">
+                    <i class="fas fa-folder"></i> Output: <code>${result.output_dir}</code>
+                </p>
+            `;
+
+            // Features list
+            const featuresList = document.getElementById('features-list');
+            featuresList.innerHTML = result.pkg_files.map(pkg => `
+                <div class="feature-card">
+                    <h4><i class="fas fa-check-circle"></i> ${pkg.feature_name}</h4>
+                    <div class="feature-stats">
+                        <span><i class="fas fa-list"></i> ${pkg.inputs} inputs</span>
+                        <span><i class="fas fa-shield-alt"></i> ${pkg.constraints} constraints</span>
+                        <span><i class="fas fa-project-diagram"></i> ${pkg.workflows} workflows</span>
+                    </div>
+                </div>
+            `).join('');
+
+        } else {
+            alert('Error: ' + result.error);
+            document.getElementById('extraction-progress').style.display = 'none';
+            document.getElementById('extraction-config').style.display = 'block';
+        }
+
+    } catch (error) {
+        console.error('Extraction error:', error);
+        alert('Error during extraction: ' + error.message);
+        document.getElementById('extraction-progress').style.display = 'none';
+        document.getElementById('extraction-config').style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

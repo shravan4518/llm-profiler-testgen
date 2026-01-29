@@ -1,0 +1,135 @@
+{
+  "feature_id": "ssh_collector",
+  "feature_name": "SSH Collector",
+  "page_locations": [
+    3,
+    7,
+    8,
+    15
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler Configuration",
+      "navigation_path": "Main Menu > Profiler > Collectors > SSH Collector",
+      "page_reference": "Page 3"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "SSH Server Address",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid IP address or hostname",
+      "default_value": "None",
+      "help_text": "Enter the IP address or hostname of the SSH server.",
+      "location": "SSH Collector Configuration",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Port",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-65535",
+      "default_value": "22",
+      "help_text": "Specify the port number for the SSH connection.",
+      "location": "SSH Collector Configuration",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Authentication Method",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "Password, Public Key",
+      "default_value": "Password",
+      "help_text": "Select the authentication method for the SSH connection.",
+      "location": "SSH Collector Configuration",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Username",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid username",
+      "default_value": "None",
+      "help_text": "Enter the username for SSH authentication.",
+      "location": "SSH Collector Configuration",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Password",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid password",
+      "default_value": "None",
+      "help_text": "Enter the password for SSH authentication (if using Password method).",
+      "location": "SSH Collector Configuration",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Private Key",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid private key file path",
+      "default_value": "None",
+      "help_text": "Provide the path to the private key file (if using Public Key method).",
+      "location": "SSH Collector Configuration",
+      "page_reference": "Page 3"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Test Connection",
+      "description": "Tests the connection to the configured SSH server.",
+      "trigger": "Button click",
+      "page_reference": "Page 3"
+    },
+    {
+      "action_name": "Save Configuration",
+      "description": "Saves the SSH Collector configuration.",
+      "trigger": "Button click",
+      "page_reference": "Page 3"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "SSH Server Address must be a valid IP address or hostname.",
+      "page_reference": "Page 3"
+    },
+    {
+      "constraint": "Port must be an integer between 1 and 65535.",
+      "page_reference": "Page 3"
+    },
+    {
+      "constraint": "Authentication Method must be either Password or Public Key.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "SSH_CONN_FAIL",
+      "description": "Failed to connect to the SSH server. Verify the server address, port, and authentication details.",
+      "page_reference": "Page 3"
+    },
+    {
+      "error_code": "INVALID_AUTH",
+      "description": "Authentication failed. Check the username, password, or private key.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_ssh_collector",
+      "steps": [
+        "Navigate to Main Menu > Profiler > Collectors.",
+        "Select 'SSH Collector' from the list.",
+        "Enter the SSH Server Address, Port, and Authentication Method.",
+        "Provide Username and Password or Private Key based on the selected Authentication Method.",
+        "Click 'Test Connection' to verify the configuration.",
+        "Click 'Save Configuration' to apply the settings."
+      ],
+      "visual_representation": "Not available in the provided documentation.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "image_insights": []
+}

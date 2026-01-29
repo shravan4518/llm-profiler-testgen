@@ -1,0 +1,176 @@
+{
+  "feature_id": "device_discovery_report_table",
+  "feature_name": "Device Discovery Report Table",
+  "ui_surfaces": [
+    {
+      "screen_id": "device_discovery_report",
+      "screen_name": "Device Discovery Report Table",
+      "navigation_path": "System -> Reports -> Device Discovery",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 24"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "records_per_page",
+      "name": "Records per page",
+      "control_type": "dropdown",
+      "data_type": "integer",
+      "range": "1-100",
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Allows to customize the number of records displayed in the page.",
+      "location": "Device Discovery Report Table",
+      "page_reference": "Page 26"
+    },
+    {
+      "input_id": "search",
+      "name": "Search",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Basic Search or Advanced Search expressions",
+      "required": false,
+      "visible_when": null,
+      "help_text": "Allows to search devices based on the MAC Address, IP Address, or other device attributes.",
+      "location": "Device Discovery Report Table",
+      "page_reference": "Page 26"
+    },
+    {
+      "input_id": "time_bound_approval",
+      "name": "Time-Bound Approve Selected Devices",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Requires start date, end date, and time zone.",
+      "required": false,
+      "visible_when": null,
+      "help_text": "Allows to select and approve devices for a specified time period.",
+      "location": "Device Discovery Report Table",
+      "page_reference": "Page 26"
+    },
+    {
+      "input_id": "add_device",
+      "name": "Add Device",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Requires MAC Address, Manufacturer, Operating system, category, IP Address, and Profiler Name.",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Allows to add new devices and override automatic updates by the profiler.",
+      "location": "Device Discovery Report Table",
+      "page_reference": "Page 26"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "approve_devices",
+      "button_text": "Approve/Unapprove selected devices",
+      "type": "custom",
+      "enabled_when": "Devices are selected",
+      "description": "Allows to manually approve or unapprove the selected devices.",
+      "page_reference": "Page 26"
+    },
+    {
+      "action_id": "download_csv",
+      "button_text": "Download Report in CSV format",
+      "type": "custom",
+      "enabled_when": "Report is generated",
+      "description": "Allows to download and save the report in CSV format.",
+      "page_reference": "Page 26"
+    },
+    {
+      "action_id": "download_pdf",
+      "button_text": "Download Report in PDF format",
+      "type": "custom",
+      "enabled_when": "Report is generated",
+      "description": "Allows to download and save the report in PDF format.",
+      "page_reference": "Page 26"
+    },
+    {
+      "action_id": "delete_devices",
+      "button_text": "Delete Selected",
+      "type": "delete",
+      "enabled_when": "Devices are selected",
+      "description": "Allows to delete the selected devices.",
+      "page_reference": "Page 26"
+    },
+    {
+      "action_id": "purge_devices",
+      "button_text": "Purge Aged Out Devices",
+      "type": "custom",
+      "enabled_when": "Devices are older than the specified interval",
+      "description": "Allows to manually purge devices older than the specified interval.",
+      "page_reference": "Page 26"
+    }
+  ],
+  "constraints": [
+    "Unapproved devices are indicated in Red.",
+    "Time-Bound Approved devices are indicated in Yellow.",
+    "Maximum number of entries to download as PDF is 30K.",
+    "Scheduled purging of devices happens automatically."
+  ],
+  "errors": [
+    {
+      "error_id": "ERR_INVALID_TIME_BOUND",
+      "message": "Invalid time-bound approval settings.",
+      "trigger": "Incorrect start date, end date, or time zone.",
+      "page_reference": "Page 26"
+    },
+    {
+      "error_id": "ERR_INVALID_DEVICE_ADDITION",
+      "message": "Failed to add device.",
+      "trigger": "Missing required attributes like MAC Address or Profiler Name.",
+      "page_reference": "Page 26"
+    }
+  ],
+  "states": [
+    "Unapproved",
+    "Approved",
+    "Time-Bound Approved"
+  ],
+  "state_transitions": [
+    {
+      "from": "Unapproved",
+      "to": "Approved",
+      "trigger": "Manual approval by administrator"
+    },
+    {
+      "from": "Unapproved",
+      "to": "Time-Bound Approved",
+      "trigger": "Time-bound approval settings applied"
+    },
+    {
+      "from": "Time-Bound Approved",
+      "to": "Unapproved",
+      "trigger": "Time-bound approval period ends"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "device_discovery_workflow",
+      "name": "Device Discovery Workflow",
+      "steps": [
+        "Navigate to Device Discovery Report Table.",
+        "Search for devices using filters.",
+        "Approve, unapprove, or time-bound approve devices.",
+        "Download reports in CSV or PDF format."
+      ],
+      "prerequisites": [
+        "Devices must be discovered in the network."
+      ],
+      "page_reference": "Page 24"
+    }
+  ]
+}

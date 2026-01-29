@@ -138,13 +138,9 @@ function deleteDocument(docId, row) {
         }
     })
     .catch(error => {
+        console.error('Error deleting document:', error);
         showToast('Error deleting document: ' + error.message, 'error');
     });
-}
-
-function showToast(message, type) {
-    console.log(`[${type.toUpperCase()}] ${message}`);
-    alert(message);
 }
 </script>
 {% endblock %}

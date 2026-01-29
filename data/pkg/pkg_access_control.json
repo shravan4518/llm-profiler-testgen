@@ -1,0 +1,121 @@
+{
+  "feature_id": "access_control",
+  "feature_name": "Access Control",
+  "page_locations": [
+    29
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Email Notifications Configuration",
+      "navigation_path": "System > Configuration > Notification > Email Notification",
+      "page_reference": "Page 29"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Email addresses",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "N/A",
+      "default_value": "None",
+      "help_text": "Enter email addresses separated by semicolon.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Email Schedule",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "daily, weekly, monthly",
+      "default_value": "None",
+      "help_text": "Select the interval to generate and send the report email notifications.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Generate Full Report",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": "true/false",
+      "default_value": "false",
+      "help_text": "Check to generate and send a complete report every time. If unchecked, only incremental changes are included.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Save Changes",
+      "control_type": "button",
+      "data_type": "N/A",
+      "range": "N/A",
+      "default_value": "N/A",
+      "help_text": "Click to save the changes made to the email notification settings.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Reset",
+      "control_type": "button",
+      "data_type": "N/A",
+      "range": "N/A",
+      "default_value": "N/A",
+      "help_text": "Click to reset the email notification settings to their previous state.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Test Settings",
+      "control_type": "button",
+      "data_type": "N/A",
+      "range": "N/A",
+      "default_value": "N/A",
+      "help_text": "Click to test the email notification settings.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    }
+  ],
+  "actions": [
+    "Configure email notification settings for reports.",
+    "Set the schedule for report email notifications (daily, weekly, monthly).",
+    "Enable or disable the generation of full reports."
+  ],
+  "constraints": [
+    "Email addresses must be separated by a semicolon.",
+    "At least one email address must be provided to enable notifications.",
+    "The schedule must be selected from the available options (daily, weekly, monthly)."
+  ],
+  "errors": [
+    {
+      "error_code": "INVALID_EMAIL_FORMAT",
+      "description": "The email address entered is not in a valid format."
+    },
+    {
+      "error_code": "MISSING_EMAIL_ADDRESS",
+      "description": "No email address provided. At least one email address is required."
+    },
+    {
+      "error_code": "INVALID_SCHEDULE_SELECTION",
+      "description": "The selected schedule is not valid. Please choose from daily, weekly, or monthly."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_email_notifications",
+      "steps": [
+        "Navigate to System > Configuration > Notification > Email Notification.",
+        "Choose to use emails from General Settings or enter custom email addresses.",
+        "Select the interval for email notifications (daily, weekly, monthly).",
+        "Optionally, enable the 'Generate Full Report' checkbox.",
+        "Click 'Save Changes' to apply the settings."
+      ],
+      "visual_representation": "N/A",
+      "page_reference": "Page 29"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 29,
+      "type": "ui_screenshot",
+      "insights": "The screenshot shows the Email Notifications configuration screen with fields for email addresses, schedule selection, and options to generate full reports. Buttons for saving, resetting, and testing settings are also visible."
+    }
+  ]
+}
