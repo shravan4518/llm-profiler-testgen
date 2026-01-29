@@ -22,24 +22,33 @@ class FrameworkExpert:
     """
 
     def __init__(self, azure_client: AzureOpenAI, framework_loader,
-                 knowledge_file: str = "framework_resources/framework_knowledge.json"):
+                 framework_type: str = "pstaff",
+                 knowledge_file: str = None):
         """
         Initialize the Framework Expert
 
         Args:
             azure_client: Azure OpenAI client
             framework_loader: FrameworkLoader instance
-            knowledge_file: Path to store/load framework knowledge base
+            framework_type: "pstaff" or "client" - determines which knowledge file to use
+            knowledge_file: Optional custom path. If None, uses framework-specific default
         """
         self.client = azure_client
         self.framework_loader = framework_loader
+        self.framework_type = framework_type
+
+        # Use framework-specific knowledge file if not provided
+        if knowledge_file is None:
+            knowledge_file = f"framework_resources/framework_knowledge_{framework_type}.json"
+
         self.knowledge_file = Path(knowledge_file)
         self.knowledge_base = None
 
         # Ensure framework_resources directory exists
         self.knowledge_file.parent.mkdir(parents=True, exist_ok=True)
 
-        logger.info("FrameworkExpert initialized")
+        logger.info(f"FrameworkExpert initialized for {framework_type} framework")
+        logger.info(f"Knowledge file: {self.knowledge_file}")
 
     def analyze_framework(self, force_reanalysis: bool = False) -> Dict:
         """
@@ -117,12 +126,7 @@ IMPORTANT: Return ONLY valid JSON, no other text."""
                 raise ValueError("LLM response content is None")
 
             # Extract JSON from response (handle markdown code blocks)
-            if '```json' in analysis_text:
-                analysis_text = analysis_text.split('```json')[1].split('```')[0].strip()
-                logger.info("Extracted JSON from markdown json block")
-            elif '```' in analysis_text:
-                analysis_text = analysis_text.split('```')[1].split('```')[0].strip()
-                logger.info("Extracted JSON from markdown block")
+            analysis_text = self._extract_json_from_response(analysis_text)
 
             if not analysis_text or analysis_text.strip() == "":
                 logger.error("Extracted text is empty!")
@@ -130,7 +134,7 @@ IMPORTANT: Return ONLY valid JSON, no other text."""
                 raise ValueError("LLM returned empty response after extraction")
 
             logger.info(f"Attempting to parse JSON ({len(analysis_text)} chars)...")
-            self.knowledge_base = json.loads(analysis_text)
+            self.knowledge_base = self._parse_json_safely(analysis_text)
 
             # Save to disk
             with open(self.knowledge_file, 'w', encoding='utf-8') as f:
@@ -151,6 +155,120 @@ IMPORTANT: Return ONLY valid JSON, no other text."""
             import traceback
             logger.error(traceback.format_exc())
             raise
+
+    def _extract_json_from_response(self, text: str) -> str:
+        """Extract JSON from LLM response, handling various formats"""
+        import re
+
+        if not text:
+            return ""
+
+        # Try to find JSON in markdown code blocks
+        if '```json' in text:
+            match = re.search(r'```json\s*([\s\S]*?)\s*```', text)
+            if match:
+                logger.info("Extracted JSON from ```json block")
+                return match.group(1).strip()
+
+        if '```' in text:
+            match = re.search(r'```\s*([\s\S]*?)\s*```', text)
+            if match:
+                extracted = match.group(1).strip()
+                if extracted.startswith('{'):
+                    logger.info("Extracted JSON from ``` block")
+                    return extracted
+
+        # Try to find JSON object directly (starts with { and ends with })
+        # Find the first { and last }
+        first_brace = text.find('{')
+        last_brace = text.rfind('}')
+
+        if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+            json_text = text[first_brace:last_brace + 1]
+            logger.info(f"Extracted JSON by finding braces (chars {first_brace} to {last_brace})")
+            return json_text
+
+        return text.strip()
+
+    def _parse_json_safely(self, text: str) -> Dict:
+        """Parse JSON with multiple fallback strategies"""
+        import re
+
+        # Strategy 1: Direct parse
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Direct JSON parse failed: {e}")
+
+        # Strategy 2: Fix common issues - trailing commas before closing braces
+        try:
+            fixed = re.sub(r',(\s*[}\]])', r'\1', text)
+            return json.loads(fixed)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Fixed trailing commas parse failed: {e}")
+
+        # Strategy 3: Fix unescaped quotes in strings
+        try:
+            # This is a simple fix for common issues
+            fixed = text.replace('\\"', '__ESCAPED_QUOTE__')
+            # Try to fix unescaped quotes (this is a heuristic)
+            fixed = re.sub(r'(?<!\\)"(?=[^,:{\[\]}\s])', '\\"', fixed)
+            fixed = fixed.replace('__ESCAPED_QUOTE__', '\\"')
+            return json.loads(fixed)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Fixed quotes parse failed: {e}")
+
+        # Strategy 4: Try to truncate at the last valid point
+        try:
+            # Find matching braces
+            depth = 0
+            last_valid = -1
+            in_string = False
+            escape_next = False
+
+            for i, char in enumerate(text):
+                if escape_next:
+                    escape_next = False
+                    continue
+
+                if char == '\\':
+                    escape_next = True
+                    continue
+
+                if char == '"' and not escape_next:
+                    in_string = not in_string
+                    continue
+
+                if in_string:
+                    continue
+
+                if char == '{':
+                    depth += 1
+                elif char == '}':
+                    depth -= 1
+                    if depth == 0:
+                        last_valid = i
+                        break
+
+            if last_valid > 0:
+                truncated = text[:last_valid + 1]
+                logger.info(f"Trying truncated JSON at position {last_valid}")
+                return json.loads(truncated)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Truncated parse failed: {e}")
+
+        # Strategy 5: Return a minimal valid structure if all else fails
+        logger.error("All JSON parsing strategies failed, returning minimal structure")
+        logger.error(f"First 1000 chars of failed text: {text[:1000]}")
+        logger.error(f"Last 500 chars of failed text: {text[-500:]}")
+
+        return {
+            "classes": {},
+            "test_patterns": {},
+            "mandatory_components": {},
+            "common_dependencies": {},
+            "_parse_error": "Failed to parse LLM response, using minimal structure"
+        }
 
     def get_relevant_context(self, test_description: str) -> str:
         """
@@ -213,6 +331,14 @@ IMPORTANT: Return ONLY valid JSON, no other text."""
 
     def _build_analysis_prompt(self, framework_data: Dict) -> str:
         """Build comprehensive prompt for framework analysis"""
+
+        if self.framework_type == "client":
+            return self._build_client_analysis_prompt(framework_data)
+        else:
+            return self._build_pstaff_analysis_prompt(framework_data)
+
+    def _build_pstaff_analysis_prompt(self, framework_data: Dict) -> str:
+        """Build analysis prompt for PSTAFF (Robot Framework) """
 
         prompt = f"""Analyze this Python test automation framework (PSTAF) and create a comprehensive knowledge base.
 
@@ -316,6 +442,115 @@ Return a JSON structure like this:
     "browser_tests": ["AppAccess", "BrowserActions", "Utils", "ConfigUtils", "Log"],
     "rest_tests": ["RestClient", "Utils", "ConfigUtils", "Log"],
     "all_tests": ["Initialize", "Utils", "Log"]
+  }}
+}}
+
+Be comprehensive and precise. This knowledge base will be used to intelligently select relevant code pieces for test generation.
+"""
+        return prompt
+
+    def _build_client_analysis_prompt(self, framework_data: Dict) -> str:
+        """Build analysis prompt for Client (aut-pypdc/pytest) framework"""
+
+        prompt = f"""Analyze this Python test automation framework (aut-pypdc Client Framework) and create a comprehensive knowledge base.
+
+=== FRAMEWORK FILES ===
+
+{self._format_framework_data(framework_data)}
+
+=== YOUR TASK ===
+
+Create a JSON knowledge base that captures:
+
+1. **Classes**: For each framework class, document:
+   - Purpose and functionality
+   - Key methods with signatures
+   - Dependencies on other classes
+   - Return value patterns
+
+2. **Test Patterns**: From the examples, identify:
+   - Common test patterns (PPS REST API calls, authentication, configuration, etc.)
+   - The example test method names (TC_001_..., TC_002_..., etc.)
+   - Required classes and methods (PpsRestClient, FWUtils, Initialize, etc.)
+   - Flow/sequence of operations
+   - What each pattern is used for
+
+3. **Method Relationships**: For key methods, document:
+   - What methods they call
+   - What they depend on
+   - Input/output formats
+   - Common usage patterns
+
+4. **Mandatory Components**: Identify:
+   - Required imports for different test types
+   - Global object initialization pattern
+   - INITIALIZE function structure
+   - CLEANUP function structure
+
+=== OUTPUT FORMAT ===
+
+Return a JSON structure like this:
+
+{{
+  "classes": {{
+    "PpsRestClient": {{
+      "purpose": "REST API client for PPS/Profiler operations",
+      "key_methods": {{
+        "execute_request": {{
+          "signature": "execute_request(self, resource_uri, method_type, payload=None)",
+          "purpose": "Execute REST API request",
+          "requires": ["authentication"],
+          "input_format": "uri string, method type (GET/PUT/POST/DELETE), optional payload dict",
+          "output_format": "Response object with status_code and json()",
+          "used_in_patterns": ["rest_api_config", "rest_api_verify"]
+        }}
+      }},
+      "depends_on": ["Authentication"]
+    }},
+    "FWUtils": {{...}},
+    "Initialize": {{...}},
+    ...
+  }},
+  "test_patterns": {{
+    "rest_api_config": {{
+      "example_method": "TC_001_PPS_CONFIGURE_WMI",
+      "description": "Configure PPS settings via REST API",
+      "required_classes": ["PpsRestClient", "FWUtils", "Initialize", "CommonUtils"],
+      "required_methods": [
+        {{"class": "PpsRestClient", "method": "execute_request"}},
+        {{"class": "Initialize", "method": "initialize"}},
+        {{"class": "CommonUtils", "method": "get_screenshot"}}
+      ],
+      "flow": "INITIALIZE -> configure via REST -> verify -> CLEANUP",
+      "keywords": ["REST", "API", "configuration", "PPS", "profiler"]
+    }},
+    "authentication_test": {{...}},
+    ...
+  }},
+  "mandatory_components": {{
+    "imports": [
+      "from FWUtils import FWUtils",
+      "from Initialize import Initialize",
+      "from CommonUtils import CommonUtils",
+      "from admin_pps.PpsRestUtils import PpsRestClient",
+      "import sys"
+    ],
+    "global_objects": [
+      "objFwUtils = FWUtils()",
+      "log = objFwUtils.get_logger(__name__, 1)",
+      "objInitialize = Initialize()",
+      "objCommonUtils = CommonUtils()",
+      "pps_client = PpsRestClient()"
+    ],
+    "function_structure": [
+      "def INITIALIZE(): ...",
+      "def TC_<ID>_PPS_<DESCRIPTION>(): ...",
+      "def CLEANUP(): ..."
+    ]
+  }},
+  "common_dependencies": {{
+    "rest_tests": ["PpsRestClient", "FWUtils", "Initialize", "CommonUtils"],
+    "all_tests": ["FWUtils", "Initialize", "CommonUtils"]
   }}
 }}
 
@@ -540,12 +775,121 @@ Be precise - only include what's truly needed. The goal is to minimize context w
                 with open(self.knowledge_file, 'r', encoding='utf-8') as f:
                     self.knowledge_base = json.load(f)
             else:
-                return {"status": "not_analyzed"}
+                return {"status": "not_analyzed", "framework_type": self.framework_type}
 
         return {
             "status": "ready",
+            "framework_type": self.framework_type,
             "classes_count": len(self.knowledge_base.get('classes', {})),
             "patterns_count": len(self.knowledge_base.get('test_patterns', {})),
             "knowledge_file": str(self.knowledge_file),
             "file_exists": self.knowledge_file.exists()
         }
+
+    def ingest_files(self, file_contents: List[Dict]) -> Dict:
+        """
+        Ingest new files into the existing knowledge base
+
+        Args:
+            file_contents: List of dicts with 'filename' and 'content' keys
+
+        Returns:
+            Dict with ingestion results
+        """
+        logger.info(f"Ingesting {len(file_contents)} files into {self.framework_type} knowledge base")
+
+        # Load existing knowledge base if it exists
+        if self.knowledge_file.exists():
+            with open(self.knowledge_file, 'r', encoding='utf-8') as f:
+                self.knowledge_base = json.load(f)
+        else:
+            self.knowledge_base = {
+                "classes": {},
+                "test_patterns": {},
+                "mandatory_components": {},
+                "common_dependencies": {}
+            }
+
+        # Format the new files for analysis
+        files_text = "\n\n".join([
+            f"=== FILE: {f['filename']} ===\n{f['content']}"
+            for f in file_contents
+        ])
+
+        # Build incremental analysis prompt
+        increment_prompt = f"""You are analyzing additional files for the {self.framework_type.upper()} test automation framework.
+
+=== EXISTING KNOWLEDGE BASE ===
+{json.dumps(self.knowledge_base, indent=2)}
+
+=== NEW FILES TO ANALYZE ===
+{files_text}
+
+=== YOUR TASK ===
+Analyze the new files and UPDATE the knowledge base:
+1. Add any NEW classes found to the "classes" section
+2. Add any NEW test patterns found to "test_patterns" section
+3. Update "mandatory_components" if new required imports or patterns are found
+4. Update "common_dependencies" if new dependency patterns emerge
+
+IMPORTANT:
+- MERGE new information with existing knowledge
+- Do NOT remove existing entries
+- Only ADD or UPDATE based on new files
+
+Return the COMPLETE UPDATED knowledge base as JSON.
+"""
+
+        try:
+            logger.info("Sending incremental analysis to LLM...")
+            response = self.client.chat.completions.create(
+                model="gpt-5.1",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert code analyzer. Analyze new framework files and merge them into an existing knowledge base. Return only valid JSON."
+                    },
+                    {
+                        "role": "user",
+                        "content": increment_prompt
+                    }
+                ],
+                temperature=0.1,
+                max_completion_tokens=64000
+            )
+
+            analysis_text = response.choices[0].message.content
+
+            # Extract JSON
+            if '```json' in analysis_text:
+                analysis_text = analysis_text.split('```json')[1].split('```')[0].strip()
+            elif '```' in analysis_text:
+                analysis_text = analysis_text.split('```')[1].split('```')[0].strip()
+
+            updated_knowledge = json.loads(analysis_text)
+
+            # Save updated knowledge base
+            self.knowledge_base = updated_knowledge
+            with open(self.knowledge_file, 'w', encoding='utf-8') as f:
+                json.dump(self.knowledge_base, f, indent=2, ensure_ascii=False)
+
+            logger.info(f"Knowledge base updated successfully")
+            logger.info(f"Classes: {len(self.knowledge_base.get('classes', {}))}")
+            logger.info(f"Patterns: {len(self.knowledge_base.get('test_patterns', {}))}")
+
+            return {
+                "success": True,
+                "files_ingested": len(file_contents),
+                "classes_count": len(self.knowledge_base.get('classes', {})),
+                "patterns_count": len(self.knowledge_base.get('test_patterns', {})),
+                "knowledge_file": str(self.knowledge_file)
+            }
+
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error: {e}")
+            return {"success": False, "error": f"Failed to parse LLM response: {e}"}
+        except Exception as e:
+            logger.error(f"Error during file ingestion: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {"success": False, "error": str(e)}

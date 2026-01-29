@@ -932,15 +932,29 @@ def get_script(job_id):
 
 @app.route('/api/framework/files')
 def get_framework_files():
-    """List all uploaded framework files"""
+    """List framework files for specified framework type"""
     try:
-        if not framework_loader:
-            return jsonify({'success': False, 'error': 'Framework loader not initialized'}), 500
+        from src.framework_loader import FrameworkLoader
 
-        files = framework_loader.list_uploaded_files()
+        # Get framework type from query parameter (default to pstaff)
+        framework_type = request.args.get('framework_type', 'pstaff')
+        logger.info(f"Listing files for framework: {framework_type}")
+
+        # Create framework loader for the requested type
+        temp_loader = FrameworkLoader(framework_type=framework_type)
+        files = temp_loader.list_uploaded_files()
+
+        # Get framework directory info for display
+        if framework_type == 'client':
+            framework_path = "aut-pypdc/Generic/Framework + aut-pypdc/PPS/Framework"
+        else:
+            framework_path = "PSTAF_FRAMEWORK/aut-pstaf/PSTAF_Framework"
+
         return jsonify({
             'success': True,
-            'files': files
+            'files': files,
+            'framework_type': framework_type,
+            'framework_path': framework_path
         })
 
     except Exception as e:
@@ -980,8 +994,8 @@ def generate_custom_script():
             api_key=config.AZURE_OPENAI_API_KEY
         )
 
-        # Initialize framework expert with the specific loader
-        temp_framework_expert = FrameworkExpert(azure_client, temp_framework_loader)
+        # Initialize framework expert with the specific loader and framework type
+        temp_framework_expert = FrameworkExpert(azure_client, temp_framework_loader, framework_type=framework_type)
 
         # Get framework-specific context
         logger.info(f"Getting optimized context for {framework_type} framework: {description}")
@@ -1032,44 +1046,23 @@ def generate_custom_script():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/framework/analyze', methods=['POST'])
-def analyze_framework():
-    """Trigger framework analysis (or re-analysis)"""
-    try:
-        if not framework_expert:
-            return jsonify({'success': False, 'error': 'Framework expert not initialized'}), 500
-
-        data = request.get_json() or {}
-        force_reanalysis = data.get('force', False)
-
-        logger.info(f"Starting framework analysis (force={force_reanalysis})...")
-
-        # Run analysis
-        knowledge_base = framework_expert.analyze_framework(force_reanalysis=force_reanalysis)
-
-        return jsonify({
-            'success': True,
-            'message': 'Framework analysis complete',
-            'stats': {
-                'classes_count': len(knowledge_base.get('classes', {})),
-                'patterns_count': len(knowledge_base.get('test_patterns', {})),
-                'knowledge_file': str(framework_expert.knowledge_file)
-            }
-        })
-
-    except Exception as e:
-        logger.error(f"Error analyzing framework: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
 @app.route('/api/framework/knowledge-stats')
 def get_knowledge_stats():
     """Get statistics about framework knowledge base"""
     try:
-        if not framework_expert:
-            return jsonify({'success': False, 'error': 'Framework expert not initialized'}), 500
+        framework_type = request.args.get('framework_type', 'pstaff')
 
-        stats = framework_expert.get_knowledge_stats()
+        # Create framework expert for specific framework type
+        from openai import AzureOpenAI
+        azure_client = AzureOpenAI(
+            api_version=config.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+            api_key=config.AZURE_OPENAI_API_KEY
+        )
+        temp_framework_loader = FrameworkLoader(framework_type=framework_type)
+        temp_framework_expert = FrameworkExpert(azure_client, temp_framework_loader, framework_type=framework_type)
+
+        stats = temp_framework_expert.get_knowledge_stats()
 
         return jsonify({
             'success': True,
@@ -1078,6 +1071,105 @@ def get_knowledge_stats():
 
     except Exception as e:
         logger.error(f"Error getting knowledge stats: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/framework/ingest-files', methods=['POST'])
+def ingest_framework_files():
+    """Ingest uploaded files into framework-specific knowledge base"""
+    try:
+        framework_type = request.form.get('framework_type', 'pstaff')
+        files = request.files.getlist('files')
+
+        if not files:
+            return jsonify({'success': False, 'error': 'No files uploaded'}), 400
+
+        logger.info(f"Ingesting {len(files)} files into {framework_type} framework knowledge base")
+
+        # Read file contents
+        file_contents = []
+        for file in files:
+            if file.filename:
+                content = file.read().decode('utf-8')
+                file_contents.append({
+                    'filename': file.filename,
+                    'content': content
+                })
+                logger.info(f"Read file: {file.filename} ({len(content)} chars)")
+
+        if not file_contents:
+            return jsonify({'success': False, 'error': 'No valid files found'}), 400
+
+        # Create framework expert for specific framework type
+        from openai import AzureOpenAI
+        azure_client = AzureOpenAI(
+            api_version=config.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+            api_key=config.AZURE_OPENAI_API_KEY
+        )
+        temp_framework_loader = FrameworkLoader(framework_type=framework_type)
+        temp_framework_expert = FrameworkExpert(azure_client, temp_framework_loader, framework_type=framework_type)
+
+        # Ingest files
+        result = temp_framework_expert.ingest_files(file_contents)
+
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'message': f'Successfully ingested {result["files_ingested"]} files',
+                'stats': {
+                    'files_ingested': result['files_ingested'],
+                    'classes_count': result['classes_count'],
+                    'patterns_count': result['patterns_count'],
+                    'knowledge_file': result['knowledge_file']
+                }
+            })
+        else:
+            return jsonify({'success': False, 'error': result.get('error', 'Unknown error')}), 500
+
+    except Exception as e:
+        logger.error(f"Error ingesting framework files: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/framework/analyze', methods=['POST'])
+def analyze_framework_api():
+    """Trigger framework analysis (or re-analysis) for specific framework type"""
+    try:
+        data = request.get_json() or {}
+        framework_type = data.get('framework_type', 'pstaff')
+        force_reanalysis = data.get('force', False)
+
+        logger.info(f"Starting {framework_type} framework analysis (force={force_reanalysis})...")
+
+        # Create framework expert for specific framework type
+        from openai import AzureOpenAI
+        azure_client = AzureOpenAI(
+            api_version=config.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+            api_key=config.AZURE_OPENAI_API_KEY
+        )
+        temp_framework_loader = FrameworkLoader(framework_type=framework_type)
+        temp_framework_expert = FrameworkExpert(azure_client, temp_framework_loader, framework_type=framework_type)
+
+        # Run analysis
+        knowledge_base = temp_framework_expert.analyze_framework(force_reanalysis=force_reanalysis)
+
+        return jsonify({
+            'success': True,
+            'message': f'{framework_type.upper()} framework analysis complete',
+            'stats': {
+                'framework_type': framework_type,
+                'classes_count': len(knowledge_base.get('classes', {})),
+                'patterns_count': len(knowledge_base.get('test_patterns', {})),
+                'knowledge_file': str(temp_framework_expert.knowledge_file)
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error analyzing framework: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1156,67 +1248,107 @@ CRITICAL REQUIREMENTS:
    PROFILER_CONFIG_URI = "/api/v1/configuration/profiler/..."
 
 FILE 2: {feature_name}_TestSuite.py
-Contains test functions using PpsRestClient and admin_pps modules.
+Contains INITIALIZE, test functions, and CLEANUP using PpsRestClient and admin_pps modules.
 
 CRITICAL REQUIREMENTS:
 1. Imports:
    import sys
    import logging as log
+   from FWUtils import FWUtils
+   from Initialize import Initialize
+   from CommonUtils import CommonUtils
    from admin_pps.PpsRestUtils import PpsRestClient
    from {feature_name}_Data import *
 
-2. Initialize PPS REST client:
+2. Create required objects at module level:
+   objFwUtils = FWUtils()
+   log = objFwUtils.get_logger(__name__, 1)
+   objInitialize = Initialize()
+   objCommonUtils = CommonUtils()
    ppsAdmin = PpsRestClient(pps_ip, PPS_ADMIN_USERNAME, PPS_ADMIN_PASSWORD)
 
-3. Test function naming: TC_<ID>_PPS_<DESCRIPTION>()
-   Example: def TC_001_PPS_CONFIGURE_WMI_PROFILING():
-
-4. Test function structure:
-   def TC_001_PPS_{test_name.upper()}():
+3. MANDATORY: Include INITIALIZE function FIRST:
+   def INITIALIZE():
        tc_id = sys._getframe().f_code.co_name
        log.info('-' * 50)
        log.info(tc_id + ' [START]')
-
        try:
-           step_text = "Step description"
+           step_text = "Initializing the test bed"
            log.info(step_text)
-
-           # Use PpsRestClient methods
-           return_dict = ppsAdmin.loginSA()
-           assert return_dict['status'] == 1, "Failed to login"
-
-           # API calls using URIs from Data file
-           response = ppsAdmin.put(PROFILER_CONFIG_URI, payload)
-           assert response.status_code == 200, "API call failed"
-
+           return_dict = objInitialize.initialize()
+           assert return_dict['status'] == 1, "Failed to initialize Test Bed"
            log.info(tc_id + ' [PASSED]')
            eresult = True
        except AssertionError as e:
            log.error(e)
            log.info(tc_id + ' [FAILED]')
            eresult = False
-
        log.info(tc_id + ' [END]')
+       log.info('-' * 50)
        return eresult
 
-5. Use try/except with AssertionError
-6. Return eresult (True/False)
-7. Use logging statements for test steps
+4. Test function naming: TC_<ID>_PPS_<DESCRIPTION>()
+   def TC_001_PPS_{test_name.upper()}():
+       tc_id = sys._getframe().f_code.co_name
+       log.info('-' * 50)
+       log.info(tc_id + ' [START]')
+       try:
+           step_text = "Step description"
+           log.info(step_text)
+           # Use PpsRestClient methods
+           return_dict = ppsAdmin.loginSA()
+           assert return_dict['status'] == 1, "Failed to login"
+           # API calls using URIs from Data file
+           response = ppsAdmin.get(PROFILER_CONFIG_URI)
+           assert response.status_code == 200, "API call failed"
+           log.info(tc_id + ' [PASSED]')
+           eresult = True
+       except AssertionError as e:
+           log.error(e)
+           log.info(tc_id + ' [FAILED]')
+           eresult = False
+       log.info(tc_id + ' [END]')
+       log.info('-' * 50)
+       return eresult
+
+5. MANDATORY: Include CLEANUP function LAST:
+   def CLEANUP():
+       tc_id = sys._getframe().f_code.co_name
+       log.info('-' * 50)
+       log.info(tc_id + ' [START]')
+       try:
+           step_text = "Cleaning up test environment"
+           log.info(step_text)
+           log.info(tc_id + ' [PASSED]')
+           eresult = True
+       except AssertionError as e:
+           log.error(e)
+           log.info(tc_id + ' [FAILED]')
+           eresult = False
+       log.info(tc_id + ' [END]')
+       log.info('-' * 50)
+       return eresult
 
 FILE 3: {feature_name}_Test.py
-pytest test runner that calls test suite functions.
+pytest test runner that calls INITIALIZE, test functions, and CLEANUP.
 
 CRITICAL REQUIREMENTS:
 1. Imports:
    import pytest
    from {feature_name}_TestSuite import *
 
-2. pytest test functions:
+2. pytest structure with setup/teardown:
+   def setup_module():
+       assert INITIALIZE() is True
+
    def test_{test_name.lower()}():
-       assert TC_001_PPS_{test_name.upper()}(), "Test failed"
+       assert TC_001_PPS_{test_name.upper()}() is True, "Test failed"
+
+   def teardown_module():
+       assert CLEANUP() is True
 
 3. Follow pytest naming conventions (test_* functions)
-4. Assert the result from TestSuite functions
+4. Use setup_module for INITIALIZE, teardown_module for CLEANUP
 
 IMPORTANT GENERATION RULES:
 1. Generate ALL THREE files in the format shown above
