@@ -1,0 +1,120 @@
+{
+  "feature_id": "role_mapping",
+  "feature_name": "Role Mapping",
+  "page_locations": [
+    3,
+    33
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Device Management Options",
+      "navigation_path": "Profiler > Device Management",
+      "page_reference": "Page 33"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Edit this device",
+      "control_type": "button",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Allows editing Manufacturer, Category, and Operating System fields for a specific device. Overrides updates from the classifier if selected.",
+      "location": "Device Management Options",
+      "page_reference": "Page 33"
+    },
+    {
+      "name": "Edit all similar devices",
+      "control_type": "button",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Allows editing all devices with the same fingerprint. Updates the fingerprint used for profiling.",
+      "location": "Device Management Options",
+      "page_reference": "Page 33"
+    },
+    {
+      "name": "Submit a ticket",
+      "control_type": "button",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Copies the fingerprint of a device and sends it to Pulse Secure for reclassification if the device is incorrectly classified.",
+      "location": "Device Management Options",
+      "page_reference": "Page 33"
+    },
+    {
+      "name": "Override any updates by the profiler",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Prevents updates from the classifier and ensures the selected profile is always used for the device.",
+      "location": "Device Management Options",
+      "page_reference": "Page 33"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Override Device Approval Status",
+      "description": "Allows administrators to override the approval status of a device, preventing automatic updates based on configuration changes.",
+      "page_reference": "Page 33"
+    },
+    {
+      "action_name": "Submit Device Fingerprint",
+      "description": "Enables administrators to report incorrectly classified devices by submitting their fingerprints to Pulse Secure for verification and updates.",
+      "page_reference": "Page 33"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_name": "Unapproved State Persistence",
+      "description": "If a device is in an unapproved state, it remains unapproved regardless of updates.",
+      "page_reference": "Page 33"
+    },
+    {
+      "constraint_name": "Temporary Approval Expiry",
+      "description": "Devices in a temporary-approved state revert to unapproved when the time-bound approval period ends.",
+      "page_reference": "Page 33"
+    },
+    {
+      "constraint_name": "Category Change Impact",
+      "description": "If a device's category changes and the new category requires manual approval, the device status changes to unapproved.",
+      "page_reference": "Page 33"
+    }
+  ],
+  "errors": [
+    {
+      "error_name": "Incorrect Device Classification",
+      "description": "Occurs when a device is misclassified by the Profiler. Administrators can submit a ticket to resolve this.",
+      "page_reference": "Page 33"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "override_device_approval",
+      "steps": [
+        "Navigate to Device Management Options.",
+        "Select the device to override.",
+        "Enable the 'Override any updates by the profiler' checkbox.",
+        "Save changes."
+      ],
+      "visual_representation": "Not provided",
+      "page_reference": "Page 33"
+    },
+    {
+      "workflow_id": "submit_device_fingerprint",
+      "steps": [
+        "Navigate to Device Management Options.",
+        "Select the device with incorrect classification.",
+        "Click 'Submit a ticket'.",
+        "Copy the fingerprint and send it to Pulse Secure via email."
+      ],
+      "visual_representation": "Not provided",
+      "page_reference": "Page 33"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 33,
+      "type": "ui_screenshot",
+      "insights": "The screenshot shows options for managing devices, including editing device details, editing similar devices, submitting tickets for misclassified devices, and overriding updates by the profiler."
+    }
+  ]
+}

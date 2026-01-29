@@ -1,0 +1,221 @@
+{
+  "feature_id": "device_discovery_and_registration",
+  "feature_name": "Device Discovery and Registration (DDR)",
+  "page_locations": [
+    3,
+    5,
+    6,
+    12,
+    18,
+    24,
+    30,
+    45
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Basic Configuration",
+      "navigation_path": "Profiler > Profiler Configuration > Basic Configuration",
+      "page_reference": 18
+    },
+    {
+      "screen_name": "Subnets Configuration",
+      "navigation_path": "Profiler > Profiler Configuration > Subnets Configuration",
+      "page_reference": 24
+    },
+    {
+      "screen_name": "Forward and Sync Endpoint Data",
+      "navigation_path": "Profiler > Profiler Configuration > Forward and Sync Endpoint Data",
+      "page_reference": 24
+    },
+    {
+      "screen_name": "Device Discovery Report Table",
+      "navigation_path": "System > Reports > Device Discovery",
+      "page_reference": 30
+    },
+    {
+      "screen_name": "Predefined Antivirus Rule Configuration",
+      "navigation_path": "Profiler > Endpoint Policy > Antivirus Rule Configuration",
+      "page_reference": 45
+    }
+  ],
+  "inputs": [
+    {
+      "name": "SNMP Poll Interval",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1440 (minutes)",
+      "default_value": "60",
+      "help_text": "Set the interval for polling network infrastructure devices.",
+      "location": "Basic Configuration",
+      "page_reference": 18
+    },
+    {
+      "name": "DHCP Sniffing Mode",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "default_value": "RSPAN",
+      "help_text": "Select the mode for DHCP sniffing (RSPAN or DHCP Helper).",
+      "location": "Basic Configuration",
+      "page_reference": 18
+    },
+    {
+      "name": "Purge Interval",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "default_value": "Never",
+      "help_text": "Set the interval to purge older devices from the database.",
+      "location": "Basic Configuration",
+      "page_reference": 18
+    },
+    {
+      "name": "Subnet",
+      "control_type": "textbox",
+      "data_type": "string",
+      "help_text": "Enter the subnet for device discovery.",
+      "location": "Subnets Configuration",
+      "page_reference": 24
+    },
+    {
+      "name": "Include/Exclude Collectors",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "help_text": "Select collectors to include or exclude for the subnet.",
+      "location": "Subnets Configuration",
+      "page_reference": 24
+    },
+    {
+      "name": "API Key",
+      "control_type": "textbox",
+      "data_type": "string",
+      "help_text": "Enter or retrieve the API key for syncing endpoint data.",
+      "location": "Forward and Sync Endpoint Data",
+      "page_reference": 24
+    },
+    {
+      "name": "Rule Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "help_text": "Enter the name of the antivirus rule.",
+      "location": "Predefined Antivirus Rule Configuration",
+      "page_reference": 45
+    },
+    {
+      "name": "Criteria",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "help_text": "Select the criteria for the antivirus rule.",
+      "location": "Predefined Antivirus Rule Configuration",
+      "page_reference": 45
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Start On-Demand Scan",
+      "description": "Trigger an on-demand scan for the selected subnets and collectors.",
+      "location": "Subnets Configuration",
+      "page_reference": 24
+    },
+    {
+      "action_name": "Add Device",
+      "description": "Manually add a device to the discovery report table.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 30
+    },
+    {
+      "action_name": "Approve Selected",
+      "description": "Approve the selected devices in the discovery report table.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 30
+    },
+    {
+      "action_name": "Unapprove Selected",
+      "description": "Unapprove the selected devices in the discovery report table.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 30
+    },
+    {
+      "action_name": "Save Changes",
+      "description": "Save the configured antivirus rule.",
+      "location": "Predefined Antivirus Rule Configuration",
+      "page_reference": 45
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "Maximum 100 subnets can be configured.",
+      "location": "Subnets Configuration",
+      "page_reference": 24
+    },
+    {
+      "constraint": "NMAP is supported only for devices in the same subnet as PPS.",
+      "location": "Subnets Configuration",
+      "page_reference": 24
+    }
+  ],
+  "errors": [
+    {
+      "error_message": "Invalid API Key",
+      "description": "Occurs when the entered API key is incorrect or expired.",
+      "location": "Forward and Sync Endpoint Data",
+      "page_reference": 24
+    },
+    {
+      "error_message": "Subnet Configuration Error",
+      "description": "Occurs when the entered subnet is invalid or exceeds the maximum limit.",
+      "location": "Subnets Configuration",
+      "page_reference": 24
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "device_discovery",
+      "steps": [
+        "Configure collectors (active/passive) for device discovery.",
+        "Set SNMP poll interval and DHCP sniffing mode.",
+        "Add subnets and configure collectors for each subnet.",
+        "Start on-demand scan or wait for scheduled scans."
+      ],
+      "visual_representation": "Not provided",
+      "page_reference": 12
+    },
+    {
+      "workflow_id": "sync_endpoint_data",
+      "steps": [
+        "Navigate to Forward and Sync Endpoint Data.",
+        "Enter the FQDN or IP address of the target profiler.",
+        "Retrieve and enter the API key.",
+        "Optionally validate the server certificate.",
+        "Save changes to start syncing data."
+      ],
+      "visual_representation": "Not provided",
+      "page_reference": 24
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 18,
+      "type": "configuration_screen",
+      "insights": "The Basic Configuration screen allows setting SNMP poll intervals, DHCP sniffing modes, and purging intervals."
+    },
+    {
+      "page": 24,
+      "type": "configuration_screen",
+      "insights": "The Subnets Configuration screen supports adding subnets, selecting collectors, and triggering on-demand scans."
+    },
+    {
+      "page": 24,
+      "type": "ui_screenshot",
+      "insights": "The Forward and Sync Endpoint Data section allows entering API keys and syncing data between profilers."
+    },
+    {
+      "page": 30,
+      "type": "ui_screenshot",
+      "insights": "The Device Discovery Report Table displays discovered devices with details like MAC address, IP address, and operating system."
+    },
+    {
+      "page": 45,
+      "type": "configuration_screen",
+      "insights": "The Predefined Antivirus Rule Configuration screen allows setting rule names, criteria, and associated products."
+    }
+  ]
+}

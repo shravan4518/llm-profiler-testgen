@@ -1,0 +1,113 @@
+{
+  "feature_id": "smb_collector",
+  "feature_name": "SMB Collector",
+  "page_locations": [
+    3,
+    7
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler UI",
+      "navigation_path": "Profiler > Collectors > SMB Collector",
+      "page_reference": "Page 3"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "SMB Server Address",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid IP address or hostname",
+      "default_value": "None",
+      "help_text": "Enter the SMB server's IP address or hostname.",
+      "location": "SMB Collector Configuration",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Authentication Method",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "NTLM, Kerberos",
+      "default_value": "NTLM",
+      "help_text": "Select the authentication method for the SMB server.",
+      "location": "SMB Collector Configuration",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Polling Interval",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1440",
+      "default_value": "60",
+      "help_text": "Specify the polling interval in minutes.",
+      "location": "SMB Collector Configuration",
+      "page_reference": "Page 3"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Add SMB Collector",
+      "description": "Allows the user to add a new SMB collector to the Profiler.",
+      "page_reference": "Page 3"
+    },
+    {
+      "action_name": "Edit SMB Collector",
+      "description": "Allows the user to modify the configuration of an existing SMB collector.",
+      "page_reference": "Page 3"
+    },
+    {
+      "action_name": "Delete SMB Collector",
+      "description": "Allows the user to remove an SMB collector from the Profiler.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "SMB Server Address must be a valid IP address or hostname.",
+      "page_reference": "Page 3"
+    },
+    {
+      "constraint": "Polling Interval must be between 1 and 1440 minutes.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "SMB001",
+      "error_message": "Invalid SMB Server Address.",
+      "resolution": "Ensure the SMB Server Address is a valid IP or hostname.",
+      "page_reference": "Page 3"
+    },
+    {
+      "error_code": "SMB002",
+      "error_message": "Polling Interval out of range.",
+      "resolution": "Set the Polling Interval between 1 and 1440 minutes.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "add_smb_collector",
+      "steps": [
+        "Navigate to Profiler > Collectors > SMB Collector.",
+        "Click 'Add Collector'.",
+        "Enter SMB Server Address, Authentication Method, and Polling Interval.",
+        "Click 'Save' to add the collector."
+      ],
+      "visual_representation": "Not provided in documentation.",
+      "page_reference": "Page 3"
+    },
+    {
+      "workflow_id": "edit_smb_collector",
+      "steps": [
+        "Navigate to Profiler > Collectors > SMB Collector.",
+        "Select the collector to edit.",
+        "Modify the required fields such as SMB Server Address or Polling Interval.",
+        "Click 'Save' to update the collector."
+      ],
+      "visual_representation": "Not provided in documentation.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "image_insights": []
+}

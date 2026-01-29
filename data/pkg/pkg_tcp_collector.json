@@ -1,0 +1,162 @@
+{
+  "feature_id": "tcp_collector",
+  "feature_name": "TCP Collector",
+  "page_locations": [
+    3,
+    7
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler UI",
+      "navigation_path": "Profiler > Collectors > TCP Collector",
+      "page_reference": "Page 3"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Collector Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "1-255 characters",
+      "default_value": "None",
+      "help_text": "Specify a unique name for the TCP Collector.",
+      "location": "Profiler UI",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Server Address",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "Valid IP address or hostname",
+      "default_value": "None",
+      "help_text": "Enter the IP address or hostname of the server to collect data from.",
+      "location": "Profiler UI",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Port",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-65535",
+      "default_value": "None",
+      "help_text": "Specify the port number for the TCP connection.",
+      "location": "Profiler UI",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Enable Authentication",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Enable or disable authentication for the TCP Collector.",
+      "location": "Profiler UI",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Authentication Key",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "1-128 characters",
+      "default_value": "None",
+      "help_text": "Provide the authentication key if authentication is enabled.",
+      "location": "Profiler UI",
+      "page_reference": "Page 3"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Add TCP Collector",
+      "description": "Allows the user to add a new TCP Collector to the Profiler.",
+      "trigger": "Clicking the 'Add' button in the Profiler UI.",
+      "page_reference": "Page 3"
+    },
+    {
+      "action_name": "Edit TCP Collector",
+      "description": "Allows the user to modify an existing TCP Collector configuration.",
+      "trigger": "Clicking the 'Edit' button next to a collector in the Profiler UI.",
+      "page_reference": "Page 3"
+    },
+    {
+      "action_name": "Delete TCP Collector",
+      "description": "Allows the user to remove an existing TCP Collector from the Profiler.",
+      "trigger": "Clicking the 'Delete' button next to a collector in the Profiler UI.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "Collector Name must be unique.",
+      "page_reference": "Page 3"
+    },
+    {
+      "constraint": "Server Address must be a valid IP address or hostname.",
+      "page_reference": "Page 3"
+    },
+    {
+      "constraint": "Port must be within the range 1-65535.",
+      "page_reference": "Page 3"
+    },
+    {
+      "constraint": "Authentication Key is required if authentication is enabled.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "INVALID_NAME",
+      "message": "Collector Name is invalid or already in use.",
+      "page_reference": "Page 3"
+    },
+    {
+      "error_code": "INVALID_SERVER_ADDRESS",
+      "message": "Server Address is not a valid IP or hostname.",
+      "page_reference": "Page 3"
+    },
+    {
+      "error_code": "INVALID_PORT",
+      "message": "Port number is out of range.",
+      "page_reference": "Page 3"
+    },
+    {
+      "error_code": "AUTH_KEY_REQUIRED",
+      "message": "Authentication Key is required when authentication is enabled.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "add_tcp_collector",
+      "steps": [
+        "Navigate to Profiler > Collectors > TCP Collector.",
+        "Click the 'Add' button.",
+        "Fill in the required fields: Collector Name, Server Address, Port.",
+        "Optionally enable authentication and provide an Authentication Key.",
+        "Click 'Save' to add the collector."
+      ],
+      "visual_representation": "Not available in the provided documentation.",
+      "page_reference": "Page 3"
+    },
+    {
+      "workflow_id": "edit_tcp_collector",
+      "steps": [
+        "Navigate to Profiler > Collectors > TCP Collector.",
+        "Click the 'Edit' button next to the desired collector.",
+        "Modify the fields as needed.",
+        "Click 'Save' to update the collector."
+      ],
+      "visual_representation": "Not available in the provided documentation.",
+      "page_reference": "Page 3"
+    },
+    {
+      "workflow_id": "delete_tcp_collector",
+      "steps": [
+        "Navigate to Profiler > Collectors > TCP Collector.",
+        "Click the 'Delete' button next to the desired collector.",
+        "Confirm the deletion in the prompt."
+      ],
+      "visual_representation": "Not available in the provided documentation.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "image_insights": []
+}

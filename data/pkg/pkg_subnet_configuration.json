@@ -1,0 +1,135 @@
+{
+  "feature_id": "subnet_configuration",
+  "feature_name": "Subnet Configuration",
+  "page_locations": [
+    18
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Basic Configuration Screen",
+      "navigation_path": "Settings > Profiler > General Settings",
+      "page_reference": "Page 18"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "SNMP Poll Interval",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1440 (minutes)",
+      "default_value": "60",
+      "help_text": "Set the interval for polling the Network Infrastructure Devices.",
+      "location": "General Settings",
+      "page_reference": "Page 18"
+    },
+    {
+      "name": "DHCP Sniffing Mode",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "RSPAN, DHCP Helper",
+      "default_value": "None",
+      "help_text": "Select the DHCP Sniffing mode for external or internal ports.",
+      "location": "General Settings",
+      "page_reference": "Page 18"
+    },
+    {
+      "name": "TCP Sniffing Mode",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Enable profiling of devices using TCP.",
+      "location": "General Settings",
+      "page_reference": "Page 18"
+    },
+    {
+      "name": "SMB Sniffing Mode",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Enable profiling of devices using SMB.",
+      "location": "General Settings",
+      "page_reference": "Page 18"
+    },
+    {
+      "name": "Purge Interval",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "Never, Daily, Weekly, Monthly",
+      "default_value": "Never",
+      "help_text": "Set the interval to purge older devices from the database.",
+      "location": "General Settings",
+      "page_reference": "Page 18"
+    },
+    {
+      "name": "Profile Discovered Devices with NMAP",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "default_value": "false",
+      "help_text": "Enable profiling of all discovered devices using NMAP.",
+      "location": "General Settings",
+      "page_reference": "Page 18"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Save Configuration",
+      "description": "Save the changes made in the General Settings.",
+      "trigger": "Click Save button",
+      "page_reference": "Page 18"
+    },
+    {
+      "action_name": "Reset Configuration",
+      "description": "Reset all fields in the General Settings to their default values.",
+      "trigger": "Click Reset button",
+      "page_reference": "Page 18"
+    }
+  ],
+  "constraints": [
+    {
+      "field": "SNMP Poll Interval",
+      "constraint": "Value must be between 1 and 1440 minutes.",
+      "page_reference": "Page 18"
+    },
+    {
+      "field": "Purge Interval",
+      "constraint": "Must select one of the predefined options: Never, Daily, Weekly, Monthly.",
+      "page_reference": "Page 18"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "INVALID_SNMP_INTERVAL",
+      "description": "SNMP Poll Interval must be a valid integer between 1 and 1440.",
+      "page_reference": "Page 18"
+    },
+    {
+      "error_code": "INVALID_PURGE_INTERVAL",
+      "description": "Purge Interval must be one of the allowed values: Never, Daily, Weekly, Monthly.",
+      "page_reference": "Page 18"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_profiler_settings",
+      "steps": [
+        "Navigate to Settings > Profiler > General Settings.",
+        "Set the SNMP Poll Interval.",
+        "Select the desired DHCP Sniffing Mode.",
+        "Optionally enable TCP or SMB Sniffing Modes.",
+        "Set the Purge Interval for older devices.",
+        "Optionally enable profiling of discovered devices using NMAP.",
+        "Click Save to apply the changes."
+      ],
+      "visual_representation": "Not provided in documentation.",
+      "page_reference": "Page 18"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 18,
+      "type": "ui_screenshot",
+      "insights": "The Basic Configuration screen includes tabs, buttons, text fields, and dropdown menus for configuring profiler settings. Fields include SNMP Poll Interval, DHCP Sniffing Mode, and options for TCP/SMB Sniffing.",
+      "page_reference": "Page 18"
+    }
+  ]
+}

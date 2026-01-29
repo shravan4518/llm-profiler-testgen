@@ -210,6 +210,42 @@
                 <p class="section-description">Generate a test script for a simple test case using framework-aware AI generation</p>
 
                 <form id="custom-generation-form">
+                    <!-- Framework Selection -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-code-branch"></i> Test Framework
+                        </label>
+                        <div class="framework-selector">
+                            <label class="framework-option">
+                                <input type="radio" name="framework-type" value="pstaff" checked>
+                                <div class="framework-card">
+                                    <div class="framework-card-header">
+                                        <i class="fas fa-robot"></i>
+                                        <strong>PSTAFF Framework</strong>
+                                    </div>
+                                    <p class="framework-card-description">
+                                        Robot Framework + Python (aut-pstaf)<br>
+                                        <small>Test suite + Python methods + Data file</small>
+                                    </p>
+                                </div>
+                            </label>
+                            <label class="framework-option">
+                                <input type="radio" name="framework-type" value="client">
+                                <div class="framework-card">
+                                    <div class="framework-card-header">
+                                        <i class="fas fa-flask"></i>
+                                        <strong>Client Framework</strong>
+                                    </div>
+                                    <p class="framework-card-description">
+                                        pytest + PPS modules (aut-pypdc)<br>
+                                        <small>TestSuite + Test runner + Data file</small>
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+                        <small class="form-help">Select the framework that matches your project setup</small>
+                    </div>
+
                     <div class="form-group">
                         <label for="custom-test-description">
                             <i class="fas fa-keyboard"></i> Test Case Description
@@ -246,16 +282,47 @@
 
                 <!-- Generated Script Display -->
                 <div id="custom-script-result" class="script-result" style="display: none;">
-                    <h3><i class="fas fa-file-code"></i> Generated Test Script</h3>
+                    <h3><i class="fas fa-file-code"></i> Generated Test Files</h3>
                     <div class="script-actions">
-                        <button class="btn btn-small btn-secondary" id="copy-custom-script">
-                            <i class="fas fa-copy"></i> Copy Script
+                        <button class="btn btn-small btn-secondary" id="copy-all-files">
+                            <i class="fas fa-copy"></i> Copy All Files
                         </button>
-                        <button class="btn btn-small btn-secondary" id="download-custom-script">
-                            <i class="fas fa-download"></i> Download Script
+                        <button class="btn btn-small btn-secondary" id="download-all-files">
+                            <i class="fas fa-download"></i> Download All Files
                         </button>
                     </div>
-                    <pre><code id="custom-script-content" class="language-python"></code></pre>
+
+                    <!-- File Tabs -->
+                    <div class="file-tabs">
+                        <button class="file-tab active" data-file="robot">
+                            <i class="fas fa-robot"></i> <span id="robot-filename">Feature.robot</span>
+                        </button>
+                        <button class="file-tab" data-file="python">
+                            <i class="fas fa-code"></i> <span id="python-filename">Feature.py</span>
+                        </button>
+                        <button class="file-tab" data-file="data">
+                            <i class="fas fa-database"></i> <span id="data-filename">Feature_Data.py</span>
+                        </button>
+                        <button class="file-tab" data-file="feedback">
+                            <i class="fas fa-chart-line"></i> Analysis & Feedback
+                        </button>
+                    </div>
+
+                    <!-- File Content -->
+                    <div class="file-content-container">
+                        <div id="robot-content" class="file-content active">
+                            <pre><code class="language-robot"></code></pre>
+                        </div>
+                        <div id="python-content" class="file-content">
+                            <pre><code class="language-python"></code></pre>
+                        </div>
+                        <div id="data-content" class="file-content">
+                            <pre><code class="language-python"></code></pre>
+                        </div>
+                        <div id="feedback-content" class="file-content feedback-container">
+                            <!-- Feedback will be populated by JavaScript -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -904,6 +971,74 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* Framework Selector */
+.framework-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.framework-option {
+    cursor: pointer;
+    position: relative;
+}
+
+.framework-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.framework-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.25rem;
+    transition: all 0.3s;
+    height: 100%;
+}
+
+.framework-option input[type="radio"]:checked + .framework-card {
+    background: #eff6ff;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.15);
+}
+
+.framework-option:hover .framework-card {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.framework-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--dark-bg);
+}
+
+.framework-card-header i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.framework-card-header strong {
+    font-size: 1.05rem;
+}
+
+.framework-card-description {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.framework-card-description small {
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
 .section-description {
     color: var(--text-secondary);
     margin-top: 0.5rem;
@@ -996,6 +1131,224 @@
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1rem;
+}
+
+/* File Tabs */
+.file-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.file-tab {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.file-tab:hover {
+    color: var(--primary-color);
+    background: #f8fafc;
+}
+
+.file-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.file-tab i {
+    font-size: 1rem;
+}
+
+/* File Content */
+.file-content-container {
+    position: relative;
+}
+
+.file-content {
+    display: none;
+}
+
+.file-content.active {
+    display: block;
+}
+
+/* Feedback Container Styles */
+.feedback-container {
+    padding: 1.5rem;
+}
+
+.feedback-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.feedback-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.rating-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.rating-A { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+.rating-B { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+.rating-C { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+.rating-D { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+.rating-F { background: linear-gradient(135deg, #7f1d1d, #991b1b); color: white; }
+
+.confidence-score {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+.feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.feedback-card {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.feedback-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--dark-bg);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.feedback-card .rating {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.strength-list, .issue-list, .recommendation-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+}
+
+.strength-list li {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: #ecfdf5;
+    border-left: 3px solid #10b981;
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.strength-list li i {
+    color: #10b981;
+    margin-top: 0.25rem;
+}
+
+.issue-list li {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    background: white;
+    border-left: 4px solid transparent;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.issue-critical { border-left-color: #dc2626; }
+.issue-high { border-left-color: #f59e0b; }
+.issue-medium { border-left-color: #3b82f6; }
+.issue-low { border-left-color: #10b981; }
+.issue-info { border-left-color: #64748b; }
+
+.issue-severity {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.severity-critical { background: #fee2e2; color: #991b1b; }
+.severity-high { background: #fef3c7; color: #92400e; }
+.severity-medium { background: #dbeafe; color: #1e40af; }
+.severity-low { background: #d1fae5; color: #065f46; }
+.severity-info { background: #f1f5f9; color: #475569; }
+
+.issue-location {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 0.25rem;
+}
+
+.issue-text {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.issue-suggestion {
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    border-left: 2px solid var(--primary-color);
+    padding-left: 0.75rem;
+}
+
+.recommendation-list li {
+    padding: 0.6rem;
+    margin-bottom: 0.5rem;
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.recommendation-list li i {
+    color: #3b82f6;
+    margin-top: 0.25rem;
+}
+
+.analysis-text {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    line-height: 1.6;
 }
 
 .script-result pre {
@@ -1728,8 +2081,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Custom script generation
     document.getElementById('custom-generation-form').addEventListener('submit', handleCustomScriptGeneration);
-    document.getElementById('copy-custom-script')?.addEventListener('click', copyCustomScript);
-    document.getElementById('download-custom-script')?.addEventListener('click', downloadCustomScript);
+    document.getElementById('copy-all-files')?.addEventListener('click', copyAllFiles);
+    document.getElementById('download-all-files')?.addEventListener('click', downloadAllFiles);
+
+    // File tab switching
+    document.querySelectorAll('.file-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const fileType = this.dataset.file;
+            switchFileTab(fileType);
+        });
+    });
 });
 
 function loadFrameworkFiles() {
@@ -1778,14 +2139,21 @@ function loadFrameworkFiles() {
         });
 }
 
+// Global variable to store generated files
+let generatedFiles = null;
+
 function handleCustomScriptGeneration(event) {
     event.preventDefault();
 
     const description = document.getElementById('custom-test-description').value;
     const testName = document.getElementById('custom-test-name').value;
+    const frameworkType = document.querySelector('input[name="framework-type"]:checked').value;
     const resultDiv = document.getElementById('custom-script-result');
-    const scriptContent = document.getElementById('custom-script-content');
     const generateBtn = document.getElementById('generate-custom-script-btn');
+
+    console.log('Generating script with framework:', frameworkType);
+    console.log('Description:', description);
+    console.log('Test name:', testName);
 
     // Disable button and show loading
     generateBtn.disabled = true;
@@ -1798,25 +2166,71 @@ function handleCustomScriptGeneration(event) {
         },
         body: JSON.stringify({
             description: description,
-            test_name: testName
+            test_name: testName,
+            framework_type: frameworkType
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            scriptContent.textContent = data.script;
+            // Store generated files globally
+            generatedFiles = data.files;
+            const featureName = data.feature_name;
+            const fwType = data.framework_type || 'pstaff';
+
+            // Update filenames in tabs based on framework type
+            if (fwType === 'client') {
+                // Client framework: Test runner, TestSuite, Data
+                document.getElementById('robot-filename').textContent = `${featureName}_Test.py`;
+                document.getElementById('python-filename').textContent = `${featureName}_TestSuite.py`;
+                document.getElementById('data-filename').textContent = `${featureName}_Data.py`;
+            } else {
+                // PSTAFF framework: Robot, Python library, Data
+                document.getElementById('robot-filename').textContent = `${featureName}.robot`;
+                document.getElementById('python-filename').textContent = `${featureName}.py`;
+                document.getElementById('data-filename').textContent = `${featureName}_Data.py`;
+            }
+
+            // Update file contents
+            document.querySelector('#robot-content code').textContent = data.files.robot_file;
+            document.querySelector('#python-content code').textContent = data.files.python_file;
+            document.querySelector('#data-content code').textContent = data.files.data_file;
+
+            // Populate feedback tab with generation feedback and code review
+            populateFeedbackTab(data.generation_feedback, data.review, featureName);
+
+            // Show result div
             resultDiv.style.display = 'block';
-            showToast('Test script generated successfully!', 'success');
+
+            // Switch to first tab (data file for client, robot for PSTAFF)
+            switchFileTab(fwType === 'client' ? 'data' : 'robot');
+
+            showToast('Test files generated successfully!', 'success');
 
             // Scroll to result
             resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
             showToast('Error generating script: ' + data.error, 'error');
+            console.error('Backend error:', data.error);
+            resultDiv.innerHTML = `
+                <div class="alert alert-error" style="display: block; margin-top: 20px;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Error:</strong> ${data.error}
+                </div>
+            `;
+            resultDiv.style.display = 'block';
         }
     })
     .catch(error => {
         console.error('Error generating script:', error);
-        showToast('Error generating script', 'error');
+        console.error('Error details:', error.message);
+        showToast('Error generating script: ' + error.message, 'error');
+        resultDiv.innerHTML = `
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <strong>Error:</strong> ${error.message}
+            </div>
+        `;
     })
     .finally(() => {
         // Re-enable button
@@ -1825,32 +2239,372 @@ function handleCustomScriptGeneration(event) {
     });
 }
 
-function copyCustomScript() {
-    const scriptContent = document.getElementById('custom-script-content').textContent;
-    navigator.clipboard.writeText(scriptContent).then(() => {
-        showToast('Script copied to clipboard!', 'success');
+function switchFileTab(fileType) {
+    // Remove active class from all tabs and contents
+    document.querySelectorAll('.file-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.file-content').forEach(content => content.classList.remove('active'));
+
+    // Add active class to selected tab and content
+    document.querySelector(`[data-file="${fileType}"]`).classList.add('active');
+    document.getElementById(`${fileType}-content`).classList.add('active');
+}
+
+function populateFeedbackTab(generationFeedback, review, featureName) {
+    const feedbackContainer = document.getElementById('feedback-content');
+
+    if (!review) {
+        feedbackContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-info-circle"></i>
+                <p>No feedback available</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Extract rating letter (A, B, C, D, F) for CSS class
+    const ratingLetter = review.overall_rating ? review.overall_rating.charAt(0) : 'C';
+
+    let html = `
+        <!-- Overall Rating Section -->
+        <div class="feedback-section">
+            <div class="feedback-header">
+                <div class="rating-badge rating-${ratingLetter}">
+                    <i class="fas fa-award"></i>
+                    <span>${escapeHtml(review.overall_rating || 'N/A')}</span>
+                </div>
+                <div class="confidence-score">
+                    <i class="fas fa-gauge-high"></i> Confidence: ${review.confidence_score || 0}%
+                </div>
+            </div>
+            ${review.rating_explanation ? `
+                <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-left: 4px solid var(--primary-color); border-radius: 4px;">
+                    <strong style="color: var(--dark-bg);">Why this rating?</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">${escapeHtml(review.rating_explanation)}</p>
+                </div>
+            ` : ''}
+            ${review.what_would_make_it_A ? `
+                <div style="margin-top: 0.75rem; padding: 1rem; background: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
+                    <strong style="color: #065f46;"><i class="fas fa-arrow-up"></i> How to reach Grade A</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: #047857;">${escapeHtml(review.what_would_make_it_A)}</p>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    // Top 3 Priorities Section (MOST IMPORTANT - SHOW FIRST)
+    if (review.top_3_priorities && review.top_3_priorities.length > 0) {
+        html += `
+            <div class="feedback-section" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b;">
+                <h3 style="color: #92400e;"><i class="fas fa-bullseye"></i> Top Priority Actions</h3>
+                <p style="color: #78350f; margin-bottom: 1rem;">Fix these issues first for maximum impact</p>
+        `;
+
+        review.top_3_priorities.forEach((priority, index) => {
+            const priorityNumber = index + 1;
+            html += `
+                <div style="background: white; padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <span style="background: #f59e0b; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">${priorityNumber}</span>
+                        <strong style="color: var(--dark-bg); font-size: 1.05rem;">${escapeHtml(priority.issue)}</strong>
+                        ${priority.estimated_effort ? `<span class="badge" style="background: #dbeafe; color: #1e40af; margin-left: auto;"><i class="fas fa-clock"></i> ${escapeHtml(priority.estimated_effort)}</span>` : ''}
+                    </div>
+                    <div style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+                        <strong style="color: var(--text-primary);">Why:</strong> ${escapeHtml(priority.why)}
+                    </div>
+                    ${priority.impact_if_not_fixed ? `
+                        <div style="background: #fee2e2; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
+                            <strong style="color: #991b1b;"><i class="fas fa-exclamation-triangle"></i> Impact if ignored:</strong>
+                            <span style="color: #7f1d1d;"> ${escapeHtml(priority.impact_if_not_fixed)}</span>
+                        </div>
+                    ` : ''}
+                    ${priority.how_to_fix ? `
+                        <div style="background: #eff6ff; padding: 0.5rem; border-radius: 4px;">
+                            <strong style="color: #1e40af;"><i class="fas fa-wrench"></i> How to fix:</strong>
+                            <span style="color: #1e3a8a;"> ${escapeHtml(priority.how_to_fix)}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+    }
+
+    // File Ratings Grid
+    html += `
+        <div class="feedback-section">
+            <h3><i class="fas fa-file-code"></i> Individual File Ratings</h3>
+            <div class="feedback-grid">
+    `;
+
+    // File ratings
+    if (review.file_ratings) {
+        const fileNames = {
+            robot_file: `${featureName}.robot`,
+            python_file: `${featureName}.py`,
+            data_file: `${featureName}_Data.py`
+        };
+
+        for (const [fileKey, rating] of Object.entries(review.file_ratings)) {
+            const fileName = fileNames[fileKey] || fileKey;
+            const fileLetter = rating ? rating.charAt(0) : 'C';
+            html += `
+                <div class="feedback-card">
+                    <h4>${escapeHtml(fileName)}</h4>
+                    <div class="rating rating-${fileLetter}">${escapeHtml(rating)}</div>
+                </div>
+            `;
+        }
+    }
+
+    html += `
+            </div>
+        </div>
+    `;
+
+    // Generation Feedback Section
+    if (generationFeedback) {
+        html += `
+            <div class="feedback-section">
+                <h3><i class="fas fa-lightbulb"></i> Generation Insights</h3>
+                <div class="feedback-card" style="border-left-color: #3b82f6;">
+                    <h4>Overall Confidence</h4>
+                    <div class="rating" style="color: #3b82f6;">${generationFeedback.overall_confidence || 0}%</div>
+                </div>
+        `;
+
+        // Assumptions
+        if (generationFeedback.assumptions && generationFeedback.assumptions.length > 0) {
+            html += `
+                <h4 style="margin-top: 1rem; color: var(--text-primary);">
+                    <i class="fas fa-question-circle"></i> Assumptions Made
+                </h4>
+                <ul class="recommendation-list">
+            `;
+            generationFeedback.assumptions.forEach(assumption => {
+                html += `
+                    <li>
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <strong>${escapeHtml(assumption.description || assumption)}</strong>
+                            ${assumption.reason ? `<br><small style="color: var(--text-secondary);">Reason: ${escapeHtml(assumption.reason)}</small>` : ''}
+                            ${assumption.confidence ? `<br><small style="color: var(--text-secondary);">Confidence: ${assumption.confidence}%</small>` : ''}
+                        </div>
+                    </li>
+                `;
+            });
+            html += `</ul>`;
+        }
+
+        // Uncertainties
+        if (generationFeedback.uncertainties && generationFeedback.uncertainties.length > 0) {
+            html += `
+                <h4 style="margin-top: 1rem; color: var(--text-primary);">
+                    <i class="fas fa-exclamation-triangle"></i> Uncertainties
+                </h4>
+                <ul class="issue-list">
+            `;
+            generationFeedback.uncertainties.forEach(uncertainty => {
+                html += `
+                    <li class="issue-medium">
+                        <span class="issue-severity severity-medium">Uncertain</span>
+                        <div class="issue-text">${escapeHtml(uncertainty)}</div>
+                    </li>
+                `;
+            });
+            html += `</ul>`;
+        }
+
+        html += `</div>`;
+    }
+
+    // Strengths Section
+    if (review.strengths && review.strengths.length > 0) {
+        html += `
+            <div class="feedback-section">
+                <h3><i class="fas fa-check-circle" style="color: #10b981;"></i> Strengths</h3>
+                <ul class="strength-list">
+        `;
+        review.strengths.forEach(strength => {
+            html += `
+                <li>
+                    <i class="fas fa-check"></i>
+                    <span>${escapeHtml(strength)}</span>
+                </li>
+            `;
+        });
+        html += `
+                </ul>
+            </div>
+        `;
+    }
+
+    // Test Coverage Gaps Section
+    if (review.test_coverage_gaps) {
+        const gaps = review.test_coverage_gaps;
+        html += `
+            <div class="feedback-section">
+                <h3><i class="fas fa-shield-halved" style="color: #f59e0b;"></i> Test Coverage Analysis</h3>
+                ${gaps.requirement_coverage_percent !== undefined ? `
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <strong>Requirement Coverage</strong>
+                            <span style="font-size: 1.2rem; font-weight: 700; color: ${gaps.requirement_coverage_percent >= 80 ? '#10b981' : gaps.requirement_coverage_percent >= 60 ? '#f59e0b' : '#ef4444'};">${gaps.requirement_coverage_percent}%</span>
+                        </div>
+                        <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: ${gaps.requirement_coverage_percent >= 80 ? '#10b981' : gaps.requirement_coverage_percent >= 60 ? '#f59e0b' : '#ef4444'}; height: 100%; width: ${gaps.requirement_coverage_percent}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                ` : ''}
+                ${gaps.what_is_missing ? `
+                    <div style="background: #fef3c7; padding: 0.75rem; border-radius: 4px; border-left: 4px solid #f59e0b; margin-bottom: 1rem;">
+                        <strong style="color: #92400e;">Missing:</strong> <span style="color: #78350f;">${escapeHtml(gaps.what_is_missing)}</span>
+                    </div>
+                ` : ''}
+                ${gaps.missing_scenarios && gaps.missing_scenarios.length > 0 ? `
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--dark-bg);">Missing Test Scenarios:</strong>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
+                            ${gaps.missing_scenarios.map(scenario => `<li>${escapeHtml(scenario)}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                ${gaps.untested_conditions && gaps.untested_conditions.length > 0 ? `
+                    <div>
+                        <strong style="color: var(--dark-bg);">Untested Conditions:</strong>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
+                            ${gaps.untested_conditions.map(condition => `<li>${escapeHtml(condition)}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Potential Issues Section (Enhanced with effort and impact)
+    if (review.potential_issues && review.potential_issues.length > 0) {
+        html += `
+            <div class="feedback-section">
+                <h3><i class="fas fa-exclamation-circle" style="color: #ef4444;"></i> All Potential Issues</h3>
+                <ul class="issue-list">
+        `;
+        review.potential_issues.forEach(issue => {
+            const severity = issue.severity || 'info';
+            const severityClass = `severity-${severity}`;
+            const issueClass = `issue-${severity}`;
+
+            html += `
+                <li class="${issueClass}">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <span class="issue-severity ${severityClass}">${escapeHtml(severity.toUpperCase())}</span>
+                        ${issue.estimated_effort ? `<span class="badge" style="background: #dbeafe; color: #1e40af;"><i class="fas fa-clock"></i> ${escapeHtml(issue.estimated_effort)}</span>` : ''}
+                    </div>
+                    ${issue.file ? `<div class="issue-location">📁 ${escapeHtml(issue.file)}${issue.location ? ` • ${escapeHtml(issue.location)}` : ''}</div>` : ''}
+                    <div class="issue-text">${escapeHtml(issue.issue || issue)}</div>
+                    ${issue.impact_if_not_fixed ? `
+                        <div style="background: #fef3c7; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; border-left: 3px solid #f59e0b;">
+                            <strong style="color: #92400e;"><i class="fas fa-exclamation-triangle"></i> Impact:</strong>
+                            <span style="color: #78350f;"> ${escapeHtml(issue.impact_if_not_fixed)}</span>
+                        </div>
+                    ` : ''}
+                    ${issue.suggestion ? `<div class="issue-suggestion"><i class="fas fa-lightbulb"></i> <strong>Suggestion:</strong> ${escapeHtml(issue.suggestion)}</div>` : ''}
+                </li>
+            `;
+        });
+        html += `
+                </ul>
+            </div>
+        `;
+    }
+
+    // Recommendations Section
+    if (review.recommendations && review.recommendations.length > 0) {
+        html += `
+            <div class="feedback-section">
+                <h3><i class="fas fa-star" style="color: #3b82f6;"></i> Recommendations</h3>
+                <ul class="recommendation-list">
+        `;
+        review.recommendations.forEach(rec => {
+            html += `
+                <li>
+                    <i class="fas fa-arrow-right"></i>
+                    <span>${escapeHtml(rec)}</span>
+                </li>
+            `;
+        });
+        html += `
+                </ul>
+            </div>
+        `;
+    }
+
+    // Correctness Analysis Section
+    if (review.correctness_analysis) {
+        html += `
+            <div class="feedback-section">
+                <h3><i class="fas fa-magnifying-glass"></i> Correctness Analysis</h3>
+                <div class="analysis-text">${escapeHtml(review.correctness_analysis)}</div>
+            </div>
+        `;
+    }
+
+    feedbackContainer.innerHTML = html;
+}
+
+function copyAllFiles() {
+    if (!generatedFiles) {
+        showToast('No files generated yet!', 'error');
+        return;
+    }
+
+    const featureName = generatedFiles.feature_name;
+    const allContent = `
+=== ${featureName}.robot ===
+${generatedFiles.robot_file}
+
+=== ${featureName}.py ===
+${generatedFiles.python_file}
+
+=== ${featureName}_Data.py ===
+${generatedFiles.data_file}
+    `.trim();
+
+    navigator.clipboard.writeText(allContent).then(() => {
+        showToast('All files copied to clipboard!', 'success');
     }).catch(err => {
-        console.error('Error copying script:', err);
-        showToast('Error copying script', 'error');
+        console.error('Error copying files:', err);
+        showToast('Error copying files', 'error');
     });
 }
 
-function downloadCustomScript() {
-    const scriptContent = document.getElementById('custom-script-content').textContent;
-    const testName = document.getElementById('custom-test-name').value;
-    const filename = `${testName}.py`;
+function downloadAllFiles() {
+    if (!generatedFiles) {
+        showToast('No files generated yet!', 'error');
+        return;
+    }
 
-    const blob = new Blob([scriptContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const featureName = generatedFiles.feature_name;
 
-    showToast('Script downloaded!', 'success');
+    // Create a helper function to download individual files
+    function downloadFile(filename, content) {
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // Download all three files
+    downloadFile(`${featureName}.robot`, generatedFiles.robot_file);
+    setTimeout(() => downloadFile(`${featureName}.py`, generatedFiles.python_file), 200);
+    setTimeout(() => downloadFile(`${featureName}_Data.py`, generatedFiles.data_file), 400);
+
+    showToast('All files downloaded!', 'success');
 }
 
 function formatFileSize(bytes) {

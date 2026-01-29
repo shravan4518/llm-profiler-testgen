@@ -34,6 +34,30 @@
             </a>
         </div>
 
+        <!-- Domain Knowledge Building -->
+        <div class="action-card" style="border: 2px solid #f59e0b;">
+            <div class="card-header">
+                <i class="fas fa-brain" style="color: #f59e0b;"></i>
+                <h3>Domain Knowledge <span style="background: #f59e0b; color: white; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; margin-left: 0.5rem;">NEW</span></h3>
+            </div>
+            <p>Build hierarchical concept graphs from documentation to improve test case quality for complex features.</p>
+            <a href="{{ url_for('domain_knowledge_page') }}" class="btn btn-primary" style="background: #f59e0b; border-color: #f59e0b;">
+                <i class="fas fa-hammer"></i> Build Domain Knowledge
+            </a>
+        </div>
+
+        <!-- PKG Extraction -->
+        <div class="action-card" style="border: 2px solid #10b981;">
+            <div class="card-header">
+                <i class="fas fa-project-diagram" style="color: #10b981;"></i>
+                <h3>PKG Extraction <span style="background: #10b981; color: white; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; margin-left: 0.5rem;">NEW</span></h3>
+            </div>
+            <p>Extract Product Knowledge Graph with exact field names, ranges, constraints, and workflows from documentation.</p>
+            <a href="{{ url_for('pkg_extraction_page') }}" class="btn btn-primary" style="background: #10b981; border-color: #10b981;">
+                <i class="fas fa-sitemap"></i> Extract PKG
+            </a>
+        </div>
+
         <!-- View Documents -->
         <div class="action-card">
             <div class="card-header">
@@ -96,6 +120,13 @@
                     <p>Index Size</p>
                 </div>
             </div>
+            <div class="stat-box" style="border-left: 4px solid #f59e0b;">
+                <i class="fas fa-brain" style="color: #f59e0b;"></i>
+                <div>
+                    <h4 id="domain-concepts">Loading...</h4>
+                    <p>Domain Concepts</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -103,6 +134,7 @@
 <script>
 // Load stats
 document.addEventListener('DOMContentLoaded', function() {
+    // Load vector store stats
     fetch('/api/health')
         .then(response => response.json())
         .then(data => {
@@ -127,6 +159,29 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('total-docs').textContent = '0';
             document.getElementById('total-chunks').textContent = '0';
             document.getElementById('index-size').textContent = '0';
+        });
+
+    // Load domain knowledge stats
+    fetch('/api/domain/status')
+        .then(response => response.json())
+        .then(data => {
+            const domainConcepts = document.getElementById('domain-concepts');
+            if (domainConcepts) {
+                if (data.success && data.statistics) {
+                    const total = data.statistics.total_concepts || 0;
+                    domainConcepts.textContent = total.toLocaleString();
+                    if (total === 0) {
+                        domainConcepts.style.color = '#94a3b8';
+                    }
+                } else {
+                    domainConcepts.textContent = '0';
+                    domainConcepts.style.color = '#94a3b8';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading domain stats:', error);
+            document.getElementById('domain-concepts').textContent = '0';
         });
 });
 </script>

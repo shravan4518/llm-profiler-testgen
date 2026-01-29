@@ -1,0 +1,200 @@
+{
+  "feature_id": "profile_groups",
+  "feature_name": "Profile Groups",
+  "page_locations": [
+    3,
+    12,
+    30,
+    32,
+    33
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Device Discovery Report Table",
+      "navigation_path": "System > Reports > Device Discovery or Profiler > Dashboard and Report > Device Discovery report",
+      "page_reference": 30
+    },
+    {
+      "screen_name": "Device Details Management",
+      "navigation_path": "Profiler > Dashboard and Report > Device Discovery report",
+      "page_reference": 33
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Records per page",
+      "control_type": "dropdown",
+      "data_type": "integer",
+      "range": "1-100",
+      "default_value": "20",
+      "help_text": "Customize the number of records displayed per page.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 32
+    },
+    {
+      "name": "Search",
+      "control_type": "textbox",
+      "data_type": "string",
+      "help_text": "Search devices based on attributes like MAC Address, IP Address, etc.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 32
+    },
+    {
+      "name": "Advanced Search",
+      "control_type": "textbox",
+      "data_type": "string",
+      "help_text": "Enter expressions with operators and wildcards for specific search results.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 32
+    },
+    {
+      "name": "Approve/Unapprove selected devices",
+      "control_type": "button",
+      "data_type": "boolean",
+      "help_text": "Manually approve or unapprove selected devices.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 32
+    },
+    {
+      "name": "Time-Bound Approve Selected Devices",
+      "control_type": "button",
+      "data_type": "boolean",
+      "help_text": "Approve devices for a specified time period by setting start and end dates.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 32
+    },
+    {
+      "name": "Add Device",
+      "control_type": "button",
+      "data_type": "object",
+      "help_text": "Add new devices with attributes like MAC Address, Manufacturer, Operating System, etc.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 32
+    },
+    {
+      "name": "Download Report",
+      "control_type": "button",
+      "data_type": "string",
+      "help_text": "Download the report in CSV or PDF format.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 32
+    },
+    {
+      "name": "Delete Selected",
+      "control_type": "button",
+      "data_type": "boolean",
+      "help_text": "Delete selected devices from the report.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 32
+    },
+    {
+      "name": "Purge Aged Out Devices",
+      "control_type": "button",
+      "data_type": "boolean",
+      "help_text": "Manually purge devices older than the specified interval.",
+      "location": "Device Discovery Report Table",
+      "page_reference": 32
+    },
+    {
+      "name": "Edit this device",
+      "control_type": "button",
+      "data_type": "object",
+      "help_text": "Edit attributes like Manufacturer, Category, and Operating System for a specific device.",
+      "location": "Device Details Management",
+      "page_reference": 33
+    },
+    {
+      "name": "Edit all similar devices",
+      "control_type": "button",
+      "data_type": "object",
+      "help_text": "Edit attributes for all devices with the same fingerprint.",
+      "location": "Device Details Management",
+      "page_reference": 33
+    },
+    {
+      "name": "Submit a ticket",
+      "control_type": "button",
+      "data_type": "string",
+      "help_text": "Send information about wrongly classified devices to Pulse Secure for verification.",
+      "location": "Device Details Management",
+      "page_reference": 33
+    },
+    {
+      "name": "Override Device Approval Status",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "help_text": "Prevent updates to the approval status of a device.",
+      "location": "Device Details Management",
+      "page_reference": 33
+    }
+  ],
+  "actions": [
+    "Approve/Unapprove devices",
+    "Time-bound approval of devices",
+    "Add new devices",
+    "Edit device attributes",
+    "Edit attributes for similar devices",
+    "Submit tickets for classification issues",
+    "Download reports in CSV/PDF format",
+    "Delete devices",
+    "Purge aged-out devices"
+  ],
+  "constraints": [
+    {
+      "constraint": "Maximum entries for PDF download",
+      "value": "30,000",
+      "description": "Apply filters to refine the report if entries exceed the limit."
+    },
+    {
+      "constraint": "Time-bound approval precedence",
+      "description": "Time-bound settings in DDR take precedence over profile group settings."
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "classification_error",
+      "description": "Device not correctly classified by Fingerbank database."
+    },
+    {
+      "error_code": "download_limit_exceeded",
+      "description": "Attempt to download more than 30,000 entries in PDF format."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "device_discovery_report_management",
+      "steps": [
+        "Navigate to System > Reports > Device Discovery",
+        "View the Device Discovery Report Table",
+        "Search or filter devices",
+        "Perform actions like approve, unapprove, add, edit, or delete devices",
+        "Download the report in desired format"
+      ],
+      "visual_representation": "Table with device attributes and action buttons",
+      "page_reference": 30
+    },
+    {
+      "workflow_id": "device_details_management",
+      "steps": [
+        "Select a device from the Device Discovery Report Table",
+        "Edit attributes like Manufacturer, Category, and Operating System",
+        "Submit tickets for classification issues if necessary",
+        "Override approval status if required"
+      ],
+      "visual_representation": "Device details section with edit and submit options",
+      "page_reference": 33
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 30,
+      "type": "ui_screenshot",
+      "insights": "Device Discovery Report Table with columns for MAC Address, IP Address, Hostname, Manufacturer, Operating System, Category, Session User, First Seen, Last Updated. Dropdown menu for actions like Approve, Unapprove, Add Device, etc."
+    },
+    {
+      "page": 33,
+      "type": "ui_screenshot",
+      "insights": "Device details section showing options to edit attributes, submit tickets, and override approval status."
+    }
+  ]
+}

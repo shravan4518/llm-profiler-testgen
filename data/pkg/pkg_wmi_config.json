@@ -1,0 +1,166 @@
+{
+  "feature_id": "wmi_configuration",
+  "feature_name": "WMI Configuration",
+  "ui_surfaces": [
+    {
+      "screen_id": "wmi_config_screen",
+      "screen_name": "WMI Profiling",
+      "navigation_path": "Profiler -> Profiler Configuration -> Advance Configuration",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 14"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "configure_wmi_credentials",
+      "name": "Configure WMI credentials",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Specify the domain administrator or user with administrator credentials to fetch accurate endpoint information from remote desktops running Microsoft Windows.",
+      "location": "WMI Profiling",
+      "page_reference": "Page 14"
+    },
+    {
+      "input_id": "use_ad_server_credentials",
+      "name": "Use Active Directory server credentials",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": "Configure WMI credentials is checked",
+      "help_text": "Use existing Active Directory server credentials.",
+      "location": "WMI Profiling",
+      "page_reference": "Page 14"
+    },
+    {
+      "input_id": "profile_all_discovered_devices",
+      "name": "Profile all discovered devices using WMI",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Optionally profile all discovered devices using WMI. If the number of discovered devices exceeds 1000, it is recommended to add subnets manually to scan only Windows devices.",
+      "location": "WMI Profiling",
+      "page_reference": "Page 14"
+    },
+    {
+      "input_id": "allow_deep_scan",
+      "name": "Allow deep scan",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Control the level of information to fetch from the endpoint remotely through WMI. Deep Scan includes information on ports, process, and security product details such as product version, signature version, and signature date attributes.",
+      "location": "WMI Profiling",
+      "page_reference": "Page 14"
+    },
+    {
+      "input_id": "endpoint_ip_or_hostname",
+      "name": "Endpoint IP or hostname",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Must be a valid IP address or hostname",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Enter the Endpoint IP or hostname to test the credentials.",
+      "location": "WMI Profiling",
+      "page_reference": "Page 14"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "test_credentials",
+      "button_text": "Test Credentials",
+      "type": "custom",
+      "enabled_when": "Endpoint IP or hostname is provided",
+      "description": "Tests the WMI credentials for the specified endpoint.",
+      "page_reference": "Page 14"
+    }
+  ],
+  "constraints": [
+    "If the number of discovered devices exceeds 1000, it is recommended to add subnets manually to scan only Windows devices.",
+    "Deep Scan is required if Agentless Host Checker with Profiler policies are configured for endpoint posture assessment."
+  ],
+  "errors": [
+    {
+      "error_id": "WMI_CONN_FAILED",
+      "message": "WMI connection failed",
+      "trigger": "Invalid credentials or endpoint unreachable",
+      "page_reference": "Page 14"
+    },
+    {
+      "error_id": "WMI_QUERY_FAILED",
+      "message": "WMI Query Failed",
+      "trigger": "Issues with fetching data from the endpoint",
+      "page_reference": "Page 14"
+    }
+  ],
+  "states": [
+    "unconfigured",
+    "configured",
+    "scanning",
+    "error"
+  ],
+  "state_transitions": [
+    {
+      "from": "unconfigured",
+      "to": "configured",
+      "trigger": "WMI credentials are saved"
+    },
+    {
+      "from": "configured",
+      "to": "scanning",
+      "trigger": "WMI profiling is initiated"
+    },
+    {
+      "from": "scanning",
+      "to": "error",
+      "trigger": "WMI connection or query fails"
+    },
+    {
+      "from": "scanning",
+      "to": "configured",
+      "trigger": "WMI profiling completes successfully"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "wmi_profiling_workflow",
+      "name": "WMI Profiling Workflow",
+      "steps": [
+        "Navigate to Profiler -> Profiler Configuration -> Advance Configuration",
+        "Select Configure WMI credentials",
+        "Enter domain administrator credentials or use Active Directory server credentials",
+        "Optionally enable deep scan and profile all discovered devices",
+        "Test the credentials using an endpoint IP or hostname",
+        "Save the configuration"
+      ],
+      "prerequisites": [
+        "Ensure the domain administrator or user credentials have sufficient privileges.",
+        "Add subnets manually if the number of discovered devices exceeds 1000."
+      ],
+      "page_reference": "Page 14"
+    }
+  ]
+}

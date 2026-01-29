@@ -20,6 +20,7 @@ from src.utils.output_formatter import TestCaseFormatter
 from src.vector_db.vector_store import VectorStore
 from src.vector_db.search_engine import HybridSearchEngine
 from src.vector_db.enhanced_retrieval import EnhancedRetrieval
+from src.pkg_loader import PKGLoader
 
 logger = setup_logger(__name__)
 
@@ -30,8 +31,12 @@ class SimpleTestGenerator:
     Uses single optimized Azure OpenAI call instead of multi-agent orchestration
     """
 
-    def __init__(self):
-        """Initialize test case generator"""
+    def __init__(self, domain_expert=None):
+        """Initialize test case generator
+
+        Args:
+            domain_expert: Optional DomainExpert instance for hierarchical concept enrichment
+        """
         logger.info("=" * 80)
         logger.info("Initializing Simplified AI Test Case Generator")
         logger.info("=" * 80)
@@ -48,6 +53,20 @@ class SimpleTestGenerator:
         logger.info("Loading utilities...")
         self.prompt_preprocessor = PromptPreprocessor()
         self.formatter = TestCaseFormatter()
+
+        # Domain Expert for hierarchical concept understanding
+        self.domain_expert = domain_expert
+        if domain_expert:
+            logger.info("Domain Expert integration enabled")
+
+        # PKG Loader for structured product knowledge
+        pkg_dir = Path(config.DATA_DIR) / "pkg"
+        if pkg_dir.exists():
+            self.pkg_loader = PKGLoader(pkg_dir, self.azure_llm)
+            logger.info(f"PKG Loader initialized: {self.pkg_loader.get_status()['total_features']} features")
+        else:
+            self.pkg_loader = None
+            logger.warning(f"PKG directory not found: {pkg_dir}. PKG-based generation disabled.")
 
         logger.info("=" * 80)
         logger.info("Test Case Generator initialized successfully")
@@ -82,29 +101,57 @@ Your test cases are known for being:
 
 You NEVER miss edge cases or error scenarios."""
 
-        user_instruction = f"""Generate a COMPREHENSIVE set of test cases for the following requirement using BOTH the provided documentation context AND your general testing knowledge.
+        user_instruction = f"""Generate SPECIFIC test cases for the following requirement.
 
 === USER REQUIREMENT ===
 {user_prompt}
 
-=== DOCUMENTATION CONTEXT (Retrieved from Knowledge Base) ===
+=== CONTEXT SOURCES (Prioritized) ===
 {rag_context}
 
 === YOUR TASK ===
 
-IMPORTANT INSTRUCTIONS:
-1. **Use the documentation context above** as your PRIMARY source for product-specific details
-2. **Apply your general testing knowledge** to ensure comprehensive coverage beyond what's in the docs
-3. **Combine both sources** to create realistic, executable test cases
+🎯 CRITICAL INSTRUCTIONS 🎯
 
-⚠️ CRITICAL REQUIREMENT - READ CAREFULLY ⚠️
-You MUST generate actual test cases FIRST, before any analysis or planning. Start your response IMMEDIATELY with test cases. Do NOT begin with any introduction, overview, or analysis. Your very first line MUST be a test case heading.
+**1. DATA SOURCE PRIORITY:**
+   - **PRIMARY:** Product Knowledge Graph (PKG) - Use EXACT field names, types, ranges, defaults from PKG
+   - **SECONDARY:** Domain Knowledge - Use for hierarchical concepts and test strategy
+   - **TERTIARY:** RAG Context - Use for additional context and descriptions only
 
-Your output structure:
+**2. PKG FIELDS ARE MANDATORY:**
+   - If PKG section exists, you MUST use the exact input field names listed
+   - You MUST use the exact ranges, defaults, and validation rules from PKG
+   - You MUST use the exact navigation paths from PKG UI surfaces
+   - You MUST reference constraints from PKG
 
-===SECTION 1: COMPREHENSIVE TEST CASES===
+**3. NO GENERIC TEST CASES:**
+   - DO NOT write "Verify configuration saves" → Write "Click Save Changes button and verify polling_interval=720 persists"
+   - DO NOT write "Test with invalid input" → Write "Enter polling_interval=0 (below min=1) and verify error"
+   - DO NOT write "Navigate to configuration page" → Write "Navigate to Profiler -> Profiler Configuration -> Advance Configuration"
 
-START IMMEDIATELY WITH TEST CASES. Generate at least 15 test cases distributed across these categories:
+**4. REQUIRED SPECIFICITY:**
+   Every test case MUST include:
+   - EXACT field name from PKG (e.g., "polling_interval", not "interval")
+   - EXACT range/default from PKG (e.g., "range: 1-1440, default: 720")
+   - EXACT navigation path from PKG (e.g., "Profiler -> Configuration -> Advance")
+   - EXACT button/action names from PKG (e.g., "Start On-Demand Scan")
+
+⚠️ EXAMPLES ⚠️
+❌ BAD (Generic): "Verify polling configuration saves"
+✅ GOOD (PKG-based): "Set polling_interval=720 (default) in Device Attribute Server Configuration section and click Save Changes"
+
+❌ BAD (Generic): "Test boundary values"
+✅ GOOD (PKG-based): "Set polling_interval=1 (min boundary), verify acceptance. Set polling_interval=1440 (max boundary), verify acceptance. Set polling_interval=1441 (above max), verify rejection."
+
+❌ BAD (Generic): "Navigate to advanced settings"
+✅ GOOD (PKG-based): "Navigate to Profiler -> Profiler Configuration -> Advance Configuration screen"
+
+⚠️ START IMMEDIATELY WITH TEST CASES ⚠️
+Do NOT write introductions or analysis. Your first line MUST be a test case heading.
+
+===SECTION 1: SPECIFIC TEST CASES (from documentation)===
+
+Generate test cases using ONLY specific details found in the documentation above:
 
 **POSITIVE TEST CASES (30-40% of total):**
 - Happy path scenarios with valid inputs
@@ -252,6 +299,113 @@ Start generating test cases NOW. Do NOT write any introduction or explanation fi
             for source in sorted(sources):
                 logger.info(f"  - {Path(source).name}")
 
+            # Step 2.5: Domain Expert Enrichment (if available)
+            domain_enriched_context = None
+            if self.domain_expert and self.domain_expert.concept_graph:
+                logger.info("\n[STEP 2.5] Domain Expert Concept Enrichment")
+                logger.info("-" * 80)
+
+                try:
+                    # Extract text chunks from RAG results for domain expert
+                    rag_chunks = [r.get('text', '') for r in rag_results]
+
+                    # Get enriched context from domain expert
+                    domain_context = self.domain_expert.get_enriched_context(
+                        user_query=user_prompt,
+                        rag_chunks=rag_chunks
+                    )
+
+                    if domain_context and domain_context.get('primary_concepts'):
+                        concepts = domain_context['primary_concepts']
+                        logger.info(f"Identified {len(concepts)} primary concepts from domain knowledge")
+
+                        # Build domain-enriched context string
+                        domain_parts = []
+
+                        # Add concept hierarchy
+                        if domain_context.get('concept_hierarchy'):
+                            hierarchy = domain_context['concept_hierarchy']
+                            domain_parts.append("=== DOMAIN KNOWLEDGE: HIERARCHICAL CONCEPTS ===\n")
+                            for concept_data in hierarchy:
+                                concept_name = concept_data.get('name', 'Unknown')
+                                domain_parts.append(f"\n**{concept_name}** ({concept_data.get('type', 'concept')})")
+                                domain_parts.append(f"Description: {concept_data.get('description', 'N/A')}")
+
+                                if concept_data.get('sub_concepts'):
+                                    domain_parts.append(f"Sub-concepts: {', '.join([sc.get('name', '') for sc in concept_data['sub_concepts'][:5]])}")
+
+                                if concept_data.get('test_dimensions'):
+                                    domain_parts.append(f"Test Dimensions: {', '.join(concept_data['test_dimensions'])}")
+
+                        # Add test strategy
+                        if domain_context.get('test_strategy'):
+                            strategy = domain_context['test_strategy']
+                            domain_parts.append("\n\n=== DOMAIN KNOWLEDGE: TEST STRATEGY ===")
+                            domain_parts.append(f"Focus Areas: {strategy.get('focus_areas', 'N/A')}")
+                            domain_parts.append(f"Required Scenarios: {strategy.get('required_scenarios', 'N/A')}")
+                            domain_parts.append(f"Priority Concepts: {strategy.get('priority_concepts', 'N/A')}")
+
+                        # Add test scenarios
+                        if domain_context.get('test_scenarios'):
+                            scenarios = domain_context['test_scenarios']
+                            domain_parts.append("\n\n=== DOMAIN KNOWLEDGE: PRE-DEFINED TEST SCENARIOS ===")
+                            for i, scenario in enumerate(scenarios[:10], 1):
+                                domain_parts.append(f"{i}. {scenario}")
+
+                        domain_enriched_context = "\n".join(domain_parts)
+                        logger.info(f"Domain-enriched context: {len(domain_enriched_context)} characters")
+                        logger.info(f"Concepts: {', '.join([c.get('name', 'Unknown') for c in concepts[:5]])}")
+                    else:
+                        logger.info("No relevant concepts found in domain knowledge")
+
+                except Exception as e:
+                    logger.warning(f"Domain expert enrichment failed: {e}")
+                    domain_enriched_context = None
+            else:
+                if not self.domain_expert:
+                    logger.info("\n[STEP 2.5] Domain Expert not available - skipping concept enrichment")
+                else:
+                    logger.info("\n[STEP 2.5] Domain knowledge base empty - build domain knowledge first")
+
+            # Step 2.7: PKG Loading (Product Knowledge Graph)
+            pkg_context = None
+            if self.pkg_loader:
+                logger.info("\n[STEP 2.7] PKG Loading (Product Knowledge Graph)")
+                logger.info("-" * 80)
+
+                try:
+                    # Identify relevant features
+                    pkg_data = self.pkg_loader.get_pkgs_for_query(user_prompt)
+
+                    if pkg_data['pkgs']:
+                        logger.info(f"Identified {len(pkg_data['features'])} relevant features:")
+                        for feat in pkg_data['features']:
+                            logger.info(f"  - {feat['feature_name']} ({feat['feature_id']})")
+
+                        # Format PKGs for prompt
+                        pkg_parts = []
+                        pkg_parts.append("=== PRODUCT KNOWLEDGE GRAPH (PKG) - PRIMARY SOURCE ===\n")
+                        pkg_parts.append("The following is structured product knowledge extracted from documentation.")
+                        pkg_parts.append("THIS IS YOUR PRIMARY SOURCE. Use EXACT field names, ranges, and constraints from PKG.\n")
+
+                        for feature_id, pkg in pkg_data['pkgs'].items():
+                            formatted_pkg = self.pkg_loader.format_pkg_for_prompt(feature_id)
+                            pkg_parts.append(formatted_pkg)
+
+                        pkg_context = "\n".join(pkg_parts)
+
+                        logger.info(f"PKG context: {len(pkg_context)} characters")
+                        logger.info(f"Total inputs across features: {sum(len(pkg.get('inputs', [])) for pkg in pkg_data['pkgs'].values())}")
+                        logger.info(f"Total constraints: {sum(len(pkg.get('constraints', [])) for pkg in pkg_data['pkgs'].values())}")
+                    else:
+                        logger.info("No relevant PKG found for this query")
+
+                except Exception as e:
+                    logger.warning(f"PKG loading failed: {e}")
+                    pkg_context = None
+            else:
+                logger.info("\n[STEP 2.7] PKG Loader not available - skipping structured product knowledge")
+
             # Step 3: Context Enrichment
             logger.info("\n[STEP 3] Context Enrichment")
             logger.info("-" * 80)
@@ -261,7 +415,24 @@ Start generating test cases NOW. Do NOT write any introduction or explanation fi
                 rag_results
             )
 
-            logger.info(f"Enriched context: {len(enriched_context)} characters")
+            # Merge PKG, Domain Expert, and RAG context (in order of priority)
+            final_context_parts = []
+
+            # Priority 1: PKG (most specific, structured product knowledge)
+            if pkg_context:
+                final_context_parts.append(pkg_context)
+                logger.info("✓ PKG context added as PRIMARY source")
+
+            # Priority 2: Domain Expert (hierarchical concepts)
+            if domain_enriched_context:
+                final_context_parts.append(domain_enriched_context)
+                logger.info("✓ Domain knowledge added as SECONDARY source")
+
+            # Priority 3: RAG (general documentation context)
+            final_context_parts.append(f"=== RAG RETRIEVED CONTEXT (for additional context) ===\n{enriched_context}")
+
+            enriched_context = "\n\n".join(final_context_parts)
+            logger.info(f"Final enriched context: {len(enriched_context)} characters")
 
             # Step 4: Build Master Prompt
             logger.info("\n[STEP 4] Building Comprehensive Prompt")

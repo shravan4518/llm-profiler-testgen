@@ -1,0 +1,141 @@
+{
+  "feature_id": "device_sponsoring",
+  "feature_name": "Device Sponsoring",
+  "page_locations": [
+    29
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Email Notifications Configuration",
+      "navigation_path": "System > Configuration > Notification > Email Notification",
+      "page_reference": "Page 29"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Email addresses",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "N/A",
+      "default_value": "N/A",
+      "help_text": "Enter email addresses separated by semicolon.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Email Schedule",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "daily, weekly, monthly",
+      "default_value": "N/A",
+      "help_text": "Select the interval to generate and send report email notifications.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Generate Full Report",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": "true/false",
+      "default_value": "false",
+      "help_text": "Select to generate and send a complete report every time.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Save Changes",
+      "control_type": "button",
+      "data_type": "N/A",
+      "range": "N/A",
+      "default_value": "N/A",
+      "help_text": "Click to save the changes made in the configuration.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Reset",
+      "control_type": "button",
+      "data_type": "N/A",
+      "range": "N/A",
+      "default_value": "N/A",
+      "help_text": "Click to reset the configuration settings.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    },
+    {
+      "name": "Test Settings",
+      "control_type": "button",
+      "data_type": "N/A",
+      "range": "N/A",
+      "default_value": "N/A",
+      "help_text": "Click to test the email notification settings.",
+      "location": "Email Notification tab",
+      "page_reference": "Page 29"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Send Report Email Notifications",
+      "description": "Generates and sends report emails based on the configured schedule and settings.",
+      "triggers": [
+        "Save Changes button"
+      ],
+      "page_reference": "Page 29"
+    },
+    {
+      "action_name": "Generate Full Report",
+      "description": "Generates a complete report instead of incremental changes when the checkbox is selected.",
+      "triggers": [
+        "Generate Full Report checkbox"
+      ],
+      "page_reference": "Page 29"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_name": "Email Address Format",
+      "description": "Email addresses must be valid and separated by semicolons.",
+      "page_reference": "Page 29"
+    },
+    {
+      "constraint_name": "Schedule Selection",
+      "description": "Only one schedule option (daily, weekly, monthly) can be selected at a time.",
+      "page_reference": "Page 29"
+    }
+  ],
+  "errors": [
+    {
+      "error_name": "Invalid Email Format",
+      "description": "Occurs when the entered email addresses are not in a valid format.",
+      "resolution": "Ensure all email addresses are valid and separated by semicolons.",
+      "page_reference": "Page 29"
+    },
+    {
+      "error_name": "Missing Schedule",
+      "description": "Occurs when no schedule is selected for email notifications.",
+      "resolution": "Select a schedule option (daily, weekly, or monthly).",
+      "page_reference": "Page 29"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_email_notifications",
+      "steps": [
+        "Navigate to System > Configuration > Notification > Email Notification.",
+        "Enter email addresses separated by semicolon.",
+        "Select the interval for email notifications (daily, weekly, or monthly).",
+        "Optionally, select Generate Full Report to send complete reports.",
+        "Click Save Changes to apply the configuration."
+      ],
+      "visual_representation": "N/A",
+      "page_reference": "Page 29"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 29,
+      "type": "ui_screenshot",
+      "insights": "The screenshot displays the Email Notifications configuration screen, including fields for email addresses, dropdown for schedule selection, and buttons for saving, resetting, and testing settings."
+    }
+  ]
+}

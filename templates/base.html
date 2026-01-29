@@ -16,25 +16,28 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
+    <!-- Navigation -->
+<nav class="navbar">
+    <div class="container">
+        <div class="nav-brand">
+            <a href="{{ url_for('index') }}" class="robot-link">
                 <i class="fas fa-robot"></i>
-                <span>Profiler Agentic Automation</span>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>
-                    <i class="fas fa-home"></i> Home
-                </a></li>
-                <li><a href="{{ url_for('training_dashboard') }}" {% if request.endpoint and 'training' in request.endpoint %}class="active"{% endif %}>
-                    <i class="fas fa-database"></i> Model Training
-                </a></li>
-                <li><a href="{{ url_for('inference_page') }}" {% if request.endpoint and 'inference' in request.endpoint %}class="active"{% endif %}>
-                    <i class="fas fa-magic"></i> Inference
-                </a></li>
-            </ul>
+            </a>
+            <span>Profiler Agentic Automation</span>
         </div>
-    </nav>
+        <ul class="nav-menu">
+            <li><a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>
+                <i class="fas fa-home"></i> Home
+            </a></li>
+            <li><a href="{{ url_for('training_dashboard') }}" {% if request.endpoint and 'training' in request.endpoint %}class="active"{% endif %}>
+                <i class="fas fa-database"></i> Model Training
+            </a></li>
+            <li><a href="{{ url_for('inference_page') }}" {% if request.endpoint and 'inference' in request.endpoint %}class="active"{% endif %}>
+                <i class="fas fa-magic"></i> Inference
+            </a></li>
+        </ul>
+    </div>
+</nav>
 
     <!-- Main Content -->
     <div class="main-content">
@@ -44,7 +47,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 Profiler Agentic Automation | Powered by Azure OpenAI & FAISS</p>
+            <p>&copy; 2026 Profiler Agentic Automation | Powered by Sai Shravan</p>
         </div>
     </footer>
 

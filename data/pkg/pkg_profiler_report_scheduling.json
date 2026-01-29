@@ -1,0 +1,140 @@
+{
+  "feature_id": "profiler_report_scheduling",
+  "feature_name": "Profiler Report Scheduling",
+  "ui_surfaces": [
+    {
+      "screen_id": "email_notification_settings",
+      "screen_name": "Email Notification",
+      "navigation_path": "System -> Configuration -> Notification -> Email Notification",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 23"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "use_emails_from_general_settings",
+      "name": "Use emails from General Settings",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": false,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Send emails to addresses specified in General Settings.",
+      "location": "Email Notification",
+      "page_reference": "Page 23"
+    },
+    {
+      "input_id": "custom_email_addresses",
+      "name": "Custom Email Addresses",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "semicolon-separated email addresses",
+      "required": false,
+      "visible_when": "Use emails from General Settings is unchecked",
+      "help_text": "Enter email addresses separated by semicolon.",
+      "location": "Email Notification",
+      "page_reference": "Page 23"
+    },
+    {
+      "input_id": "report_interval",
+      "name": "Report Interval",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": [
+        "daily",
+        "weekly",
+        "monthly"
+      ],
+      "default_value": "daily",
+      "unit": null,
+      "validation": null,
+      "required": true,
+      "visible_when": null,
+      "help_text": "Select the interval to generate and send the report email notifications.",
+      "location": "Email Notification",
+      "page_reference": "Page 23"
+    },
+    {
+      "input_id": "generate_full_report",
+      "name": "Generate Full Report",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": false,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Generate and send a complete report every time. If unchecked, only incremental changes are included.",
+      "location": "Email Notification",
+      "page_reference": "Page 23"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "save_changes",
+      "button_text": "Save Changes",
+      "type": "submit",
+      "enabled_when": "All required fields are filled",
+      "description": "Saves the email notification settings for report scheduling.",
+      "page_reference": "Page 23"
+    }
+  ],
+  "constraints": [
+    "Email addresses must be valid and separated by semicolons.",
+    "Report interval must be selected.",
+    "If 'Use emails from General Settings' is unchecked, custom email addresses must be provided."
+  ],
+  "errors": [
+    {
+      "error_id": "ERR_INVALID_EMAIL",
+      "message": "Invalid email address format.",
+      "trigger": "When an invalid email address is entered in the Custom Email Addresses field.",
+      "page_reference": "Page 23"
+    },
+    {
+      "error_id": "ERR_NO_EMAILS",
+      "message": "No email addresses provided.",
+      "trigger": "When both 'Use emails from General Settings' and 'Custom Email Addresses' are empty.",
+      "page_reference": "Page 23"
+    }
+  ],
+  "states": [
+    "configured",
+    "not_configured"
+  ],
+  "state_transitions": [
+    {
+      "from": "not_configured",
+      "to": "configured",
+      "trigger": "User saves valid email notification settings."
+    },
+    {
+      "from": "configured",
+      "to": "not_configured",
+      "trigger": "User clears all email notification settings."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "schedule_profiler_reports",
+      "name": "Schedule Profiler Reports",
+      "steps": [
+        "Navigate to System -> Configuration -> Notification -> Email Notification.",
+        "Configure email addresses and report interval.",
+        "Save changes."
+      ],
+      "prerequisites": [
+        "SMTP server must be configured and reachable."
+      ],
+      "page_reference": "Page 23"
+    }
+  ]
+}

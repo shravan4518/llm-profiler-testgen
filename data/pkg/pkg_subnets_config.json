@@ -1,0 +1,140 @@
+{
+  "feature_id": "subnets_configuration",
+  "feature_name": "Subnets Configuration",
+  "ui_surfaces": [
+    {
+      "screen_id": "subnets_config_screen",
+      "screen_name": "Subnets Configuration",
+      "navigation_path": "Profiler -> Profiler Configuration -> Subnets Configuration",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 18"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "subnet_entry",
+      "name": "Enter Subnets",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Valid subnet format",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Enter one or more subnets for granular profiling.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 18"
+    },
+    {
+      "input_id": "collector_selection",
+      "name": "Include/Exclude Collectors",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Select collectors like SSH, WMI, SNMP (HOST), and NMAP.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 18"
+    },
+    {
+      "input_id": "start_scan",
+      "name": "Start On-Demand Scan",
+      "control_type": "button",
+      "data_type": null,
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Trigger a scan instantly on the selected subnets for selected collectors.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 18"
+    },
+    {
+      "input_id": "subnet_order",
+      "name": "Order Subnets",
+      "control_type": "button",
+      "data_type": null,
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Use arrow buttons to change the order of subnets.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 18"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "start_scan_action",
+      "button_text": "Start On-Demand Scan",
+      "type": "custom",
+      "enabled_when": "Subnets and collectors are selected",
+      "description": "Triggers an immediate scan on the selected subnets using the selected collectors.",
+      "page_reference": "Page 18"
+    },
+    {
+      "action_id": "order_subnets_action",
+      "button_text": "Order Subnets",
+      "type": "custom",
+      "enabled_when": "Subnets are listed",
+      "description": "Reorders the list of subnets based on IP address matching.",
+      "page_reference": "Page 18"
+    }
+  ],
+  "constraints": [
+    "Maximum 100 subnets configuration are supported.",
+    "For on-demand scan, NMAP is supported only for devices in the same subnet as PPS."
+  ],
+  "errors": [
+    {
+      "error_id": "ERR_INVALID_SUBNET",
+      "message": "Invalid subnet format.",
+      "trigger": "Entering a subnet in an incorrect format.",
+      "page_reference": "Page 18"
+    }
+  ],
+  "states": [
+    "configured",
+    "scanning",
+    "completed"
+  ],
+  "state_transitions": [
+    {
+      "from": "configured",
+      "to": "scanning",
+      "trigger": "Start On-Demand Scan button clicked"
+    },
+    {
+      "from": "scanning",
+      "to": "completed",
+      "trigger": "Scan finishes successfully"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "subnet_scan_workflow",
+      "name": "Subnet Scan Workflow",
+      "steps": [
+        "Enter subnets",
+        "Select collectors",
+        "Start On-Demand Scan",
+        "View scan results"
+      ],
+      "prerequisites": [
+        "Subnets must be configured.",
+        "Collectors must be selected."
+      ],
+      "page_reference": "Page 18"
+    }
+  ]
+}

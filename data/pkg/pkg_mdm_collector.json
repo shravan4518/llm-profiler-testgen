@@ -1,0 +1,99 @@
+{
+  "feature_id": "mdm_collector",
+  "feature_name": "MDM Collector",
+  "page_locations": [
+    3,
+    8
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler Configuration",
+      "navigation_path": "Settings > Profiler > Collectors",
+      "page_reference": "Page 3"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Collector Type",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "TCP, SMB, LDAP, SNMP",
+      "default_value": "TCP",
+      "help_text": "Select the type of collector to configure.",
+      "location": "Profiler Configuration",
+      "page_reference": "Page 3"
+    },
+    {
+      "name": "Auth Table Timeout",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1440",
+      "default_value": "60",
+      "help_text": "Specify the timeout value (in minutes) for the authentication table.",
+      "location": "Profiler Groups",
+      "page_reference": "Page 3"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Add Collector",
+      "description": "Allows the user to add a new collector type to the profiler.",
+      "page_reference": "Page 3"
+    },
+    {
+      "action_name": "Backup Profiler Configuration",
+      "description": "Enables backup and recovery for profiler deployments.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_name": "Valid Collector Type",
+      "description": "Only TCP, SMB, LDAP, and SNMP are supported as collector types.",
+      "page_reference": "Page 3"
+    },
+    {
+      "constraint_name": "Auth Table Timeout Range",
+      "description": "The timeout value must be between 1 and 1440 minutes.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "INVALID_COLLECTOR_TYPE",
+      "description": "The selected collector type is not supported.",
+      "resolution": "Choose a valid collector type from the dropdown.",
+      "page_reference": "Page 3"
+    },
+    {
+      "error_code": "TIMEOUT_OUT_OF_RANGE",
+      "description": "The specified timeout value is outside the allowed range.",
+      "resolution": "Enter a value between 1 and 1440 minutes.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_collector",
+      "steps": [
+        "Navigate to Settings > Profiler > Collectors.",
+        "Select the collector type from the dropdown.",
+        "Configure the required fields such as Auth Table Timeout.",
+        "Save the configuration."
+      ],
+      "visual_representation": "Not provided in documentation.",
+      "page_reference": "Page 3"
+    },
+    {
+      "workflow_id": "backup_profiler",
+      "steps": [
+        "Navigate to Settings > Profiler > Backup.",
+        "Select the backup option and specify the destination.",
+        "Initiate the backup process."
+      ],
+      "visual_representation": "Not provided in documentation.",
+      "page_reference": "Page 3"
+    }
+  ],
+  "image_insights": []
+}

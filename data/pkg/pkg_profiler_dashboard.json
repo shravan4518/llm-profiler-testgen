@@ -1,0 +1,166 @@
+{
+  "feature_id": "profiler_dashboard",
+  "feature_name": "Profiler Dashboard",
+  "ui_surfaces": [
+    {
+      "screen_id": "profiler_dashboard_screen",
+      "screen_name": "Device Profiles Dashboard",
+      "navigation_path": "Profiler -> Dashboard and Report -> Dashboard",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 20"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "timeframe",
+      "name": "Timeframe",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": null,
+      "default_value": "Last 24 hours",
+      "unit": null,
+      "validation": "Must be one of: Last 24 hours, 7 days, 30 days, All",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Specify the timeframe for displayed information.",
+      "location": "Dashboard Settings",
+      "page_reference": "Page 20"
+    },
+    {
+      "input_id": "refresh_interval",
+      "name": "Refresh Interval",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": null,
+      "default_value": "5 minutes",
+      "unit": null,
+      "validation": "Must be one of: Disabled, 5 minutes, 10 minutes, 30 minutes, 60 minutes",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Set the refresh interval for updating charts.",
+      "location": "Dashboard Settings",
+      "page_reference": "Page 20"
+    },
+    {
+      "input_id": "chart_selection",
+      "name": "Select List of Charts",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Choose which charts to display on the dashboard.",
+      "location": "Dashboard Settings",
+      "page_reference": "Page 20"
+    },
+    {
+      "input_id": "charts_per_row",
+      "name": "Charts Per Row",
+      "control_type": "dropdown",
+      "data_type": "integer",
+      "range": "1-3",
+      "default_value": 3,
+      "unit": null,
+      "validation": "Must be one of: 1, 2, 3",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Set the number of charts displayed per row.",
+      "location": "Dashboard Settings",
+      "page_reference": "Page 20"
+    },
+    {
+      "input_id": "profiler_selection",
+      "name": "Profiler Selection",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": null,
+      "default_value": "All Profilers",
+      "unit": null,
+      "validation": "Must be one of: All Profilers or specific profiler names",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Choose the profiler for which information is displayed.",
+      "location": "Dashboard Settings",
+      "page_reference": "Page 20"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "download_pdf_report",
+      "button_text": "Download Report",
+      "type": "custom",
+      "enabled_when": "Charts are displayed",
+      "description": "Download the dashboard charts as a PDF report.",
+      "page_reference": "Page 21"
+    },
+    {
+      "action_id": "schedule_report_email",
+      "button_text": "Schedule Report Email",
+      "type": "custom",
+      "enabled_when": "Email notifications are configured",
+      "description": "Schedule email notifications for dashboard reports.",
+      "page_reference": "Page 22"
+    }
+  ],
+  "constraints": [
+    "Dashboard refresh interval must be set to a valid value (Disabled, 5 minutes, 10 minutes, 30 minutes, 60 minutes).",
+    "Charts per row must be between 1 and 3.",
+    "Profiler selection must be valid (All Profilers or specific profiler names).",
+    "Timeframe must be one of: Last 24 hours, 7 days, 30 days, All."
+  ],
+  "errors": [
+    {
+      "error_id": "ERR_INVALID_TIMEFRAME",
+      "message": "Invalid timeframe selected.",
+      "trigger": "User selects a timeframe not listed in the dropdown.",
+      "page_reference": "Page 20"
+    },
+    {
+      "error_id": "ERR_INVALID_REFRESH_INTERVAL",
+      "message": "Invalid refresh interval selected.",
+      "trigger": "User selects a refresh interval not listed in the dropdown.",
+      "page_reference": "Page 20"
+    }
+  ],
+  "states": [
+    "Devices waiting to be Profiled",
+    "Devices for which the profile has changed",
+    "Unmanaged devices",
+    "Devices waiting for administrator approval",
+    "Devices added in last 24 hours",
+    "Devices added last week",
+    "Devices added last month"
+  ],
+  "state_transitions": [
+    {
+      "from": "Devices waiting to be Profiled",
+      "to": "Profiled devices",
+      "trigger": "Device profiling completes successfully."
+    },
+    {
+      "from": "Devices waiting for administrator approval",
+      "to": "Approved devices",
+      "trigger": "Administrator approves the device."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "dashboard_report_workflow",
+      "name": "Dashboard Report Workflow",
+      "steps": [
+        "Navigate to Profiler -> Dashboard and Report -> Dashboard.",
+        "Customize dashboard settings (timeframe, refresh interval, charts per row, etc.).",
+        "View charts and summary panels.",
+        "Download report as PDF or schedule email notifications."
+      ],
+      "prerequisites": [
+        "Profiler must be configured and profiling must be active."
+      ],
+      "page_reference": "Page 20"
+    }
+  ]
+}

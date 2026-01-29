@@ -1,0 +1,128 @@
+{
+  "feature_id": "troubleshooting_tools",
+  "feature_name": "Troubleshooting Tools",
+  "ui_surfaces": [
+    {
+      "screen_id": "troubleshooting_screen",
+      "screen_name": "Troubleshooting",
+      "navigation_path": "Profiler -> Profiler Configuration -> Troubleshooting",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 48"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "test_selection",
+      "name": "Select Test",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": true,
+      "visible_when": null,
+      "help_text": "Select the required test to run diagnostics.",
+      "location": "Troubleshooting",
+      "page_reference": "Page 48"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "run_diagnostics",
+      "button_text": "Run diagnostics",
+      "type": "submit",
+      "enabled_when": "A test is selected from the dropdown",
+      "description": "Executes the selected diagnostic test.",
+      "page_reference": "Page 48"
+    }
+  ],
+  "constraints": [
+    "Tests are dependent on the selected diagnostic type.",
+    "Ensure the Profiler is properly configured before running diagnostics."
+  ],
+  "errors": [
+    {
+      "error_id": "PRO31443",
+      "message": "Password Decryption Failure",
+      "trigger": "Occurs when password decryption fails during diagnostics.",
+      "page_reference": "Page 50"
+    },
+    {
+      "error_id": "PRO31447",
+      "message": "WMI connection failed",
+      "trigger": "Occurs when WMI connection fails during diagnostics.",
+      "page_reference": "Page 50"
+    },
+    {
+      "error_id": "PRO31448",
+      "message": "WMI Query Failed",
+      "trigger": "Occurs when WMI query fails during diagnostics.",
+      "page_reference": "Page 50"
+    },
+    {
+      "error_id": "PRO31606",
+      "message": "SSH Connection failed",
+      "trigger": "Occurs when SSH connection fails during diagnostics.",
+      "page_reference": "Page 50"
+    },
+    {
+      "error_id": "PRO31607",
+      "message": "SSH Command Failed",
+      "trigger": "Occurs when SSH command execution fails during diagnostics.",
+      "page_reference": "Page 50"
+    },
+    {
+      "error_id": "SYS31660",
+      "message": "SMTP error",
+      "trigger": "Occurs when there is an issue with the SMTP configuration.",
+      "page_reference": "Page 51"
+    }
+  ],
+  "states": [
+    "idle",
+    "running_diagnostics",
+    "completed",
+    "error"
+  ],
+  "state_transitions": [
+    {
+      "from": "idle",
+      "to": "running_diagnostics",
+      "trigger": "User clicks 'Run diagnostics' after selecting a test."
+    },
+    {
+      "from": "running_diagnostics",
+      "to": "completed",
+      "trigger": "Diagnostics complete without errors."
+    },
+    {
+      "from": "running_diagnostics",
+      "to": "error",
+      "trigger": "Diagnostics encounter an error."
+    },
+    {
+      "from": "error",
+      "to": "idle",
+      "trigger": "User resolves the issue and retries."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "diagnostic_workflow",
+      "name": "Run Diagnostics",
+      "steps": [
+        "Navigate to Profiler -> Profiler Configuration -> Troubleshooting.",
+        "Select the required test from the dropdown.",
+        "Click 'Run diagnostics' to execute the test.",
+        "Review the results displayed after the test completes."
+      ],
+      "prerequisites": [
+        "Ensure the Profiler is properly configured.",
+        "Ensure network connectivity for tests requiring external communication."
+      ],
+      "page_reference": "Page 48"
+    }
+  ]
+}

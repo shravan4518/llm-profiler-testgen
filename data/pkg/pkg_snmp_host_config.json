@@ -1,0 +1,132 @@
+{
+  "feature_id": "snmp_host_configuration",
+  "feature_name": "SNMP Host Configuration",
+  "ui_surfaces": [
+    {
+      "screen_id": "snmp_host_config_screen",
+      "screen_name": "SNMP (Host) Profiling",
+      "navigation_path": "Profiler -> Profiler Configuration -> Advance Configuration",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 16"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "community_list",
+      "name": "Possible Community List Names",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Comma-separated list of community names",
+      "required": false,
+      "visible_when": null,
+      "help_text": "Enter the possible community list names, separated by commas, to collect device attributes for the endpoints monitored through SNMP.",
+      "location": "SNMP (Host) Profiling",
+      "page_reference": "Page 16"
+    },
+    {
+      "input_id": "profile_all_devices_snmp",
+      "name": "Profile All Discovered Devices Using SNMP (Host)",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": false,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Optionally, select to profile all the discovered devices using SNMP (Host).",
+      "location": "SNMP (Host) Profiling",
+      "page_reference": "Page 16"
+    },
+    {
+      "input_id": "subnet_manual_scan",
+      "name": "Add Subnets for Manual Scan",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Valid subnet format",
+      "required": false,
+      "visible_when": "Profile All Discovered Devices Using SNMP (Host) is unchecked",
+      "help_text": "If the number of discovered devices exceeds 1000, it is recommended to add subnets manually to scan only Windows devices.",
+      "location": "SNMP (Host) Profiling",
+      "page_reference": "Page 16"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "save_snmp_host_config",
+      "button_text": "Save Changes",
+      "type": "submit",
+      "enabled_when": "All required fields are valid",
+      "description": "Saves the SNMP (Host) profiling configuration.",
+      "page_reference": "Page 16"
+    },
+    {
+      "action_id": "reset_snmp_host_config",
+      "button_text": "Reset",
+      "type": "reset",
+      "enabled_when": "Always enabled",
+      "description": "Clears the settings and reverts to default settings.",
+      "page_reference": "Page 16"
+    }
+  ],
+  "constraints": [
+    "If the number of discovered devices exceeds 1000, it is recommended to add subnets manually to scan only Windows devices.",
+    "Ensure SNMP is enabled and properly configured on the network devices to allow data collection."
+  ],
+  "errors": [
+    {
+      "error_id": "ERR_SNMP_COMMUNITY",
+      "message": "Invalid community list format.",
+      "trigger": "Community list names are not comma-separated or contain invalid characters.",
+      "page_reference": "Page 16"
+    },
+    {
+      "error_id": "ERR_SNMP_SCAN_LIMIT",
+      "message": "Too many devices discovered. Please add subnets manually.",
+      "trigger": "Number of discovered devices exceeds 1000 without subnet configuration.",
+      "page_reference": "Page 16"
+    }
+  ],
+  "states": [
+    "unconfigured",
+    "configured",
+    "error"
+  ],
+  "state_transitions": [
+    {
+      "from": "unconfigured",
+      "to": "configured",
+      "trigger": "User saves valid SNMP (Host) configuration."
+    },
+    {
+      "from": "configured",
+      "to": "error",
+      "trigger": "Invalid SNMP community list or scan configuration."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "snmp_host_setup",
+      "name": "Configure SNMP (Host) Profiling",
+      "steps": [
+        "Navigate to Profiler -> Profiler Configuration -> Advance Configuration.",
+        "Enter possible community list names.",
+        "Optionally, select to profile all discovered devices using SNMP (Host).",
+        "If required, add subnets manually for scanning.",
+        "Click Save Changes."
+      ],
+      "prerequisites": [
+        "Ensure SNMP is enabled on network devices.",
+        "Verify network devices support SNMP (Host) profiling."
+      ],
+      "page_reference": "Page 16"
+    }
+  ]
+}

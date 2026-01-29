@@ -1,0 +1,155 @@
+{
+  "feature_id": "dashboard",
+  "feature_name": "Dashboard",
+  "page_locations": [
+    20
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler Section",
+      "navigation_path": "System > Profiler",
+      "page_reference": "Page 20"
+    },
+    {
+      "screen_name": "Advance Profiler Configuration",
+      "navigation_path": "Profiler > Profiler Configuration > Advance Configuration",
+      "page_reference": "Page 20"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "ID",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Unique identifier for the device.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "name": "Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Name of the device.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "name": "Protocol",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Protocol used by the device.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "name": "IP Address",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "IP address of the device.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "name": "Vendor Details",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Details about the device vendor.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "name": "Timestamp",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Timestamp of the last update.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "name": "Actions",
+      "control_type": "button",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Actions available for the device.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Save Changes",
+      "description": "Saves the current configuration.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "action_name": "Reset",
+      "description": "Clears the settings and reverts to default.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "action_name": "Delete Profiler",
+      "description": "Deletes the selected profiler.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "IP Address must be a valid IPv4 or IPv6 address.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "constraint": "ID must be unique across all devices.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "INVALID_IP",
+      "message": "The IP address entered is not valid.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    },
+    {
+      "error_code": "DUPLICATE_ID",
+      "message": "The ID entered already exists.",
+      "location": "Profiler Section",
+      "page_reference": "Page 20"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_profiler",
+      "steps": [
+        "Navigate to Profiler > Profiler Configuration.",
+        "Select Advance Configuration.",
+        "Modify the settings as required.",
+        "Click Save Changes to apply the configuration."
+      ],
+      "visual_representation": "Not provided in documentation.",
+      "page_reference": "Page 20"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 20,
+      "type": "ui_screenshot",
+      "insights": "The Profiler section lists network devices with details such as ID, Name, Protocol, IP Address, Vendor Details, Timestamp, and available Actions. It includes navigation menus, checkboxes for selecting rows, and pagination controls."
+    },
+    {
+      "page": 20,
+      "type": "ui_screenshot",
+      "insights": "The Advance Profiler Configuration interface includes tabs for various settings such as Forward and Sync Endpoint Data, Device Sponsoring, Troubleshooting, Fingerprint DB, and Profile Groups. The Advance Configuration tab is highlighted."
+    }
+  ]
+}

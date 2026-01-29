@@ -1,0 +1,208 @@
+{
+  "features": [
+    {
+      "feature_id": "basic_profiler_config",
+      "feature_name": "Basic Profiler Configuration",
+      "domain": "Profiler",
+      "feature_type": "configuration_screen",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 10: Basic Profiler Configuration"
+      ],
+      "parent_feature": null,
+      "description": "Allows configuration of basic settings for the Local Profiler, including SNMP poll intervals, DHCP sniffing modes, and device purging intervals."
+    },
+    {
+      "feature_id": "advanced_profiler_config",
+      "feature_name": "Advanced Profiler Configuration",
+      "domain": "Profiler",
+      "feature_type": "configuration_screen",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 14: Advance Profiler Configuration"
+      ],
+      "parent_feature": null,
+      "description": "Provides advanced configuration options for the Local Profiler, including WMI, SSH, SNMP Host, and Device Attribute Server settings."
+    },
+    {
+      "feature_id": "wmi_config",
+      "feature_name": "WMI Configuration",
+      "domain": "Profiler",
+      "feature_type": "configuration_screen",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 14: WMI Configuration"
+      ],
+      "parent_feature": "advanced_profiler_config",
+      "description": "Configures WMI profiling to fetch detailed information from Windows endpoints, including deep scans for ports, processes, and security product details."
+    },
+    {
+      "feature_id": "ssh_config",
+      "feature_name": "SSH Configuration",
+      "domain": "Profiler",
+      "feature_type": "configuration_screen",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 15: SSH Configuration"
+      ],
+      "parent_feature": "advanced_profiler_config",
+      "description": "Configures SSH profiling to gather detailed information from endpoints, supporting password or RSA-based authentication."
+    },
+    {
+      "feature_id": "snmp_host_config",
+      "feature_name": "SNMP Host Configuration",
+      "domain": "Profiler",
+      "feature_type": "configuration_screen",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 16: SNMP (Host) Configuration"
+      ],
+      "parent_feature": "advanced_profiler_config",
+      "description": "Configures SNMP Host profiling to collect device attributes for endpoints monitored through SNMP."
+    },
+    {
+      "feature_id": "device_attribute_server_config",
+      "feature_name": "Device Attribute Server Configuration",
+      "domain": "Profiler",
+      "feature_type": "configuration_screen",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 17: Device Attribute Server Configuration"
+      ],
+      "parent_feature": "advanced_profiler_config",
+      "description": "Configures the profiler to poll device attribute servers at regular intervals to collect attributes for discovered endpoints."
+    },
+    {
+      "feature_id": "additional_data_collectors_config",
+      "feature_name": "Additional Data Collectors Configuration",
+      "domain": "Profiler",
+      "feature_type": "configuration_screen",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 17: Additional Data Collectors Configuration"
+      ],
+      "parent_feature": "advanced_profiler_config",
+      "description": "Configures additional data collectors such as MDM and LDAP servers for accurate profiling of mobile and other devices."
+    },
+    {
+      "feature_id": "subnets_config",
+      "feature_name": "Subnets Configuration",
+      "domain": "Profiler",
+      "feature_type": "configuration_screen",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 18: Subnets Configuration"
+      ],
+      "parent_feature": "advanced_profiler_config",
+      "description": "Allows configuration of subnets for granular profiling using active collectors like SSH, WMI, SNMP Host, and NMAP."
+    },
+    {
+      "feature_id": "forward_sync_endpoint_data",
+      "feature_name": "Forward and Sync Endpoint Data",
+      "domain": "Profiler",
+      "feature_type": "workflow",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 18: Forward and Sync Endpoint Data"
+      ],
+      "parent_feature": null,
+      "description": "Enables forwarding and syncing of endpoint data between profilers for centralized management."
+    },
+    {
+      "feature_id": "profiler_dashboard",
+      "feature_name": "Profiler Dashboard",
+      "domain": "Profiler",
+      "feature_type": "report",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 20: Dashboard"
+      ],
+      "parent_feature": null,
+      "description": "Displays an overall summary of discovered and profiled devices, with customizable charts and timeframes."
+    },
+    {
+      "feature_id": "profiler_report_scheduling",
+      "feature_name": "Profiler Report Scheduling",
+      "domain": "Profiler",
+      "feature_type": "workflow",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 22: Profiler Report Scheduling"
+      ],
+      "parent_feature": null,
+      "description": "Allows scheduling of profiler reports and delivery via email notifications."
+    },
+    {
+      "feature_id": "device_discovery_report_table",
+      "feature_name": "Device Discovery Report Table",
+      "domain": "Profiler",
+      "feature_type": "report",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 24: Device Discovery Report Table"
+      ],
+      "parent_feature": null,
+      "description": "Lists discovered devices, allowing for adding, modifying, and deleting endpoints, as well as applying filters and exporting data."
+    },
+    {
+      "feature_id": "device_sponsoring",
+      "feature_name": "Device Sponsoring",
+      "domain": "Profiler",
+      "feature_type": "workflow",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 29: Device Sponsoring"
+      ],
+      "parent_feature": null,
+      "description": "Allows administrators to manually approve devices based on specific categories, with email notifications for new device approvals."
+    },
+    {
+      "feature_id": "profile_groups",
+      "feature_name": "Profile Groups",
+      "domain": "Profiler",
+      "feature_type": "configuration_screen",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 30: Profile Groups"
+      ],
+      "parent_feature": null,
+      "description": "Enables grouping of devices based on rules and attributes for easier management and role mapping."
+    },
+    {
+      "feature_id": "agentless_host_checker",
+      "feature_name": "Agentless Host Checker with Profiler",
+      "domain": "Profiler",
+      "feature_type": "workflow",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 37: Agentless Host Checker with Profiler"
+      ],
+      "parent_feature": null,
+      "description": "Allows authorization of users based on device attributes without requiring agent installation, supporting compliance checks for Windows devices."
+    },
+    {
+      "feature_id": "import_export_profiler_database",
+      "feature_name": "Import/Export Profiler Database",
+      "domain": "Profiler",
+      "feature_type": "workflow",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 46: Import/Export Profiler Database"
+      ],
+      "parent_feature": null,
+      "description": "Supports importing and exporting profiler device data in binary or CSV formats for backup, troubleshooting, and analysis."
+    },
+    {
+      "feature_id": "troubleshooting_tools",
+      "feature_name": "Troubleshooting Tools",
+      "domain": "Profiler",
+      "feature_type": "workflow",
+      "confidence": "high",
+      "documentation_references": [
+        "Page 48: Troubleshooting"
+      ],
+      "parent_feature": null,
+      "description": "Provides diagnostic tools to test configurations and resolve issues with profiler settings and collectors."
+    }
+  ]
+}

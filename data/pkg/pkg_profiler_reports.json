@@ -1,0 +1,237 @@
+{
+  "feature_id": "profiler_reports",
+  "feature_name": "Profiler Reports",
+  "page_locations": [
+    3,
+    20,
+    22,
+    24,
+    26
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Profiler Basic Configuration",
+      "navigation_path": "Profiler > Profiler Configuration > Basic Configuration",
+      "page_reference": "Page 20"
+    },
+    {
+      "screen_name": "Profiler Advance Configuration",
+      "navigation_path": "Profiler > Profiler Configuration > Advance Configuration",
+      "page_reference": "Page 20"
+    },
+    {
+      "screen_name": "SNMP (Host) Profiling",
+      "navigation_path": "Profiler > Profiler Configuration > SNMP (Host) Profiling",
+      "page_reference": "Page 22"
+    },
+    {
+      "screen_name": "Subnets Configuration",
+      "navigation_path": "Profiler > Profiler Configuration > Subnets Configuration",
+      "page_reference": "Page 24"
+    },
+    {
+      "screen_name": "Forward and Sync Endpoint Data",
+      "navigation_path": "Profiler > Profiler Configuration > Forward and Sync Endpoint Data",
+      "page_reference": "Page 24"
+    },
+    {
+      "screen_name": "Profiler Reports Dashboard",
+      "navigation_path": "Profiler > Dashboard and report > Dashboard",
+      "page_reference": "Page 26"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Community List",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Enter the possible community list names, separated by commas, to collect device attributes for endpoints monitored through SNMP.",
+      "location": "SNMP (Host) Profiling",
+      "page_reference": "Page 22"
+    },
+    {
+      "name": "Polling Interval",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-60",
+      "default_value": "5",
+      "help_text": "Set the interval (in minutes) for polling SNMP devices.",
+      "location": "SNMP (Host) Profiling",
+      "page_reference": "Page 22"
+    },
+    {
+      "name": "Subnets",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Enter one or more subnets for device discovery and profiling.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 24"
+    },
+    {
+      "name": "Include/Exclude Collectors",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "default_value": "Include",
+      "help_text": "Select whether to include or exclude the listed collectors (e.g., SSH, WMI, SNMP, NMAP).",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 24"
+    },
+    {
+      "name": "FQDN or IP Address",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Enter the FQDN or IP address of the profiler or backup profiler to sync data.",
+      "location": "Forward and Sync Endpoint Data",
+      "page_reference": "Page 24"
+    },
+    {
+      "name": "API Key",
+      "control_type": "textbox",
+      "data_type": "string",
+      "default_value": "None",
+      "help_text": "Enter the API key for syncing endpoint data. Optionally, validate the server certificate to retrieve the API key.",
+      "location": "Forward and Sync Endpoint Data",
+      "page_reference": "Page 24"
+    },
+    {
+      "name": "Timeframe",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "default_value": "Last 24 hours",
+      "help_text": "Set the timeframe for displaying data in the dashboard (e.g., 24 hours, 7 days, 30 days, All).",
+      "location": "Profiler Reports Dashboard",
+      "page_reference": "Page 26"
+    },
+    {
+      "name": "Refresh Interval",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "default_value": "5 minutes",
+      "help_text": "Set the refresh interval for updating dashboard charts (e.g., 5 minutes, 10 minutes, 30 minutes, 60 minutes, Disabled).",
+      "location": "Profiler Reports Dashboard",
+      "page_reference": "Page 26"
+    },
+    {
+      "name": "Charts Per Row",
+      "control_type": "dropdown",
+      "data_type": "integer",
+      "default_value": "3",
+      "help_text": "Set the number of charts to display per row in the dashboard (e.g., 1, 2, 3).",
+      "location": "Profiler Reports Dashboard",
+      "page_reference": "Page 26"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Save Changes",
+      "description": "Save the current configuration settings.",
+      "location": "Profiler Basic Configuration",
+      "page_reference": "Page 20"
+    },
+    {
+      "action_name": "Reset",
+      "description": "Clear the settings and revert to default values.",
+      "location": "Profiler Basic Configuration",
+      "page_reference": "Page 20"
+    },
+    {
+      "action_name": "Delete Profiler",
+      "description": "Delete the profiler configuration.",
+      "location": "Profiler Basic Configuration",
+      "page_reference": "Page 20"
+    },
+    {
+      "action_name": "Start On-Demand Scan",
+      "description": "Trigger an immediate scan on the selected subnets using the selected collectors.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 24"
+    },
+    {
+      "action_name": "Get API Key",
+      "description": "Retrieve and auto-fill the API key by entering administrator credentials.",
+      "location": "Forward and Sync Endpoint Data",
+      "page_reference": "Page 24"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "Maximum 100 subnets can be configured for device discovery.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 24"
+    },
+    {
+      "constraint": "If the number of discovered devices exceeds 1000, manually add subnets to scan only Windows devices.",
+      "location": "SNMP (Host) Profiling",
+      "page_reference": "Page 22"
+    },
+    {
+      "constraint": "NMAP is supported only for devices in the same subnet as PPS for on-demand scans.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 24"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "ERR_SNMP_COMMUNITY",
+      "description": "Invalid community list format. Ensure names are separated by commas.",
+      "location": "SNMP (Host) Profiling",
+      "page_reference": "Page 22"
+    },
+    {
+      "error_code": "ERR_SUBNET_LIMIT",
+      "description": "Exceeded maximum subnet configuration limit of 100.",
+      "location": "Subnets Configuration",
+      "page_reference": "Page 24"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_snmp_profiling",
+      "steps": [
+        "Navigate to Profiler > Profiler Configuration > SNMP (Host) Profiling.",
+        "Enter the community list names separated by commas.",
+        "Optionally, select the option to profile all discovered devices using SNMP.",
+        "Save changes."
+      ],
+      "visual_representation": "Not available",
+      "page_reference": "Page 22"
+    },
+    {
+      "workflow_id": "sync_endpoint_data",
+      "steps": [
+        "Navigate to Profiler > Profiler Configuration > Forward and Sync Endpoint Data.",
+        "Enter the FQDN or IP address of the profiler or backup profiler.",
+        "Enter the API key or retrieve it using administrator credentials.",
+        "Optionally, validate the server certificate.",
+        "Save changes."
+      ],
+      "visual_representation": "Not available",
+      "page_reference": "Page 24"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 20,
+      "type": "ui_screenshot",
+      "insights": "The Profiler Basic Configuration screen includes options to save, reset, or delete the profiler configuration."
+    },
+    {
+      "page": 22,
+      "type": "configuration_screen",
+      "insights": "The SNMP (Host) Profiling screen allows configuration of community lists and polling intervals for device attribute collection."
+    },
+    {
+      "page": 24,
+      "type": "configuration_screen",
+      "insights": "The Subnets Configuration screen supports adding subnets, selecting collectors, and triggering on-demand scans."
+    },
+    {
+      "page": 26,
+      "type": "ui_screenshot",
+      "insights": "The Profiler Reports Dashboard displays device profiling statistics with customizable charts and timeframes."
+    }
+  ]
+}

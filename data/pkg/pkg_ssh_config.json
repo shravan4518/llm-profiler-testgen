@@ -1,0 +1,158 @@
+{
+  "feature_id": "ssh_configuration",
+  "feature_name": "SSH Configuration",
+  "ui_surfaces": [
+    {
+      "screen_id": "ssh_configuration_screen",
+      "screen_name": "SSH Profiling",
+      "navigation_path": "Profiler -> Profiler Configuration -> Advance Configuration",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 15"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "authentication_method",
+      "name": "Authentication Method",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": true,
+      "visible_when": null,
+      "help_text": "Select Password to authenticate using administrator credentials or Public key to authenticate using RSA credentials.",
+      "location": "SSH Profiling",
+      "page_reference": "Page 15"
+    },
+    {
+      "input_id": "profile_all_devices",
+      "name": "Profile All Discovered Devices Using SSH",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": false,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Optionally, select to profile all discovered devices using SSH.",
+      "location": "SSH Profiling",
+      "page_reference": "Page 15"
+    },
+    {
+      "input_id": "subnet_scan_limit",
+      "name": "Subnet Scan Limit",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1000",
+      "default_value": null,
+      "unit": null,
+      "validation": "If the number of discovered devices exceeds 1000, add subnets manually to scan only Windows devices.",
+      "required": false,
+      "visible_when": null,
+      "help_text": "Limit the number of devices scanned in a subnet.",
+      "location": "SSH Profiling",
+      "page_reference": "Page 15"
+    },
+    {
+      "input_id": "test_credentials",
+      "name": "Test Credentials",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Enter the Endpoint IP or hostname to test the credentials.",
+      "location": "SSH Profiling",
+      "page_reference": "Page 15"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "save_changes",
+      "button_text": "Save Changes",
+      "type": "submit",
+      "enabled_when": "All required fields are filled.",
+      "description": "Saves the SSH profiling configuration.",
+      "page_reference": "Page 15"
+    },
+    {
+      "action_id": "reset_settings",
+      "button_text": "Reset",
+      "type": "reset",
+      "enabled_when": "Always enabled.",
+      "description": "Clears the settings and reverts to default settings.",
+      "page_reference": "Page 15"
+    }
+  ],
+  "constraints": [
+    "SSH profiling is supported for MAC OSX endpoints only.",
+    "If the number of discovered devices exceeds 1000, subnets must be added manually to scan only Windows devices."
+  ],
+  "errors": [
+    {
+      "error_id": "SSH_CONN_FAIL",
+      "message": "SSH Connection failed, while performing SSH scan.",
+      "trigger": "Invalid credentials or network issues during SSH scan.",
+      "page_reference": "Page 15"
+    },
+    {
+      "error_id": "SSH_CMD_FAIL",
+      "message": "SSH Command Failed, while performing SSH scan.",
+      "trigger": "Command execution error during SSH scan.",
+      "page_reference": "Page 15"
+    }
+  ],
+  "states": [
+    "unconfigured",
+    "configured",
+    "scanning",
+    "error"
+  ],
+  "state_transitions": [
+    {
+      "from": "unconfigured",
+      "to": "configured",
+      "trigger": "User saves valid SSH configuration."
+    },
+    {
+      "from": "configured",
+      "to": "scanning",
+      "trigger": "SSH scan is initiated."
+    },
+    {
+      "from": "scanning",
+      "to": "error",
+      "trigger": "SSH connection or command fails."
+    },
+    {
+      "from": "scanning",
+      "to": "configured",
+      "trigger": "SSH scan completes successfully."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "ssh_profiling_workflow",
+      "name": "SSH Profiling Workflow",
+      "steps": [
+        "Navigate to Profiler -> Profiler Configuration -> Advance Configuration.",
+        "Select Authentication Method.",
+        "Optionally, enable profiling for all discovered devices using SSH.",
+        "Test credentials by entering Endpoint IP or hostname.",
+        "Save changes."
+      ],
+      "prerequisites": [
+        "Ensure SSH is enabled on the target devices.",
+        "Ensure valid administrator or RSA credentials are available."
+      ],
+      "page_reference": "Page 15"
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "feature_id": "device_attribute_server_configuration",
+  "feature_name": "Device Attribute Server Configuration",
+  "ui_surfaces": [
+    {
+      "screen_id": "device_attribute_server_settings",
+      "screen_name": "Device Attribute Server Configuration",
+      "navigation_path": "Profiler -> Profiler Configuration -> Device Attribute Server",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 17"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "polling_interval",
+      "name": "Polling Interval",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1440",
+      "default_value": "720",
+      "unit": "minutes",
+      "validation": "must be a positive integer",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Set the interval in minutes for polling the device attribute server.",
+      "location": "Device Attribute Server Configuration",
+      "page_reference": "Page 17"
+    },
+    {
+      "input_id": "available_servers",
+      "name": "Available Servers",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "must be a valid server from the list",
+      "required": false,
+      "visible_when": null,
+      "help_text": "Select servers to add to the list of available servers.",
+      "location": "Device Attribute Server Configuration",
+      "page_reference": "Page 17"
+    },
+    {
+      "input_id": "selected_servers",
+      "name": "Selected Servers",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "must be a valid server from the list",
+      "required": false,
+      "visible_when": null,
+      "help_text": "Select servers to add to the list of selected servers.",
+      "location": "Device Attribute Server Configuration",
+      "page_reference": "Page 17"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "save_changes",
+      "button_text": "Save Changes",
+      "type": "submit",
+      "enabled_when": "all required fields are valid",
+      "description": "Saves the configuration settings for the device attribute server.",
+      "page_reference": "Page 17"
+    },
+    {
+      "action_id": "reset_settings",
+      "button_text": "Reset",
+      "type": "reset",
+      "enabled_when": "always enabled",
+      "description": "Clears the settings and reverts to default values.",
+      "page_reference": "Page 17"
+    },
+    {
+      "action_id": "delete_profiler",
+      "button_text": "Delete Profiler",
+      "type": "delete",
+      "enabled_when": "always enabled",
+      "description": "Deletes the profiler configuration.",
+      "page_reference": "Page 17"
+    }
+  ],
+  "constraints": [
+    "Polling interval must be set in minutes.",
+    "Only servers with valid configurations can be added to the selected servers list.",
+    "The feature requires passive collectors to discover endpoints."
+  ],
+  "errors": [
+    {
+      "error_id": "ERR_INVALID_POLLING_INTERVAL",
+      "message": "Polling interval must be a positive integer.",
+      "trigger": "User enters a non-integer or negative value for polling interval.",
+      "page_reference": "Page 17"
+    },
+    {
+      "error_id": "ERR_INVALID_SERVER_SELECTION",
+      "message": "Selected server is not valid.",
+      "trigger": "User selects a server not listed in available servers.",
+      "page_reference": "Page 17"
+    }
+  ],
+  "states": [
+    "configured",
+    "not_configured",
+    "error"
+  ],
+  "state_transitions": [
+    {
+      "from": "not_configured",
+      "to": "configured",
+      "trigger": "User saves valid configuration."
+    },
+    {
+      "from": "configured",
+      "to": "error",
+      "trigger": "Invalid server or polling interval detected."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_device_attribute_server",
+      "name": "Configure Device Attribute Server",
+      "steps": [
+        "Navigate to Profiler -> Profiler Configuration -> Device Attribute Server.",
+        "Set the polling interval in minutes.",
+        "Add or remove servers from the available and selected servers lists.",
+        "Save the configuration."
+      ],
+      "prerequisites": [
+        "Ensure passive collectors are configured to discover endpoints.",
+        "Ensure valid servers are available for selection."
+      ],
+      "page_reference": "Page 17"
+    }
+  ]
+}

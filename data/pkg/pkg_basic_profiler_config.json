@@ -1,0 +1,202 @@
+{
+  "feature_id": "basic_profiler_configuration",
+  "feature_name": "Basic Profiler Configuration",
+  "ui_surfaces": [
+    {
+      "screen_id": "basic_profiler_config_screen",
+      "screen_name": "Basic Profiler Configuration",
+      "navigation_path": "Profiler -> Profiler Configuration -> Basic Configuration",
+      "url_pattern": null,
+      "requires_role": [],
+      "page_reference": "Page 11"
+    }
+  ],
+  "inputs": [
+    {
+      "input_id": "profiler_name",
+      "name": "Profiler Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": null,
+      "required": true,
+      "visible_when": null,
+      "help_text": "Enter a name for the Profiler.",
+      "location": "General Settings",
+      "page_reference": "Page 11"
+    },
+    {
+      "input_id": "device_fingerprints_package",
+      "name": "Device Fingerprints Package",
+      "control_type": "upload",
+      "data_type": "file",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Must be a valid device fingerprints package file.",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Upload the device fingerprints package.",
+      "location": "General Settings",
+      "page_reference": "Page 11"
+    },
+    {
+      "input_id": "snmp_poll_interval",
+      "name": "SNMP Poll Interval",
+      "control_type": "textbox",
+      "data_type": "integer",
+      "range": "1-1440",
+      "default_value": "60",
+      "unit": "minutes",
+      "validation": "Must be a positive integer within the range.",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Set SNMP Poll interval for polling the Network Infrastructure Devices.",
+      "location": "General Settings",
+      "page_reference": "Page 12"
+    },
+    {
+      "input_id": "dhcp_sniffing_mode",
+      "name": "DHCP Sniffing Mode",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": null,
+      "default_value": null,
+      "unit": null,
+      "validation": "Must be one of the predefined options: RSPAN or DHCP Helper.",
+      "required": true,
+      "visible_when": null,
+      "help_text": "Select the DHCP Sniffing mode.",
+      "location": "General Settings",
+      "page_reference": "Page 12"
+    },
+    {
+      "input_id": "tcp_smb_sniffing_modes",
+      "name": "TCP or SMB Sniffing Modes",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": false,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Optionally, select the TCP or SMB Sniffing modes to profile devices using TCP and SMB.",
+      "location": "General Settings",
+      "page_reference": "Page 12"
+    },
+    {
+      "input_id": "purge_interval",
+      "name": "Purge Interval",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": null,
+      "default_value": "Never",
+      "unit": null,
+      "validation": "Must be one of the predefined options.",
+      "required": false,
+      "visible_when": null,
+      "help_text": "Select the interval to purge older devices from the database periodically.",
+      "location": "General Settings",
+      "page_reference": "Page 12"
+    },
+    {
+      "input_id": "nmap_profiling",
+      "name": "NMAP Profiling",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": null,
+      "default_value": false,
+      "unit": null,
+      "validation": null,
+      "required": false,
+      "visible_when": null,
+      "help_text": "Optionally, select the option to profile all the discovered devices using NMAP.",
+      "location": "General Settings",
+      "page_reference": "Page 12"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "save_changes",
+      "button_text": "Save Changes",
+      "type": "submit",
+      "enabled_when": "All required fields are filled correctly.",
+      "description": "Saves the basic profiler configuration.",
+      "page_reference": "Page 14"
+    },
+    {
+      "action_id": "reset_settings",
+      "button_text": "Reset",
+      "type": "reset",
+      "enabled_when": "Always enabled.",
+      "description": "Clears the settings and reverts to default settings.",
+      "page_reference": "Page 14"
+    },
+    {
+      "action_id": "delete_profiler",
+      "button_text": "Delete Profiler",
+      "type": "delete",
+      "enabled_when": "Profiler exists.",
+      "description": "Deletes the profiler configuration.",
+      "page_reference": "Page 14"
+    }
+  ],
+  "constraints": [
+    "Minimum supported fingerprints database version for 9.1R9 is 45.",
+    "DHCP fingerprinting requires switches to forward DHCP packets to the PPS.",
+    "SNMP/SSH-based profiling requires switches to be configured in the Network Infrastructure Device page.",
+    "External interface must be connected to switch SPAN port for TCP/SMB sniffing."
+  ],
+  "errors": [
+    {
+      "error_id": "ERR_INVALID_FINGERPRINT_PACKAGE",
+      "message": "Invalid device fingerprints package.",
+      "trigger": "Uploading an unsupported or corrupted fingerprints package.",
+      "page_reference": "Page 12"
+    },
+    {
+      "error_id": "ERR_SNMP_POLL_INTERVAL_OUT_OF_RANGE",
+      "message": "SNMP Poll interval must be between 1 and 1440 minutes.",
+      "trigger": "Entering a value outside the allowed range for SNMP Poll interval.",
+      "page_reference": "Page 12"
+    }
+  ],
+  "states": [
+    "configured",
+    "not_configured",
+    "deleted"
+  ],
+  "state_transitions": [
+    {
+      "from": "not_configured",
+      "to": "configured",
+      "trigger": "Saving valid configuration settings."
+    },
+    {
+      "from": "configured",
+      "to": "deleted",
+      "trigger": "Deleting the profiler."
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "basic_profiler_setup",
+      "name": "Basic Profiler Setup",
+      "steps": [
+        "Navigate to Profiler -> Profiler Configuration -> Basic Configuration.",
+        "Enter Profiler Name.",
+        "Upload Device Fingerprints Package.",
+        "Set General Settings (SNMP Poll Interval, DHCP Sniffing Mode, etc.).",
+        "Save Changes."
+      ],
+      "prerequisites": [
+        "Switches configured to forward DHCP packets.",
+        "Network Infrastructure Devices configured for SNMP/SSH-based profiling."
+      ],
+      "page_reference": "Page 11"
+    }
+  ]
+}

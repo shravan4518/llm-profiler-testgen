@@ -187,5 +187,122 @@
     "created_at": "2026-01-13T11:08:32.265332",
     "script_status": "generating",
     "updated_at": "2026-01-13T11:09:27.580470"
+  },
+  "a973e715": {
+    "job_id": "a973e715",
+    "user_prompt": "Profiler SNMP Traps",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-19T10:04:54.985688",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-19T10:06:18.925640"
+  },
+  "8ab54450": {
+    "job_id": "8ab54450",
+    "user_prompt": "Profiler DB Upgrade",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-19T12:29:49.306483",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-19T12:31:19.068641"
+  },
+  "c6795203": {
+    "job_id": "c6795203",
+    "user_prompt": "L2 dot1x authentication using Native Supplicant",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-19T12:58:18.741655",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-19T12:59:39.183316"
+  },
+  "bb883dcb": {
+    "job_id": "bb883dcb",
+    "user_prompt": "Profiler Troubleshooting",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-19T13:06:35.199823",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-19T13:07:50.347695"
+  },
+  "24b19ea8": {
+    "job_id": "24b19ea8",
+    "user_prompt": "Profiler Configuration > Profiler Troubleshooting",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-19T13:10:55.347293",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-19T13:12:07.562890"
+  },
+  "fba323bc": {
+    "job_id": "fba323bc",
+    "user_prompt": "Profiler configuration and advanced configuration\nLink: Profiler Configuration >       \t  Settings >           Advance Configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-19T13:16:48.820812",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-19T13:18:12.957231"
+  },
+  "fca0b0e8": {
+    "job_id": "fca0b0e8",
+    "user_prompt": "Test Device Discovery Rules",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-20T10:43:16.866549",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-20T10:44:40.933311"
+  },
+  "c6c25296": {
+    "job_id": "c6c25296",
+    "user_prompt": "explain advanced configuration in profiler",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-20T14:07:56.799995",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-20T14:09:14.146824"
+  },
+  "ed603c07": {
+    "job_id": "ed603c07",
+    "user_prompt": "explain Profiler advanced configuration\nLink: Profiler Configuration >       \t  Settings >           Advance Configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-20T14:46:57.298415",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-20T14:48:20.170047"
+  },
+  "74cb44bd": {
+    "job_id": "74cb44bd",
+    "user_prompt": "Test all Advanced Profiler Configuration options including WMI configuration with deep scan, SSH authentication, SNMP host profiling, Device Attribute Server polling, MDM and LDAP data collectors, and subnet-based on-demand scanning",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-20T15:32:50.219284",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-20T15:34:02.214341"
+  },
+  "a29839f1": {
+    "job_id": "a29839f1",
+    "user_prompt": "Test Profiler troubleshooting tools",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-21T11:23:22.232939",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-21T11:25:06.735085"
+  },
+  "2508b30b": {
+    "job_id": "2508b30b",
+    "user_prompt": "Profiler database import/export and upgrade",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-21T11:48:14.126666",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-21T11:49:36.781346"
+  },
+  "df778b5d": {
+    "job_id": "df778b5d",
+    "user_prompt": "Advanced Profiler configuration",
+    "model": "gpt-4.1-nano",
+    "status": "completed",
+    "created_at": "2026-01-22T14:32:02.874766",
+    "script_status": "not_generated",
+    "updated_at": "2026-01-22T14:33:42.934460"
   }
 }

@@ -1,0 +1,130 @@
+{
+  "feature_id": "import_export_profiler_database",
+  "feature_name": "Import/Export Profiler Database",
+  "page_locations": [
+    3,
+    46
+  ],
+  "ui_surfaces": [
+    {
+      "screen_name": "Firewall Rule Configuration",
+      "navigation_path": "Profiler > Configuration > Firewall Rules",
+      "page_reference": "Page 46"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "Rule Name",
+      "control_type": "textbox",
+      "data_type": "string",
+      "range": "1-255 characters",
+      "default_value": "None",
+      "help_text": "Enter the name of the firewall rule.",
+      "location": "Firewall Rule Configuration",
+      "page_reference": "Page 46"
+    },
+    {
+      "name": "Criteria",
+      "control_type": "radio_buttons",
+      "data_type": "string",
+      "range": "Predefined options",
+      "default_value": "None",
+      "help_text": "Select the criteria for the rule.",
+      "location": "Firewall Rule Configuration",
+      "page_reference": "Page 46"
+    },
+    {
+      "name": "Available Products",
+      "control_type": "dropdown",
+      "data_type": "string",
+      "range": "List of predefined products",
+      "default_value": "None",
+      "help_text": "Select a product from the available list.",
+      "location": "Firewall Rule Configuration",
+      "page_reference": "Page 46"
+    },
+    {
+      "name": "Selected Products",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "range": "True/False",
+      "default_value": "False",
+      "help_text": "Check to include specific products in the rule.",
+      "location": "Firewall Rule Configuration",
+      "page_reference": "Page 46"
+    }
+  ],
+  "actions": [
+    {
+      "action_name": "Add Rule",
+      "description": "Adds a new firewall rule to the configuration.",
+      "trigger": "Clicking the 'Add' button",
+      "page_reference": "Page 46"
+    },
+    {
+      "action_name": "Remove Rule",
+      "description": "Removes the selected firewall rule from the configuration.",
+      "trigger": "Clicking the 'Remove' button",
+      "page_reference": "Page 46"
+    },
+    {
+      "action_name": "Save Changes",
+      "description": "Saves the current configuration changes.",
+      "trigger": "Clicking the 'Save Changes' button",
+      "page_reference": "Page 46"
+    },
+    {
+      "action_name": "Cancel Changes",
+      "description": "Cancels the current configuration changes.",
+      "trigger": "Clicking the 'Cancel' button",
+      "page_reference": "Page 46"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint": "Rule Name must be unique.",
+      "page_reference": "Page 46"
+    },
+    {
+      "constraint": "At least one product must be selected for the rule.",
+      "page_reference": "Page 46"
+    }
+  ],
+  "errors": [
+    {
+      "error_code": "ERR001",
+      "description": "Rule Name cannot be empty.",
+      "resolution": "Provide a valid Rule Name.",
+      "page_reference": "Page 46"
+    },
+    {
+      "error_code": "ERR002",
+      "description": "No products selected for the rule.",
+      "resolution": "Select at least one product.",
+      "page_reference": "Page 46"
+    }
+  ],
+  "workflows": [
+    {
+      "workflow_id": "configure_firewall_rule",
+      "steps": [
+        "Navigate to Profiler > Configuration > Firewall Rules.",
+        "Click 'Add' to create a new rule.",
+        "Enter the Rule Name.",
+        "Select the Criteria.",
+        "Choose products from the Available Products dropdown.",
+        "Check the Selected Products checkbox if required.",
+        "Click 'Save Changes' to apply the configuration."
+      ],
+      "visual_representation": "Not provided in documentation.",
+      "page_reference": "Page 46"
+    }
+  ],
+  "image_insights": [
+    {
+      "page": 46,
+      "type": "ui_screenshot",
+      "insights": "The image shows a configuration screen for adding predefined firewall rules. It includes fields for Rule Name, Criteria selection, and product selection, along with action buttons for adding, removing, saving, or canceling changes."
+    }
+  ]
+}
