@@ -62,7 +62,8 @@ class SimpleTestGenerator:
         # PKG Loader for structured product knowledge
         pkg_dir = Path(config.DATA_DIR) / "pkg"
         if pkg_dir.exists():
-            self.pkg_loader = PKGLoader(pkg_dir, self.azure_llm)
+            # Pass the raw AzureOpenAI client, not the AzureLLM wrapper
+            self.pkg_loader = PKGLoader(pkg_dir, self.azure_llm.client)
             logger.info(f"PKG Loader initialized: {self.pkg_loader.get_status()['total_features']} features")
         else:
             self.pkg_loader = None
@@ -389,14 +390,20 @@ Start generating test cases NOW. Do NOT write any introduction or explanation fi
                         pkg_parts.append("THIS IS YOUR PRIMARY SOURCE. Use EXACT field names, ranges, and constraints from PKG.\n")
 
                         for feature_id, pkg in pkg_data['pkgs'].items():
+                            # Skip malformed PKG entries
+                            if not isinstance(pkg, dict):
+                                logger.warning(f"Skipping malformed PKG for {feature_id}: expected dict, got {type(pkg).__name__}")
+                                continue
                             formatted_pkg = self.pkg_loader.format_pkg_for_prompt(feature_id)
                             pkg_parts.append(formatted_pkg)
 
                         pkg_context = "\n".join(pkg_parts)
 
+                        # Filter valid PKGs for logging
+                        valid_pkgs = [pkg for pkg in pkg_data['pkgs'].values() if isinstance(pkg, dict)]
                         logger.info(f"PKG context: {len(pkg_context)} characters")
-                        logger.info(f"Total inputs across features: {sum(len(pkg.get('inputs', [])) for pkg in pkg_data['pkgs'].values())}")
-                        logger.info(f"Total constraints: {sum(len(pkg.get('constraints', [])) for pkg in pkg_data['pkgs'].values())}")
+                        logger.info(f"Total inputs across features: {sum(len(pkg.get('inputs', [])) for pkg in valid_pkgs)}")
+                        logger.info(f"Total constraints: {sum(len(pkg.get('constraints', [])) for pkg in valid_pkgs)}")
                     else:
                         logger.info("No relevant PKG found for this query")
 
